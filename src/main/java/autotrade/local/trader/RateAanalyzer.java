@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class RateAanalyzer {
@@ -16,6 +17,9 @@ public class RateAanalyzer {
     private List<Rate> rates;
     private int askThreshold;
     private int bidThreshold;
+
+    @Setter
+    private Rate lastOrderRate;
 
     public RateAanalyzer() {
         rates = new ArrayList<>();

@@ -21,8 +21,8 @@ public class AutoTrader {
     private int initialLot;
 
     private AutoTrader() {
-        targetAmount = 100;
-        initialLot = 1;
+        targetAmount = Integer.parseInt(AutoTradeProperties.get("autotrade.targetAmount"));
+        initialLot = Integer.parseInt(AutoTradeProperties.get("autotrade.initialLot"));
         rateAnalyzer = new RateAanalyzer();
     }
 
@@ -99,27 +99,33 @@ public class AutoTrader {
             wrapper.setLot(initialLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
                 wrapper.orderAsk();
+                rateAnalyzer.setLastOrderRate(rate);
             }
             if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
                 wrapper.orderBid();
+                rateAnalyzer.setLastOrderRate(rate);
             }
         } else {
             // ポジションがある場合
             if (position.isAskSide()) {
                 // 買いポジションが多い場合
                 wrapper.setLot(position.getAskLot() * 2 - position.getBidLot());
-                if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
-                    // 閾値を超えた場合
+                if (rate.getBid() <= rateAnalyzer.getBidThreshold()
+                        && rate.getBid() < rateAnalyzer.getLastOrderRate().getBid()) {
+                    // 閾値を超えた場合、且つ前回注文時のBidよりもレートが低い場合
                     // 逆ポジション取得
                     wrapper.orderBid();
+                    rateAnalyzer.setLastOrderRate(rate);
                 }
             } else {
                 // 売りポジションが多い場合
                 wrapper.setLot(position.getBidLot() * 2 - position.getAskLot());
-                if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
-                    // 閾値を超えた場合
+                if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
+                        && rateAnalyzer.getLastOrderRate().getAsk() < rate.getAsk()) {
+                    // 閾値を超えた場合、且つ前回注文時のAskよりもレートが高い場合
                     // 逆ポジション取得
                     wrapper.orderAsk();
+                    rateAnalyzer.setLastOrderRate(rate);
                 }
             }
         }

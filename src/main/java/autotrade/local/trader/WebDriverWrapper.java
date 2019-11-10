@@ -20,11 +20,9 @@ public class WebDriverWrapper {
         driver.findElement(By.id("passwordShow")).sendKeys(AutoTradeProperties.get("login.password"));
         driver.findElement(By.id("LoginWindowBtn")).click();
     }
-
     public void startUpTradeTool() {
         driver.navigate().to("https://trade.fx.dmm.com/comportal/SsoOutbound.do?subSystemType=-20");
     }
-
     public String getAskLot() {
         return driver.findElement(By.xpath("//span[@uifield='askTotalAmount']")).getText();
     }

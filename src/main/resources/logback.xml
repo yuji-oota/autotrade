@@ -8,9 +8,9 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>autotrade-local.log</File>
+        <File>log/autotrade-local.log</File>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>autotrade-local.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <FileNamePattern>log/autotrade-local.%d{yyyy-MM-dd}.log</FileNamePattern>
         </rollingPolicy>
         <encoder>
             <charset>UTF-8</charset>
