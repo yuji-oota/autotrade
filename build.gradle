@@ -45,4 +45,9 @@ tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-defaultTasks 'clean', 'jar'
+task collect(type: Copy) {
+    from 'build/libs'
+    into './'
+}
+
+defaultTasks 'clean', 'jar', 'collect'

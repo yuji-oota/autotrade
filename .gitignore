@@ -1,3 +1,6 @@
+# Propertie file
+*.yml
+
 # Compiled class file
 *.class
 
@@ -11,4 +14,12 @@
 build
 
 # binaly
+*.jar
 bin
+release
+
+# Eclipse
+.classpath
+.project
+.settings
+

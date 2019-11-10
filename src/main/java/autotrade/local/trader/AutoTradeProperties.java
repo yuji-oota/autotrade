@@ -1,5 +1,8 @@
 package autotrade.local.trader;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,14 +11,26 @@ import java.util.Objects;
 
 import org.yaml.snakeyaml.Yaml;
 
+/**
+ * ymlファイルの設定項目は以下を想定しています
+
+login:
+  username: xxx
+  password: xxx
+
+ *
+ */
 public class AutoTradeProperties {
 
     private static AutoTradeProperties instance;
     private static Map<String, Object> properties;
 
     private AutoTradeProperties() {
-        properties = new Yaml().load(this.getClass().getClassLoader().getResourceAsStream("application.yml"));
-        System.out.println(properties);
+        try {
+            properties = new Yaml().load(Files.newInputStream(Paths.get("application.yml")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     static {

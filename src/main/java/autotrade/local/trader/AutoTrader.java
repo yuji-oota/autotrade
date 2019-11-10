@@ -34,6 +34,7 @@ public class AutoTrader {
 
         try {
             // WebDriver初期化
+//            System.setProperty("webdriver.chrome.driver", AutoTradeProperties.get("webdriver.chrome.driver"));
             driver = new ChromeDriver();
             wrapper = new WebDriverWrapper(driver);
 
@@ -66,7 +67,6 @@ public class AutoTrader {
                 .bidLot(Integer.parseInt(wrapper.getBidLot().replace(",", "")))
                 .profit(Integer.parseInt(wrapper.getProfit().replace(",", "")))
                 .build();
-        System.out.println(position);
 
         if (position.getProfit() >= targetAmount) {
             // 目標金額達成で利益確定
@@ -82,14 +82,12 @@ public class AutoTrader {
                 .bid(Integer.parseInt(wrapper.getBidRate().replace(".", "")))
                 .timestamp(LocalDateTime.now())
                 .build();
-        System.out.println(rate);
 
         // 注文
         order(position, rate);
 
         // analizerにレート追加
         rateAnalyzer.add(rate);
-
     }
 
     private void order(Position position, Rate rate) {
