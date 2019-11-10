@@ -6,6 +6,9 @@ import java.util.Objects;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class AutoTrader {
 
     private static AutoTrader instance;
@@ -34,7 +37,6 @@ public class AutoTrader {
 
         try {
             // WebDriver初期化
-//            System.setProperty("webdriver.chrome.driver", AutoTradeProperties.get("webdriver.chrome.driver"));
             driver = new ChromeDriver();
             wrapper = new WebDriverWrapper(driver);
 
@@ -48,13 +50,9 @@ public class AutoTrader {
                 Thread.sleep(1000);
             }
         } catch(Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         } finally {
-            try {
-                driver.quit();
-            } catch(Exception e) {
-                e.printStackTrace();
-            }
+            driver.quit();
         }
 
     }
@@ -70,7 +68,7 @@ public class AutoTrader {
 
         if (position.getProfit() >= targetAmount) {
             // 目標金額達成で利益確定
-            wrapper.allPayments();
+            wrapper.fixProfit();
 
             // ポジション初期化
             position = Position.builder().build();

@@ -11,6 +11,8 @@ import java.util.Objects;
 
 import org.yaml.snakeyaml.Yaml;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * ymlファイルの設定項目は以下を想定しています
 
@@ -20,6 +22,7 @@ login:
 
  *
  */
+@Slf4j
 public class AutoTradeProperties {
 
     private static AutoTradeProperties instance;
@@ -28,6 +31,7 @@ public class AutoTradeProperties {
     private AutoTradeProperties() {
         try {
             properties = new Yaml().load(Files.newInputStream(Paths.get("application.yml")));
+            log.info("properties:{}", properties);
         } catch (IOException e) {
             e.printStackTrace();
         }

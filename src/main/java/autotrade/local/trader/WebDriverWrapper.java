@@ -3,6 +3,9 @@ package autotrade.local.trader;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class WebDriverWrapper {
 
     private WebDriver driver;
@@ -43,14 +46,18 @@ public class WebDriverWrapper {
     }
     public void setLot(int lot) {
         driver.findElement(By.xpath("//input[@uifield='orderQuantity']")).sendKeys(String.valueOf(lot));
+        log.info("lot {}", lot);
     }
     public void orderAsk() {
         driver.findElement(By.xpath("//div[@uifield='bidStreamingButton']")).click();
+        log.info("ask {}", getAskRate());
     }
     public void orderBid() {
         driver.findElement(By.xpath("//div[@uifield='askStreamingButton']")).click();
+        log.info("bid {}", getBidRate());
     }
-    public void allPayments() {
+    public void fixProfit() {
         driver.findElement(By.xpath("//button[@uifield='orderButtonAll']")).click();
+        log.info("profit {}", getProfit());
     }
 }
