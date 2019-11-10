@@ -1,0 +1,7 @@
+login:
+  username: xxx
+  password: xxx
+
+webdriver:
+  chrome:
+    driver: lib/chromedriver.exe
