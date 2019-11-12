@@ -45,12 +45,17 @@ public class WebDriverWrapper {
     }
     public void startUpTradeTool() {
         driver.navigate().to("https://trade.fx.dmm.com/comportal/SsoOutbound.do?subSystemType=-20");
+        driver.manage().window().maximize();
     }
-    public void settings() {
-        driver.findElement(By.xpath("//button[@uifield='orderSettings']")).click();
-        driver.findElement(By.xpath("//button[@uifield='displayGroupSettlementConfirmLayerFlag']")).click();
-        driver.findElement(By.xpath("//button[@uifield='displayGroupSettlementResultLayerFlag']")).click();
-        driver.findElement(By.xpath("//button[@uifield='closeButton']")).click();
+    public void settings() throws InterruptedException {
+        driver.findElement(By.xpath("//input[@uifield='orderSettings']")).click();
+        Thread.sleep(1000);
+        driver.findElement(By.xpath("//div[contains(text(),\"その他設定\")]")).click();
+        driver.findElement(By.xpath("//input[@uifield='displayGroupSettlementConfirmLayerFlag']")).click();
+        driver.findElement(By.xpath("//input[@uifield='displayGroupSettlementResultLayerFlag']")).click();
+//        driver.findElement(By.xpath("//button[@uifield='closeButton']")).click();
+//        driver.close();
+        Thread.sleep(1000);
     }
     public String getAskLot() {
         return driver.findElement(By.xpath("//span[@uifield='askTotalAmount']")).getText();
@@ -78,7 +83,7 @@ public class WebDriverWrapper {
                 + driver.findElement(By.xpath("//div[@uifield='askStreamingButton']/div/div[@class='fraction']")).getText();
     }
     public void setLot(int lot) {
-        String lastLot = driver.findElement(By.xpath("//input[@uifield='orderQuantity']")).getText();
+        String lastLot = driver.findElement(By.xpath("//input[@uifield='orderQuantity']")).getAttribute("value");
         if (!lastLot.equals(String.valueOf(lot))) {
             driver.findElement(By.xpath("//input[@uifield='orderQuantity']")).sendKeys(Keys.chord(Keys.CONTROL,"a"));
             driver.findElement(By.xpath("//input[@uifield='orderQuantity']")).sendKeys(String.valueOf(lot));

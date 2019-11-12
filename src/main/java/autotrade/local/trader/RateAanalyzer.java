@@ -25,6 +25,7 @@ public class RateAanalyzer {
         rates = new ArrayList<>();
         askThreshold = Integer.MAX_VALUE;
         bidThreshold = Integer.MIN_VALUE;
+        lastOrderRate = new Rate(Integer.MAX_VALUE, Integer.MIN_VALUE, LocalDateTime.now());
     }
 
     public void add(Rate rate) {

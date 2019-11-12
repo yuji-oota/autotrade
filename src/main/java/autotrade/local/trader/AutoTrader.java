@@ -68,7 +68,7 @@ public class AutoTrader {
                 Thread.sleep(1000);
             }
         } catch(Exception e) {
-            log.error(e.getMessage());
+            log.error(e.getMessage(), e);
         } finally {
             driver.quit();
         }

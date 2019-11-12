@@ -13,7 +13,7 @@ public class Application {
                 AutoTrader.getInstance().operation();
             }
         } catch(Exception e) {
-            log.error(e.getMessage());
+            log.error(e.getMessage(), e);
         }
 
     }
