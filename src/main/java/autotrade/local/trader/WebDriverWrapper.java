@@ -46,14 +46,26 @@ public class WebDriverWrapper {
     public void startUpTradeTool() {
         driver.navigate().to("https://trade.fx.dmm.com/comportal/SsoOutbound.do?subSystemType=-20");
     }
+    public void settings() {
+        driver.findElement(By.xpath("//button[@uifield='orderSettings']")).click();
+        driver.findElement(By.xpath("//button[@uifield='displayGroupSettlementConfirmLayerFlag']")).click();
+        driver.findElement(By.xpath("//button[@uifield='displayGroupSettlementResultLayerFlag']")).click();
+        driver.findElement(By.xpath("//button[@uifield='closeButton']")).click();
+    }
     public String getAskLot() {
         return driver.findElement(By.xpath("//span[@uifield='askTotalAmount']")).getText();
     }
     public String getBidLot() {
         return driver.findElement(By.xpath("//span[@uifield='bidTotalAmount']")).getText();
     }
-    public String getProfit() {
-        return driver.findElement(By.xpath("//span[@uifield='balancePl']")).getText();
+    public int getProfit() {
+        return Integer.parseInt(getAskProfit().replace(",", "")) + Integer.parseInt(getBidProfit().replace(",", ""));
+    }
+    public String getAskProfit() {
+        return driver.findElement(By.xpath("//span[@uifield='askEvaluationPl']")).getText();
+    }
+    public String getBidProfit() {
+        return driver.findElement(By.xpath("//span[@uifield='bidEvaluationPl']")).getText();
     }
     public String getBidRate() {
         return driver.findElement(By.xpath("//div[@uifield='bidStreamingButton']/div/div[@class='small']")).getText()
@@ -82,4 +94,5 @@ public class WebDriverWrapper {
         driver.findElement(By.xpath("//button[@uifield='orderButtonAll']")).click();
         log.info("profit {}", getProfit());
     }
+
 }

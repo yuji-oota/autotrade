@@ -57,6 +57,9 @@ public class AutoTrader {
             wrapper.startUpTradeTool();
             Thread.sleep(15000);
 
+            // 設定
+            wrapper.settings();
+
             // 繰り返し実行
             while(true) {
                 trade();
@@ -76,7 +79,7 @@ public class AutoTrader {
         Position position = Position.builder()
                 .askLot(Integer.parseInt(wrapper.getAskLot().replace(",", "")))
                 .bidLot(Integer.parseInt(wrapper.getBidLot().replace(",", "")))
-                .profit(Integer.parseInt(wrapper.getProfit().replace(",", "")))
+                .profit(wrapper.getProfit())
                 .build();
 
         if (position.getProfit() >= targetAmount) {
