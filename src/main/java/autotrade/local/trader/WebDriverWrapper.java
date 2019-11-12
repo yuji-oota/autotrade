@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -65,6 +66,7 @@ public class WebDriverWrapper {
                 + driver.findElement(By.xpath("//div[@uifield='askStreamingButton']/div/div[@class='fraction']")).getText();
     }
     public void setLot(int lot) {
+        driver.findElement(By.xpath("//input[@uifield='orderQuantity']")).sendKeys(Keys.chord(Keys.CONTROL,"a"));
         driver.findElement(By.xpath("//input[@uifield='orderQuantity']")).sendKeys(String.valueOf(lot));
         log.info("lot {}", lot);
     }
