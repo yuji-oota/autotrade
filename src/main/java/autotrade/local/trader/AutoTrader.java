@@ -105,7 +105,7 @@ public class AutoTrader {
 
         if (!position.hasPosition()) {
             // ポジションがない場合
-            if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 10) {
+            if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 20) {
                 // 閾値間隔が狭い場合は注文しない
                 return;
             }
