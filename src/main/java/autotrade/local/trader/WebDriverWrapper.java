@@ -71,11 +71,11 @@ public class WebDriverWrapper {
         log.info("lot {}", lot);
     }
     public void orderAsk() {
-        driver.findElement(By.xpath("//div[@uifield='bidStreamingButton']")).click();
+        driver.findElement(By.xpath("//div[@uifield='askStreamingButton']")).click();
         log.info("ask {}", getAskRate());
     }
     public void orderBid() {
-        driver.findElement(By.xpath("//div[@uifield='askStreamingButton']")).click();
+        driver.findElement(By.xpath("//div[@uifield='bidStreamingButton']")).click();
         log.info("bid {}", getBidRate());
     }
     public void fixProfit() {
