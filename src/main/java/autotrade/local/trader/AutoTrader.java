@@ -1,6 +1,8 @@
 package autotrade.local.trader;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 import org.openqa.selenium.WebDriver;
@@ -16,6 +18,7 @@ public class AutoTrader {
     private WebDriver driver;
     private WebDriverWrapper wrapper;
     private RateAanalyzer rateAnalyzer;
+    private IndicateAnalyzer indicateAnalyzer;
 
     private int targetAmount;
     private int initialLot;
@@ -40,7 +43,17 @@ public class AutoTrader {
             driver = new ChromeDriver();
             wrapper = new WebDriverWrapper(driver);
 
+            // 指標を確認する
+            // 本日分
+            List<LocalDateTime> indicates = wrapper.getIndicates(LocalDate.now());
+            // 翌日分
+            indicates.addAll(wrapper.getIndicates(LocalDate.now().plusDays(1)));
+            indicateAnalyzer = new IndicateAnalyzer(indicates);
+
+            // ログイン
             wrapper.login();
+
+            // ツール起動
             wrapper.startUpTradeTool();
             Thread.sleep(15000);
 
@@ -89,13 +102,18 @@ public class AutoTrader {
     }
 
     private void order(Position position, Rate rate) {
-        if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 10) {
-            // 閾値間隔が狭い場合は注文しない
-            return;
-        }
 
         if (!position.hasPosition()) {
             // ポジションがない場合
+            if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 10) {
+                // 閾値間隔が狭い場合は注文しない
+                return;
+            }
+            if (indicateAnalyzer.isNextIndicateWithin(5) ) {
+                // 指標が近い場合は注文しない
+                return;
+            }
+
             wrapper.setLot(initialLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
                 wrapper.orderAsk();

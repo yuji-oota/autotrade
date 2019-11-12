@@ -1,7 +1,15 @@
 package autotrade.local.trader;
 
+import java.text.MessageFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,7 +21,21 @@ public class WebDriverWrapper {
     public WebDriverWrapper(WebDriver driver) {
         this.driver = driver;
     }
-
+    public List<LocalDateTime> getIndicates(LocalDate targetDate) {
+        driver.get("https://fx.dmm.com/market/indicators/");
+        List<WebElement> elements = driver.findElements(By.xpath(
+                MessageFormat.format("//td[contains(text(),\"{0}月{1}日\")]", targetDate.getMonthValue(), targetDate.getDayOfMonth())));
+        return elements.stream()
+                .map(WebElement::getText)
+                .distinct()
+                .map(s -> {
+                    String time = s.substring(s.length() - 5);
+                    int hour = Integer.parseInt(time.split(":")[0]);
+                    int minute = Integer.parseInt(time.split(":")[1]);
+                    return LocalDateTime.of(targetDate, LocalTime.of(hour, minute));
+                })
+                .collect(Collectors.toList());
+    }
     public void login() {
         driver.get("https://trade.fx.dmm.com/comportal/Login.do?type=1");
         driver.findElement(By.id("username")).sendKeys(AutoTradeProperties.get("login.username"));
