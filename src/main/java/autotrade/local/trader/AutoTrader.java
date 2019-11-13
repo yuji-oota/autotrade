@@ -81,12 +81,16 @@ public class AutoTrader {
         Position position = Position.builder()
                 .askLot(Integer.parseInt(wrapper.getAskLot().replace(",", "")))
                 .bidLot(Integer.parseInt(wrapper.getBidLot().replace(",", "")))
-                .profit(wrapper.getProfit())
+                .askAverageRate(Integer.parseInt(wrapper.getAskAverageRate().replace(".", "")))
+                .bidAverageRate(Integer.parseInt(wrapper.getBidAverageRate().replace(".", "")))
+                .askProfit(Integer.parseInt(wrapper.getAskProfit().replace(",", "")))
+                .bidProfit(Integer.parseInt(wrapper.getBidProfit().replace(",", "")))
                 .build();
 
         if (position.getProfit() >= targetAmount) {
             // 目標金額達成で利益確定
-            wrapper.fixProfit();
+            wrapper.fixAll();
+            log.info("profit {}", position.getProfit());
 
             // ポジション初期化
             position = Position.builder().build();
@@ -108,13 +112,14 @@ public class AutoTrader {
 
     private void order(Position position, Rate rate) {
 
-        if (!position.hasPosition()) {
+        switch (position.getStatus()) {
+        case NONE:
             // ポジションがない場合
             if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 20) {
                 // 閾値間隔が狭い場合は注文しない
                 return;
             }
-            if (indicateAnalyzer.isNextIndicateWithin(5) ) {
+            if (indicateAnalyzer.isNextIndicateWithin(5) || indicateAnalyzer.isPrevIndicateWithin(10) ) {
                 // 指標が近い場合は注文しない
                 return;
             }
@@ -128,32 +133,47 @@ public class AutoTrader {
                 wrapper.orderBid();
                 rateAnalyzer.setLastOrderRate(rate);
             }
-        } else {
-            // ポジションがある場合
-            if (position.isAskSide()) {
-                // 買いポジションが多い場合
-                int lot = position.getAskLot() * 2 - position.getBidLot();
-                wrapper.setLot(lot > maxLot ? maxLot : lot);
-                if (rate.getBid() <= rateAnalyzer.getBidThreshold()
-                        && rate.getBid() < rateAnalyzer.getLastOrderRate().getBid()) {
-                    // 閾値を超えた場合、且つ前回注文時のBidよりもレートが低い場合
-                    // 逆ポジション取得
-                    wrapper.orderBid();
-                    rateAnalyzer.setLastOrderRate(rate);
-                }
-            } else {
-                // 売りポジションが多い場合
-                int lot = position.getBidLot() * 2 - position.getAskLot();
-                wrapper.setLot(lot > maxLot ? maxLot : lot);
-                if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
-                        && rateAnalyzer.getLastOrderRate().getAsk() < rate.getAsk()) {
-                    // 閾値を超えた場合、且つ前回注文時のAskよりもレートが高い場合
-                    // 逆ポジション取得
-                    wrapper.orderAsk();
-                    rateAnalyzer.setLastOrderRate(rate);
-                }
+
+        case ASK_SIDE:
+            // 買いポジションが多い場合
+            int bidLot = position.getAskLot() * 2 - position.getBidLot();
+            wrapper.setLot(bidLot > maxLot ? 8 : bidLot);
+            if (rate.getBid() <= rateAnalyzer.getBidThreshold()
+                    && rate.getBid() < rateAnalyzer.getLastOrderRate().getBid()) {
+                // 閾値を超えた場合、且つ前回注文時のBidよりもレートが低い場合
+                // 逆ポジション取得
+                wrapper.orderBid();
+                rateAnalyzer.setLastOrderRate(rate);
             }
+
+        case BID_SIDE:
+            // 売りポジションが多い場合
+            int askLot = position.getBidLot() * 2 - position.getAskLot();
+            wrapper.setLot(askLot > maxLot ? 8 : askLot);
+            if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
+                    && rateAnalyzer.getLastOrderRate().getAsk() < rate.getAsk()) {
+                // 閾値を超えた場合、且つ前回注文時のAskよりもレートが高い場合
+                // 逆ポジション取得
+                wrapper.orderAsk();
+                rateAnalyzer.setLastOrderRate(rate);
+            }
+
+        case SAME:
+            if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() > 20) {
+                // 閾値間隔が広い場合は注文しない
+                return;
+            }
+            if (position.getAskProfit() > 0) {
+                wrapper.fixAsk();
+                log.info("same recovery ask profit {}", wrapper.getAskProfit());
+            }
+            if (position.getBidProfit() > 0) {
+                wrapper.fixBid();
+                log.info("same recovery bid profit {}", wrapper.getBidProfit());
+            }
+        default:
         }
+
     }
 
 }

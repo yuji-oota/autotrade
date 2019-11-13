@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -50,12 +51,14 @@ public class WebDriverWrapper {
     public void settings() throws InterruptedException {
         driver.findElement(By.xpath("//input[@uifield='orderSettings']")).click();
         Thread.sleep(1000);
+
         driver.findElement(By.xpath("//div[contains(text(),\"その他設定\")]")).click();
         driver.findElement(By.xpath("//input[@uifield='displayGroupSettlementConfirmLayerFlag']")).click();
         driver.findElement(By.xpath("//input[@uifield='displayGroupSettlementResultLayerFlag']")).click();
-//        driver.findElement(By.xpath("//button[@uifield='closeButton']")).click();
-//        driver.close();
-        Thread.sleep(1000);
+
+        JavascriptExecutor jexec = (JavascriptExecutor) driver;
+        jexec.executeScript("document.querySelector('div.orderSettings').style.display='none';");
+        jexec.executeScript("document.getElementById('disableLayer').style.width=0;");
     }
     public String getAskLot() {
         return driver.findElement(By.xpath("//span[@uifield='askTotalAmount']")).getText();
@@ -63,8 +66,11 @@ public class WebDriverWrapper {
     public String getBidLot() {
         return driver.findElement(By.xpath("//span[@uifield='bidTotalAmount']")).getText();
     }
-    public int getProfit() {
-        return Integer.parseInt(getAskProfit().replace(",", "")) + Integer.parseInt(getBidProfit().replace(",", ""));
+    public String getAskAverageRate() {
+        return driver.findElement(By.xpath("//span[@uifield='askAvgExecutionPrice']")).getText();
+    }
+    public String getBidAverageRate() {
+        return driver.findElement(By.xpath("//span[@uifield='bidAvgExecutionPrice']")).getText();
     }
     public String getAskProfit() {
         return driver.findElement(By.xpath("//span[@uifield='askEvaluationPl']")).getText();
@@ -99,9 +105,14 @@ public class WebDriverWrapper {
         driver.findElement(By.xpath("//div[@uifield='bidStreamingButton']")).click();
         log.info("bid {}", getBidRate());
     }
-    public void fixProfit() {
+    public void fixAll() {
         driver.findElement(By.xpath("//button[@uifield='orderButtonAll']")).click();
-        log.info("profit {}", getProfit());
+    }
+    public void fixAsk() {
+        driver.findElement(By.xpath("//button[@uifield='orderButtonBuy']")).click();
+    }
+    public void fixBid() {
+        driver.findElement(By.xpath("//button[@uifield='orderButtonSell']")).click();
     }
 
 }

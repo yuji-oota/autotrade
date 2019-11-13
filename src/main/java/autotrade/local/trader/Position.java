@@ -9,13 +9,28 @@ public class Position {
 
     private int askLot;
     private int bidLot;
-    private int profit;
+    private int askAverageRate;
+    private int bidAverageRate;
+    private int askProfit;
+    private int bidProfit;
 
-    public boolean hasPosition() {
-        return (askLot + bidLot) > 0;
+    public int getProfit () {
+        return askProfit + bidProfit;
     }
 
-    public boolean isAskSide() {
-        return bidLot < askLot;
+    public PositionStatus getStatus() {
+
+        if (askLot + bidLot == 0) {
+            return PositionStatus.NONE;
+        }
+
+        if (askLot > bidLot) {
+            return PositionStatus.ASK_SIDE;
+        }
+        if (askLot < bidLot) {
+            return PositionStatus.BID_SIDE;
+        }
+
+        return PositionStatus.SAME;
     }
 }
