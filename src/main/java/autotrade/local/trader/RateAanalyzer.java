@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public class RateAanalyzer {
@@ -18,17 +17,10 @@ public class RateAanalyzer {
     private int askThreshold;
     private int bidThreshold;
 
-    @Setter
-    private Rate lastOrderAskRate;
-    @Setter
-    private Rate lastOrderBidRate;
-
     public RateAanalyzer() {
         rates = new ArrayList<>();
         askThreshold = Integer.MAX_VALUE;
         bidThreshold = Integer.MIN_VALUE;
-        lastOrderAskRate = new Rate(Integer.MAX_VALUE, Integer.MIN_VALUE, LocalDateTime.now());
-        lastOrderBidRate = new Rate(Integer.MAX_VALUE, Integer.MIN_VALUE, LocalDateTime.now());
     }
 
     public void add(Rate rate) {

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,6 +27,7 @@ public class AutoTrader {
     private int initialLot;
     private int sameLimit;
 
+    private LocalDateTime bootDateTime;
     private LocalTime inactiveStart;
     private LocalTime inactiveEnd;
 
@@ -33,6 +35,8 @@ public class AutoTrader {
         targetAmount = Integer.parseInt(AutoTradeProperties.get("autotrade.targetAmount"));
         initialLot = Integer.parseInt(AutoTradeProperties.get("autotrade.initialLot"));
         sameLimit = Integer.parseInt(AutoTradeProperties.get("autotrade.sameLimit"));
+
+        bootDateTime = LocalDateTime.now();
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
         rateAnalyzer = new RateAanalyzer();
@@ -120,6 +124,11 @@ public class AutoTrader {
 
     private void order(Position position, Rate rate) {
 
+        if (ChronoUnit.MINUTES.between(bootDateTime, LocalDateTime.now()) < 10) {
+            // 起動直後は何もしない
+            return;
+        }
+
         switch (position.getStatus()) {
         case NONE:
             // ポジションがない場合
@@ -139,11 +148,9 @@ public class AutoTrader {
             wrapper.setLot(initialLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
                 wrapper.orderAsk();
-                rateAnalyzer.setLastOrderAskRate(rate);
             }
             if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
                 wrapper.orderBid();
-                rateAnalyzer.setLastOrderBidRate(rate);
             }
             break;
         case ASK_SIDE:
@@ -155,11 +162,10 @@ public class AutoTrader {
             int bidLot = position.getAskLot() * 2 - position.getBidLot();
             wrapper.setLot(position.getAskLot() >= sameLimit ? sameLimit - position.getBidLot() : bidLot);
             if (rate.getBid() <= rateAnalyzer.getBidThreshold()
-                    && rate.getBid() < rateAnalyzer.getLastOrderAskRate().getBid()) {
-                // 閾値を超えた場合、且つ前回Ask注文時のBidよりもレートが低い場合
+                    && rate.getBid() < position.getAskAverageRate()) {
+                // 閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
                 wrapper.orderBid();
-                rateAnalyzer.setLastOrderBidRate(rate);
             }
             break;
         case BID_SIDE:
@@ -171,11 +177,10 @@ public class AutoTrader {
             int askLot = position.getBidLot() * 2 - position.getAskLot();
             wrapper.setLot(position.getBidLot() >= sameLimit ? sameLimit - position.getAskLot() : askLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
-                    && rateAnalyzer.getLastOrderBidRate().getAsk() < rate.getAsk()) {
-                // 閾値を超えた場合、且つ前回Bid注文時のAskよりもレートが高い場合
+                    && position.getBidAverageRate() < rate.getAsk()) {
+                // 閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
                 wrapper.orderAsk();
-                rateAnalyzer.setLastOrderAskRate(rate);
             }
             break;
         case SAME:
