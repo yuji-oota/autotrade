@@ -11,7 +11,7 @@ import java.util.Objects;
 
 import org.yaml.snakeyaml.Yaml;
 
-import autotrade.local.exception.AppliationException;
+import autotrade.local.exception.ApplicationException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -42,7 +42,7 @@ public class AutoTradeProperties {
             properties = new Yaml().load(Files.newInputStream(Paths.get("application.yml")));
             log.info("properties:{}", properties);
         } catch (IOException e) {
-            throw new AppliationException(e);
+            throw new ApplicationException(e);
         }
     }
 

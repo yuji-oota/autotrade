@@ -11,6 +11,7 @@ import java.util.Objects;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
+import autotrade.local.exception.ApplicationException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -125,7 +126,7 @@ public class AutoTrader {
     private void order(Position position, Rate rate) {
 
         if (ChronoUnit.MINUTES.between(bootDateTime, LocalDateTime.now()) < 10) {
-            // 起動直後は何もしない
+            // 起動直後は注文しない
             return;
         }
 
@@ -140,8 +141,9 @@ public class AutoTrader {
                 // 指標が近い場合は注文しない
                 return;
             }
-            if (isInactive()) {
+            if (isInactiveTime()) {
                 // 非活性時間は注文しない
+                inactiveProcess();
                 return;
             }
 
@@ -190,7 +192,16 @@ public class AutoTrader {
 
     }
 
-    private boolean isInactive() {
+    private boolean isInactiveTime() {
         return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
+    }
+
+    private void inactiveProcess() {
+        try {
+            Thread.sleep(ChronoUnit.MILLIS.between(LocalDateTime.now(), inactiveEnd));
+        } catch (InterruptedException e) {
+            throw new ApplicationException(e);
+        }
+        throw new ApplicationException("forced termination for activate");
     }
 }
