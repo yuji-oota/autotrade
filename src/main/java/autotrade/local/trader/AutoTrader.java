@@ -129,13 +129,13 @@ public class AutoTrader {
             return;
         }
 
+        if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 20) {
+            // 閾値間隔が狭い場合は注文しない
+            return;
+        }
         switch (position.getStatus()) {
         case NONE:
             // ポジションがない場合
-            if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 20) {
-                // 閾値間隔が狭い場合は注文しない
-                return;
-            }
             if (indicateAnalyzer.isNextIndicateWithin(5) || indicateAnalyzer.isPrevIndicateWithin(10) ) {
                 // 指標が近い場合は注文しない
                 return;
@@ -155,10 +155,6 @@ public class AutoTrader {
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合
-            if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 20) {
-                // 閾値間隔が狭い場合は注文しない
-                return;
-            }
             int bidLot = position.getAskLot() * 2 - position.getBidLot();
             wrapper.setLot(position.getAskLot() >= sameLimit ? sameLimit - position.getBidLot() : bidLot);
             if (rate.getBid() <= rateAnalyzer.getBidThreshold()
@@ -170,10 +166,6 @@ public class AutoTrader {
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
-            if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 20) {
-                // 閾値間隔が狭い場合は注文しない
-                return;
-            }
             int askLot = position.getBidLot() * 2 - position.getAskLot();
             wrapper.setLot(position.getBidLot() >= sameLimit ? sameLimit - position.getAskLot() : askLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
@@ -184,15 +176,11 @@ public class AutoTrader {
             }
             break;
         case SAME:
-            if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() > 20) {
-                // 閾値間隔が広い場合は注文しない
-                return;
-            }
-            if (position.getAskProfit() > 0) {
+            if (rate.getBid() <= rateAnalyzer.getBidThreshold() && position.getAskProfit() > 0) {
                 wrapper.fixAsk();
                 log.info("same position recovery ask profit {}", position.getAskProfit());
             }
-            if (position.getBidProfit() > 0) {
+            if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && position.getBidProfit() > 0) {
                 wrapper.fixBid();
                 log.info("same position recovery bid profit {}", position.getBidProfit());
             }
