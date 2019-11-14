@@ -133,7 +133,7 @@ public class AutoTrader {
                 wrapper.orderBid();
                 rateAnalyzer.setLastOrderRate(rate);
             }
-
+            break;
         case ASK_SIDE:
             // 買いポジションが多い場合
             int bidLot = position.getAskLot() * 2 - position.getBidLot();
@@ -145,7 +145,7 @@ public class AutoTrader {
                 wrapper.orderBid();
                 rateAnalyzer.setLastOrderRate(rate);
             }
-
+            break;
         case BID_SIDE:
             // 売りポジションが多い場合
             int askLot = position.getBidLot() * 2 - position.getAskLot();
@@ -171,6 +171,7 @@ public class AutoTrader {
                 wrapper.fixBid();
                 log.info("same recovery bid profit {}", wrapper.getBidProfit());
             }
+            break;
         default:
         }
 
