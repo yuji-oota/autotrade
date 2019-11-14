@@ -22,12 +22,12 @@ public class AutoTrader {
 
     private int targetAmount;
     private int initialLot;
-    private int maxLot;
+    private int sameLimit;
 
     private AutoTrader() {
         targetAmount = Integer.parseInt(AutoTradeProperties.get("autotrade.targetAmount"));
         initialLot = Integer.parseInt(AutoTradeProperties.get("autotrade.initialLot"));
-        maxLot = Integer.parseInt(AutoTradeProperties.get("autotrade.maxLot"));
+        sameLimit = Integer.parseInt(AutoTradeProperties.get("autotrade.sameLimit"));
         rateAnalyzer = new RateAanalyzer();
     }
 
@@ -137,7 +137,7 @@ public class AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
             int bidLot = position.getAskLot() * 2 - position.getBidLot();
-            wrapper.setLot(bidLot > maxLot ? 8 : bidLot);
+            wrapper.setLot(position.getAskLot() >= sameLimit ? sameLimit - position.getBidLot() : bidLot);
             if (rate.getBid() <= rateAnalyzer.getBidThreshold()
                     && rate.getBid() < rateAnalyzer.getLastOrderRate().getBid()) {
                 // 閾値を超えた場合、且つ前回注文時のBidよりもレートが低い場合
@@ -149,7 +149,7 @@ public class AutoTrader {
         case BID_SIDE:
             // 売りポジションが多い場合
             int askLot = position.getBidLot() * 2 - position.getAskLot();
-            wrapper.setLot(askLot > maxLot ? 8 : askLot);
+            wrapper.setLot(position.getBidLot() >= sameLimit ? sameLimit - position.getAskLot() : askLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
                     && rateAnalyzer.getLastOrderRate().getAsk() < rate.getAsk()) {
                 // 閾値を超えた場合、且つ前回注文時のAskよりもレートが高い場合

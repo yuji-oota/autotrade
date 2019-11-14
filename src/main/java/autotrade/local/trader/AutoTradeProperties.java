@@ -24,7 +24,7 @@ login:
 autotrade:
   targetAmount: xxx
   initialLot: xxx
-  maxLot: xxx
+  sameLimit: xxx
 
  *
  */
