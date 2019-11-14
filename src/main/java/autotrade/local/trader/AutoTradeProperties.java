@@ -25,6 +25,9 @@ autotrade:
   targetAmount: xxx
   initialLot: xxx
   sameLimit: xxx
+  inactive:
+    start: xx:xx
+    end: xx:xx
 
  *
  */

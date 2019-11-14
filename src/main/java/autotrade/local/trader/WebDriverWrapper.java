@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,9 +33,7 @@ public class WebDriverWrapper {
                 .distinct()
                 .map(s -> {
                     String time = s.substring(s.length() - 5);
-                    int hour = Integer.parseInt(time.split(":")[0]);
-                    int minute = Integer.parseInt(time.split(":")[1]);
-                    return LocalDateTime.of(targetDate, LocalTime.of(hour, minute));
+                    return LocalDateTime.of(targetDate, LocalTime.from(DateTimeFormatter.ISO_TIME.parse(time)));
                 })
                 .collect(Collectors.toList());
     }

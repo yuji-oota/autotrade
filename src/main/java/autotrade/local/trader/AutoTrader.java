@@ -2,6 +2,8 @@ package autotrade.local.trader;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,10 +26,15 @@ public class AutoTrader {
     private int initialLot;
     private int sameLimit;
 
+    private LocalTime inactiveStart;
+    private LocalTime inactiveEnd;
+
     private AutoTrader() {
         targetAmount = Integer.parseInt(AutoTradeProperties.get("autotrade.targetAmount"));
         initialLot = Integer.parseInt(AutoTradeProperties.get("autotrade.initialLot"));
         sameLimit = Integer.parseInt(AutoTradeProperties.get("autotrade.sameLimit"));
+        inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
+        inactiveEnd = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
         rateAnalyzer = new RateAanalyzer();
     }
 
@@ -50,6 +57,7 @@ public class AutoTrader {
             List<LocalDateTime> indicates = wrapper.getIndicates(LocalDate.now());
             // 翌日分
             indicates.addAll(wrapper.getIndicates(LocalDate.now().plusDays(1)));
+            log.info("indicates {}", indicates);
             indicateAnalyzer = new IndicateAnalyzer(indicates);
 
             // ログイン
@@ -123,41 +131,53 @@ public class AutoTrader {
                 // 指標が近い場合は注文しない
                 return;
             }
+            if (isInactive()) {
+                // 非活性時間は注文しない
+                return;
+            }
 
             wrapper.setLot(initialLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
                 wrapper.orderAsk();
-                rateAnalyzer.setLastOrderRate(rate);
+                rateAnalyzer.setLastOrderAskRate(rate);
             }
             if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
                 wrapper.orderBid();
-                rateAnalyzer.setLastOrderRate(rate);
+                rateAnalyzer.setLastOrderBidRate(rate);
             }
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合
+            if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 20) {
+                // 閾値間隔が狭い場合は注文しない
+                return;
+            }
             int bidLot = position.getAskLot() * 2 - position.getBidLot();
             wrapper.setLot(position.getAskLot() >= sameLimit ? sameLimit - position.getBidLot() : bidLot);
             if (rate.getBid() <= rateAnalyzer.getBidThreshold()
-                    && rate.getBid() < rateAnalyzer.getLastOrderRate().getBid()) {
-                // 閾値を超えた場合、且つ前回注文時のBidよりもレートが低い場合
+                    && rate.getBid() < rateAnalyzer.getLastOrderAskRate().getBid()) {
+                // 閾値を超えた場合、且つ前回Ask注文時のBidよりもレートが低い場合
                 // 逆ポジション取得
                 wrapper.orderBid();
-                rateAnalyzer.setLastOrderRate(rate);
+                rateAnalyzer.setLastOrderBidRate(rate);
             }
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
+            if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 20) {
+                // 閾値間隔が狭い場合は注文しない
+                return;
+            }
             int askLot = position.getBidLot() * 2 - position.getAskLot();
             wrapper.setLot(position.getBidLot() >= sameLimit ? sameLimit - position.getAskLot() : askLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
-                    && rateAnalyzer.getLastOrderRate().getAsk() < rate.getAsk()) {
-                // 閾値を超えた場合、且つ前回注文時のAskよりもレートが高い場合
+                    && rateAnalyzer.getLastOrderBidRate().getAsk() < rate.getAsk()) {
+                // 閾値を超えた場合、且つ前回Bid注文時のAskよりもレートが高い場合
                 // 逆ポジション取得
                 wrapper.orderAsk();
-                rateAnalyzer.setLastOrderRate(rate);
+                rateAnalyzer.setLastOrderAskRate(rate);
             }
-
+            break;
         case SAME:
             if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() > 20) {
                 // 閾値間隔が広い場合は注文しない
@@ -165,11 +185,11 @@ public class AutoTrader {
             }
             if (position.getAskProfit() > 0) {
                 wrapper.fixAsk();
-                log.info("same recovery ask profit {}", wrapper.getAskProfit());
+                log.info("same position recovery ask profit {}", position.getAskProfit());
             }
             if (position.getBidProfit() > 0) {
                 wrapper.fixBid();
-                log.info("same recovery bid profit {}", wrapper.getBidProfit());
+                log.info("same position recovery bid profit {}", position.getBidProfit());
             }
             break;
         default:
@@ -177,4 +197,7 @@ public class AutoTrader {
 
     }
 
+    private boolean isInactive() {
+        return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
+    }
 }
