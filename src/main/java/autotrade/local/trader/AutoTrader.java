@@ -161,7 +161,7 @@ public class AutoTrader {
             wrapper.setLot(position.getAskLot() >= sameLimit ? sameLimit - position.getBidLot() : bidLot);
             if (rate.getBid() <= rateAnalyzer.getBidThreshold()
                     && rate.getBid() < position.getAskAverageRate()) {
-                // 閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
+                // 下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
                 wrapper.orderBid();
             }
@@ -172,17 +172,22 @@ public class AutoTrader {
             wrapper.setLot(position.getBidLot() >= sameLimit ? sameLimit - position.getAskLot() : askLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
                     && position.getBidAverageRate() < rate.getAsk()) {
-                // 閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
+                // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
                 wrapper.orderAsk();
             }
             break;
         case SAME:
+            // ポジションが同数の場合
             if (rate.getBid() <= rateAnalyzer.getBidThreshold() && position.getAskProfit() > 0) {
+                // 下値閾値を超えて利益が出ている場合
+                // Ask決済
                 wrapper.fixAsk();
                 log.info("same position recovery ask profit {}", position.getAskProfit());
             }
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && position.getBidProfit() > 0) {
+                // 上値閾値を超えて利益が出ている場合
+                // Ask決済
                 wrapper.fixBid();
                 log.info("same position recovery bid profit {}", position.getBidProfit());
             }
