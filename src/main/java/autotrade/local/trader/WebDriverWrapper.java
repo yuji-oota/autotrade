@@ -14,6 +14,7 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -47,9 +48,9 @@ public class WebDriverWrapper {
         driver.navigate().to("https://trade.fx.dmm.com/comportal/SsoOutbound.do?subSystemType=-20");
         driver.manage().window().maximize();
     }
-    public void settings() throws InterruptedException {
+    public void settings() {
         driver.findElement(By.xpath("//input[@uifield='orderSettings']")).click();
-        Thread.sleep(1000);
+        AutoTradeUtils.sleep(1000);
 
         driver.findElement(By.xpath("//div[contains(text(),\"その他設定\")]")).click();
         driver.findElement(By.xpath("//input[@uifield='displayGroupSettlementConfirmLayerFlag']")).click();

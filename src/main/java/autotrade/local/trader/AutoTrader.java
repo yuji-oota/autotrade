@@ -7,11 +7,12 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
-import autotrade.local.exception.ApplicationException;
+import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -75,6 +76,7 @@ public class AutoTrader {
 
             // 設定
             wrapper.settings();
+            Thread.sleep(1000);
 
             // 繰り返し実行
             while(true) {
@@ -142,11 +144,14 @@ public class AutoTrader {
                 // 指標が近い場合は注文しない
                 return;
             }
-//            if (isInactiveTime()) {
-//                // 非活性時間は注文しない
-//                inactiveProcess();
-//                return;
-//            }
+            if (isInactiveTime()) {
+                // 非活性時間は注文しない
+                // 非活性時間の終了までスリープする
+                long minutesToActive = ChronoUnit.MINUTES.between(LocalDateTime.now(), inactiveEnd);
+                log.info("application will sleep {} minutes, because of inactive time.", minutesToActive);
+                AutoTradeUtils.sleep(TimeUnit.MINUTES.toMillis(minutesToActive));
+                return;
+            }
 
             wrapper.setLot(initialLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
@@ -202,12 +207,4 @@ public class AutoTrader {
         return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
     }
 
-    private void inactiveProcess() {
-        try {
-            Thread.sleep(ChronoUnit.MILLIS.between(LocalDateTime.now(), inactiveEnd));
-        } catch (InterruptedException e) {
-            throw new ApplicationException(e);
-        }
-//        throw new ApplicationException("forced termination for activate");
-    }
 }
