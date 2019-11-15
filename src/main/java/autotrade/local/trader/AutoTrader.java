@@ -67,6 +67,7 @@ public class AutoTrader {
 
             // ログイン
             wrapper.login();
+            Thread.sleep(15000);
 
             // ツール起動
             wrapper.startUpTradeTool();
@@ -130,7 +131,7 @@ public class AutoTrader {
             return;
         }
 
-        if (rateAnalyzer.getAskThreshold() - rateAnalyzer.getBidThreshold() < 20) {
+        if (rateAnalyzer.rangeWithin(10) < 20) {
             // 閾値間隔が狭い場合は注文しない
             return;
         }
@@ -141,11 +142,11 @@ public class AutoTrader {
                 // 指標が近い場合は注文しない
                 return;
             }
-            if (isInactiveTime()) {
-                // 非活性時間は注文しない
-                inactiveProcess();
-                return;
-            }
+//            if (isInactiveTime()) {
+//                // 非活性時間は注文しない
+//                inactiveProcess();
+//                return;
+//            }
 
             wrapper.setLot(initialLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
@@ -207,6 +208,6 @@ public class AutoTrader {
         } catch (InterruptedException e) {
             throw new ApplicationException(e);
         }
-        throw new ApplicationException("forced termination for activate");
+//        throw new ApplicationException("forced termination for activate");
     }
 }

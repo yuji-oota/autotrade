@@ -27,16 +27,34 @@ public class RateAanalyzer {
         currentRate = rate;
         rates.add(currentRate);
         rates = rates.stream()
-                .filter(r -> ChronoUnit.MINUTES.between(r.getTimestamp(), LocalDateTime.now()) <= 10)
+                .filter(r -> ChronoUnit.MINUTES.between(r.getTimestamp(), LocalDateTime.now()) <= 15)
                 .collect(Collectors.toList());
 
-        // ratesから基準値取得
-        int max = rates.stream().map(Rate::getAsk).max(Comparator.naturalOrder()).get();
-        int min = rates.stream().map(Rate::getBid).min(Comparator.naturalOrder()).get();
-
         // 売買閾値設定
-        askThreshold = max;
-        bidThreshold = min;
+        askThreshold = maxWithin(10);
+        bidThreshold = minWithin(10);
+        if (askThreshold - bidThreshold > 100) {
+            askThreshold = maxWithin(1);
+            bidThreshold = minWithin(1);
+        }
     }
 
+    public int rangeWithin(int minutes) {
+        return maxWithin(minutes) - minWithin(minutes);
+    }
+
+    private int maxWithin(int minutes) {
+        return rates.stream()
+                .filter(r -> ChronoUnit.MINUTES.between(r.getTimestamp(), LocalDateTime.now()) <= minutes)
+                .map(Rate::getAsk)
+                .max(Comparator.naturalOrder())
+                .get();
+    }
+    private int minWithin(int minutes) {
+        return rates.stream()
+                .filter(r -> ChronoUnit.MINUTES.between(r.getTimestamp(), LocalDateTime.now()) <= minutes)
+                .map(Rate::getBid)
+                .min(Comparator.naturalOrder())
+                .get();
+    }
 }
