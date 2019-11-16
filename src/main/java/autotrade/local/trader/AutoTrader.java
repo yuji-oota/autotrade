@@ -219,7 +219,7 @@ public class AutoTrader {
             }
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && latestInfo.getBidProfit() > 0) {
                 // 上値閾値を超えて利益が出ている場合
-                // Ask決済
+                // Bid決済
                 wrapper.fixBid();
                 log.info("same position recovery start. bid profit {}, total profit {}", latestInfo.getBidProfit(), latestInfo.getTotalProfit());
             }
