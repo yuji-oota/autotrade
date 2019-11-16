@@ -38,6 +38,7 @@ public class AutoTraderTest {
         return method;
     }
 
+    @SuppressWarnings("unchecked")
     private <T> T invokePrivateMethod(Method method, Object object, Object... args) {
         try {
             return (T) method.invoke(object, args);
