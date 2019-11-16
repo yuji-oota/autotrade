@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class Position {
+public class LatestInfo {
 
     private int askLot;
     private int bidLot;
@@ -13,9 +13,15 @@ public class Position {
     private int bidAverageRate;
     private int askProfit;
     private int bidProfit;
+    private int todaysProfit;
+    private Rate rate;
 
-    public int getProfit () {
+    public int getProfit() {
         return askProfit + bidProfit;
+    }
+
+    public int getTotalProfit() {
+        return getProfit() + todaysProfit;
     }
 
     public PositionStatus getStatus() {
@@ -32,5 +38,25 @@ public class Position {
         }
 
         return PositionStatus.SAME;
+    }
+
+    public boolean isRecovering(int initialLot) {
+        switch (getStatus()) {
+        case ASK_SIDE:
+            if (askLot > initialLot && bidLot == 0) {
+                return true;
+            }
+            break;
+        case BID_SIDE:
+            if (bidLot > initialLot && askLot == 0) {
+                return true;
+            }
+            break;
+
+        case NONE:
+        case SAME:
+            break;
+        }
+        return false;
     }
 }

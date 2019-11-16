@@ -78,6 +78,9 @@ public class WebDriverWrapper {
     public String getBidProfit() {
         return driver.findElement(By.xpath("//span[@uifield='bidEvaluationPl']")).getText();
     }
+    public String getTodaysProfit() {
+        return driver.findElement(By.xpath("//span[@uifield='dailyPlTotalJPY']")).getText();
+    }
     public String getBidRate() {
         return driver.findElement(By.xpath("//div[@uifield='bidStreamingButton']/div/div[@class='small']")).getText()
                 + driver.findElement(By.xpath("//div[@uifield='bidStreamingButton']/div/div[@class='big']")).getText()

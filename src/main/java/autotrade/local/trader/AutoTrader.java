@@ -93,40 +93,66 @@ public class AutoTrader {
 
     private void trade() {
 
-        // ポジション確認
-        Position position = Position.builder()
+        // 最新情報取得
+        LatestInfo latestInfo = LatestInfo.builder()
                 .askLot(Integer.parseInt(wrapper.getAskLot().replace(",", "")))
                 .bidLot(Integer.parseInt(wrapper.getBidLot().replace(",", "")))
                 .askAverageRate(Integer.parseInt(wrapper.getAskAverageRate().replace(".", "")))
                 .bidAverageRate(Integer.parseInt(wrapper.getBidAverageRate().replace(".", "")))
                 .askProfit(Integer.parseInt(wrapper.getAskProfit().replace(",", "")))
                 .bidProfit(Integer.parseInt(wrapper.getBidProfit().replace(",", "")))
+                .todaysProfit(Integer.parseInt(wrapper.getTodaysProfit().replace(",", "")))
+                .rate(Rate.builder()
+                    .ask(Integer.parseInt(wrapper.getAskRate().replace(".", "")))
+                    .bid(Integer.parseInt(wrapper.getBidRate().replace(".", "")))
+                    .timestamp(LocalDateTime.now())
+                    .build())
                 .build();
 
-        if (position.getProfit() >= targetAmount) {
-            // 目標金額達成で利益確定
-            wrapper.fixAll();
-            log.info("profit {}", position.getProfit());
+        // 最新情報を元に利益確定
+        fix(latestInfo);
 
-            // ポジション初期化
-            position = Position.builder().build();
-        }
-
-        // レート取得
-        Rate rate = Rate.builder()
-                .ask(Integer.parseInt(wrapper.getAskRate().replace(".", "")))
-                .bid(Integer.parseInt(wrapper.getBidRate().replace(".", "")))
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        // 注文
-        order(position, rate);
+        // 最新情報を元に注文
+        order(latestInfo);
 
         // analizerにレート追加
-        rateAnalyzer.add(rate);
+        rateAnalyzer.add(latestInfo.getRate());
     }
 
-    private void order(Position position, Rate rate) {
+    private void fix(LatestInfo latestInfo) {
+
+        // 通常の利益確定判定
+        if (latestInfo.getProfit() >= targetAmount) {
+            // 目標金額達成で利益確定
+            wrapper.fixAll();
+            log.info("achieved target amount. profit {}, total profit {}", latestInfo.getProfit(), latestInfo.getTotalProfit());
+        }
+
+        // Sameポジション発生時の利益確定判定
+        switch (latestInfo.getStatus()) {
+        case NONE:
+            SameManager.close();
+            break;
+        case SAME:
+            SameManager.setProfit(latestInfo.getTodaysProfit());
+            break;
+        case ASK_SIDE:
+        case BID_SIDE:
+            if (latestInfo.isRecovering(initialLot)) {
+                // Sameポジション回復中の場合
+                if (SameManager.getInstance().isRecovered(latestInfo)) {
+                    // Sameポジション回復達成で利益確定
+                    wrapper.fixAll();
+                    log.info("same position recovery done. profit {}, total profit {}", latestInfo.getProfit(), latestInfo.getTotalProfit());
+                }
+            }
+            break;
+        default:
+        }
+    }
+
+    private void order(LatestInfo latestInfo) {
+        Rate rate = latestInfo.getRate();
 
         if (ChronoUnit.MINUTES.between(bootDateTime, LocalDateTime.now()) < 10) {
             // 起動直後は注文しない
@@ -137,7 +163,7 @@ public class AutoTrader {
             // 閾値間隔が狭い場合は注文しない
             return;
         }
-        switch (position.getStatus()) {
+        switch (latestInfo.getStatus()) {
         case NONE:
             // ポジションがない場合
             if (indicateAnalyzer.isNextIndicateWithin(5) || indicateAnalyzer.isPrevIndicateWithin(10) ) {
@@ -163,10 +189,10 @@ public class AutoTrader {
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合
-            int bidLot = position.getAskLot() * 2 - position.getBidLot();
-            wrapper.setLot(position.getAskLot() >= sameLimit ? sameLimit - position.getBidLot() : bidLot);
+            int bidLot = latestInfo.getAskLot() * 2 - latestInfo.getBidLot();
+            wrapper.setLot(latestInfo.getAskLot() >= sameLimit ? sameLimit - latestInfo.getBidLot() : bidLot);
             if (rate.getBid() <= rateAnalyzer.getBidThreshold()
-                    && rate.getBid() < position.getAskAverageRate()) {
+                    && rate.getBid() < latestInfo.getAskAverageRate()) {
                 // 下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
                 wrapper.orderBid();
@@ -174,10 +200,10 @@ public class AutoTrader {
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
-            int askLot = position.getBidLot() * 2 - position.getAskLot();
-            wrapper.setLot(position.getBidLot() >= sameLimit ? sameLimit - position.getAskLot() : askLot);
+            int askLot = latestInfo.getBidLot() * 2 - latestInfo.getAskLot();
+            wrapper.setLot(latestInfo.getBidLot() >= sameLimit ? sameLimit - latestInfo.getAskLot() : askLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
-                    && position.getBidAverageRate() < rate.getAsk()) {
+                    && latestInfo.getBidAverageRate() < rate.getAsk()) {
                 // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
                 wrapper.orderAsk();
@@ -185,17 +211,17 @@ public class AutoTrader {
             break;
         case SAME:
             // ポジションが同数の場合
-            if (rate.getBid() <= rateAnalyzer.getBidThreshold() && position.getAskProfit() > 0) {
+            if (rate.getBid() <= rateAnalyzer.getBidThreshold() && latestInfo.getAskProfit() > 0) {
                 // 下値閾値を超えて利益が出ている場合
                 // Ask決済
                 wrapper.fixAsk();
-                log.info("same position recovery ask profit {}", position.getAskProfit());
+                log.info("same position recovery start. ask profit {}, total profit {}", latestInfo.getAskProfit(), latestInfo.getTotalProfit());
             }
-            if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && position.getBidProfit() > 0) {
+            if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && latestInfo.getBidProfit() > 0) {
                 // 上値閾値を超えて利益が出ている場合
                 // Ask決済
                 wrapper.fixBid();
-                log.info("same position recovery bid profit {}", position.getBidProfit());
+                log.info("same position recovery start. bid profit {}, total profit {}", latestInfo.getBidProfit(), latestInfo.getTotalProfit());
             }
             break;
         default:
