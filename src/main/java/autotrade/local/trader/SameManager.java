@@ -25,6 +25,10 @@ public class SameManager {
         return instance;
     }
 
+    public static boolean hasInstance() {
+        return Objects.nonNull(instance);
+    }
+
     public boolean isRecovered(LatestInfo latestInfo) {
         if (latestInfo.getTotalProfit() >= todaysProfitWhenSamed) {
             return true;

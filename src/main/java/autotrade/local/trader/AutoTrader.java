@@ -144,7 +144,7 @@ public class AutoTrader {
             break;
         case ASK_SIDE:
         case BID_SIDE:
-            if (latestInfo.isRecovering(initialLot)) {
+            if (SameManager.hasInstance()) {
                 // Sameポジション回復中の場合
                 if (SameManager.getInstance().isRecovered(latestInfo)) {
                     // Sameポジション回復達成で利益確定

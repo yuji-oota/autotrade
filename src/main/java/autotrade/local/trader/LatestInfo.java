@@ -39,24 +39,4 @@ public class LatestInfo {
 
         return PositionStatus.SAME;
     }
-
-    public boolean isRecovering(int initialLot) {
-        switch (getStatus()) {
-        case ASK_SIDE:
-            if (askLot > initialLot && bidLot == 0) {
-                return true;
-            }
-            break;
-        case BID_SIDE:
-            if (bidLot > initialLot && askLot == 0) {
-                return true;
-            }
-            break;
-
-        case NONE:
-        case SAME:
-            break;
-        }
-        return false;
-    }
 }
