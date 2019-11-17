@@ -45,7 +45,7 @@ public class AutoTradeProperties {
     private AutoTradeProperties() {
         try {
             properties = new Yaml().load(Files.newInputStream(Paths.get("application.yml")));
-            log.info("properties:{}", properties);
+            log.info("properties loaded successfully.");
         } catch (IOException e) {
             throw new ApplicationException(e);
         }
