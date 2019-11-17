@@ -1,14 +1,23 @@
 package autotrade.local;
 
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 public class Test {
 
     public static void main(String[] args) {
-        System.out.println(DateTimeFormatter.ISO_LOCAL_TIME.parse("05:00"));
-        System.out.println(LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse("09:00")));
 
+        Path logFile = Paths.get("log", "autotrade-local.log");
+        try {
+            System.out.println(ChronoUnit.MINUTES.between(Files.getLastModifiedTime(logFile).toInstant(), LocalDateTime.now()));
+        } catch (IOException e) {
+            // TODO 自動生成された catch ブロック
+            e.printStackTrace();
+        }
 
     }
 

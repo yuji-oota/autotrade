@@ -1,5 +1,9 @@
 package autotrade.local.trader;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -81,6 +85,8 @@ public class AutoTrader {
             // 繰り返し実行
             while(true) {
                 trade();
+                // ログファイルアップロード
+                uploadLog();
                 Thread.sleep(1000);
             }
         } catch(Exception e) {
@@ -231,6 +237,14 @@ public class AutoTrader {
 
     private boolean isInactiveTime() {
         return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
+    }
+
+    private static void uploadLog() throws IOException {
+        Path logFile = Paths.get("log", "autotrade-local.log");
+        if (System.currentTimeMillis() - Files.getLastModifiedTime(logFile).toMillis() < 1000) {
+            // 1秒以内に変更があった場合はアップロード
+            AwsS3ClientWrapper.upload(logFile);
+        }
     }
 
 }

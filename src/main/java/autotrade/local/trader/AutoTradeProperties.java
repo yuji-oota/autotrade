@@ -29,6 +29,11 @@ autotrade:
     start: xx:xx
     end: xx:xx
 
+aws:
+  s3:
+    bucketName: xxx
+    accessKey: xxx
+    secretKey: xxx
  *
  */
 @Slf4j
