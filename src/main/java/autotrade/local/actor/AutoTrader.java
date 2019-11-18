@@ -1,7 +1,5 @@
 package autotrade.local.actor;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
@@ -20,7 +18,6 @@ import autotrade.local.material.LatestInfo;
 import autotrade.local.material.Rate;
 import autotrade.local.utility.AutoTradeProperties;
 import autotrade.local.utility.AutoTradeUtils;
-import autotrade.local.utility.AwsS3ClientWrapper;
 import autotrade.local.utility.WebDriverWrapper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,11 +25,13 @@ import lombok.extern.slf4j.Slf4j;
 public class AutoTrader {
 
     private static AutoTrader instance;
+    private static Path logFile = Paths.get("log", "autotrade-local.log");
 
     private WebDriver driver;
     private WebDriverWrapper wrapper;
     private RateAanalyzer rateAnalyzer;
     private IndicateAnalyzer indicateAnalyzer;
+    private UploadManager uploadManager;
 
     private int targetAmount;
     private int initialLot;
@@ -51,6 +50,7 @@ public class AutoTrader {
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
         rateAnalyzer = new RateAanalyzer();
+        uploadManager = new UploadManager();
     }
 
     public static AutoTrader getInstance() {
@@ -91,8 +91,7 @@ public class AutoTrader {
             while(true) {
                 trade();
                 // ログファイルアップロード
-                uploadLog();
-                Thread.sleep(1000);
+                uploadManager.upload(logFile);
             }
         } catch(Exception e) {
             log.error(e.getMessage(), e);
@@ -242,14 +241,6 @@ public class AutoTrader {
 
     private boolean isInactiveTime() {
         return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
-    }
-
-    private static void uploadLog() throws IOException {
-        Path logFile = Paths.get("log", "autotrade-local.log");
-        if (System.currentTimeMillis() - Files.getLastModifiedTime(logFile).toMillis() < 1000) {
-            // 1秒以内に変更があった場合はアップロード
-            AwsS3ClientWrapper.upload(logFile);
-        }
     }
 
 }
