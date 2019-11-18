@@ -1,4 +1,4 @@
-package autotrade.local.trader;
+package autotrade.local.actor;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

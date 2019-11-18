@@ -1,4 +1,4 @@
-package autotrade.local.trader;
+package autotrade.local.utility;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
@@ -14,7 +14,6 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

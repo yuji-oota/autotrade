@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import org.junit.Before;
 import org.junit.Test;
 
+import autotrade.local.actor.AutoTrader;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

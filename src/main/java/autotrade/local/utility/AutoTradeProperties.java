@@ -1,4 +1,4 @@
-package autotrade.local.trader;
+package autotrade.local.utility;
 
 import java.io.IOException;
 import java.nio.file.Files;

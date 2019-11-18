@@ -1,8 +1,9 @@
-package autotrade.local.trader;
+package autotrade.local.actor;
 
 import java.util.Objects;
 
 import autotrade.local.exception.ApplicationException;
+import autotrade.local.material.LatestInfo;
 
 public class SameManager {
 

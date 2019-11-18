@@ -1,4 +1,4 @@
-package autotrade.local.trader;
+package autotrade.local.material;
 
 import java.time.LocalDateTime;
 

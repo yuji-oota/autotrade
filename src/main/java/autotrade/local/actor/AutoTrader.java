@@ -1,4 +1,4 @@
-package autotrade.local.trader;
+package autotrade.local.actor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,7 +16,12 @@ import java.util.concurrent.TimeUnit;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
+import autotrade.local.material.LatestInfo;
+import autotrade.local.material.Rate;
+import autotrade.local.utility.AutoTradeProperties;
 import autotrade.local.utility.AutoTradeUtils;
+import autotrade.local.utility.AwsS3ClientWrapper;
+import autotrade.local.utility.WebDriverWrapper;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

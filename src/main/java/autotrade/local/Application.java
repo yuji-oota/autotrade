@@ -1,6 +1,6 @@
 package autotrade.local;
 
-import autotrade.local.trader.AutoTrader;
+import autotrade.local.actor.AutoTrader;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
