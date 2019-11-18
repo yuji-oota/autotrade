@@ -48,13 +48,13 @@ public class RateAanalyzer {
                 .filter(r -> ChronoUnit.MINUTES.between(r.getTimestamp(), LocalDateTime.now()) <= minutes)
                 .map(Rate::getAsk)
                 .max(Comparator.naturalOrder())
-                .get();
+                .orElse(0);
     }
     private int minWithin(int minutes) {
         return rates.stream()
                 .filter(r -> ChronoUnit.MINUTES.between(r.getTimestamp(), LocalDateTime.now()) <= minutes)
                 .map(Rate::getBid)
                 .min(Comparator.naturalOrder())
-                .get();
+                .orElse(0);
     }
 }
