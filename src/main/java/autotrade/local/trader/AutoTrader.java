@@ -179,7 +179,7 @@ public class AutoTrader {
             if (isInactiveTime()) {
                 // 非活性時間は注文しない
                 // 非活性時間の終了までスリープする
-                long minutesToActive = ChronoUnit.MINUTES.between(LocalDateTime.now(), inactiveEnd);
+                long minutesToActive = ChronoUnit.MINUTES.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
                 log.info("application will sleep {} minutes, because of inactive time.", minutesToActive);
                 AutoTradeUtils.sleep(TimeUnit.MINUTES.toMillis(minutesToActive));
                 return;
