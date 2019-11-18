@@ -33,6 +33,10 @@ public class RateAanalyzer {
         // 売買閾値設定
         askThreshold = maxWithin(10);
         bidThreshold = minWithin(10);
+        if (askThreshold - bidThreshold > 50) {
+            askThreshold = maxWithin(5);
+            bidThreshold = minWithin(5);
+        }
         if (askThreshold - bidThreshold > 100) {
             askThreshold = maxWithin(1);
             bidThreshold = minWithin(1);
