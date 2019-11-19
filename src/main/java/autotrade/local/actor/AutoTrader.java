@@ -122,8 +122,10 @@ public class AutoTrader {
         // 最新情報を元に利益確定
         fix(latestInfo);
 
-        // 最新情報を元に注文
-        order(latestInfo);
+        if (isOrderable(latestInfo)) {
+            // 最新情報を元に注文
+            order(latestInfo);
+        }
 
         // analizerにレート追加
         rateAnalyzer.add(latestInfo.getRate());
@@ -161,24 +163,22 @@ public class AutoTrader {
         }
     }
 
-    private void order(LatestInfo latestInfo) {
-        Rate rate = latestInfo.getRate();
-
+    private boolean isOrderable(LatestInfo latestInfo) {
         if (ChronoUnit.MINUTES.between(bootDateTime, LocalDateTime.now()) < 10) {
             // 起動直後は注文しない
-            return;
+            return false;
+        }
+        if (ChronoUnit.MINUTES.between(bootDateTime, LocalDateTime.now()) < 10) {
+            // 起動直後は注文しない
+            return false;
         }
 
-        if (rateAnalyzer.rangeWithin(10) < 20) {
-            // 閾値間隔が狭い場合は注文しない
-            return;
-        }
         switch (latestInfo.getStatus()) {
         case NONE:
-            // ポジションがない場合
+        case SAME:
             if (indicateAnalyzer.isNextIndicateWithin(5) || indicateAnalyzer.isPrevIndicateWithin(10) ) {
                 // 指標が近い場合は注文しない
-                return;
+                return false;
             }
             if (isInactiveTime()) {
                 // 非活性時間は注文しない
@@ -186,9 +186,24 @@ public class AutoTrader {
                 long minutesToActive = ChronoUnit.MINUTES.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
                 log.info("application will sleep {} minutes, because of inactive time.", minutesToActive);
                 AutoTradeUtils.sleep(TimeUnit.MINUTES.toMillis(minutesToActive));
-                return;
+                return false;
             }
+            if (latestInfo.getRate().getAsk() - latestInfo.getRate().getBid() > 3) {
+                // スプレッドが開いている場合は注文しない
+                return false;
+            }
+            break;
+        default:
+        }
+        return true;
+    }
 
+    private void order(LatestInfo latestInfo) {
+        Rate rate = latestInfo.getRate();
+
+        switch (latestInfo.getStatus()) {
+        case NONE:
+            // ポジションがない場合
             wrapper.setLot(initialLot);
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
                 wrapper.orderAsk();
