@@ -168,8 +168,8 @@ public class AutoTrader {
             // 起動直後は注文しない
             return false;
         }
-        if (ChronoUnit.MINUTES.between(bootDateTime, LocalDateTime.now()) < 10) {
-            // 起動直後は注文しない
+        if (rateAnalyzer.rangeWithin(10) < 20) {
+            // 閾値間隔が狭い場合は注文しない
             return false;
         }
 
