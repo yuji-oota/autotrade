@@ -137,7 +137,7 @@ public class AutoTrader {
         if (latestInfo.getProfit() >= targetAmount) {
             // 目標金額達成で利益確定
             wrapper.fixAll();
-            log.info("achieved target amount. profit {}, total profit {}", latestInfo.getProfit(), latestInfo.getTotalProfit());
+            log.info("achieved target amount. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getProfit(), latestInfo.getTotalProfit());
         }
 
         // Sameポジション発生時の利益確定判定
@@ -155,7 +155,7 @@ public class AutoTrader {
                 if (SameManager.getInstance().isRecovered(latestInfo)) {
                     // Sameポジション回復達成で利益確定
                     wrapper.fixAll();
-                    log.info("same position recovery done. profit {}, total profit {}", latestInfo.getProfit(), latestInfo.getTotalProfit());
+                    log.info("same position recovery done. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getProfit(), latestInfo.getTotalProfit());
                 }
             }
             break;
@@ -240,13 +240,13 @@ public class AutoTrader {
                 // 下値閾値を超えて利益が出ている場合
                 // Ask決済
                 wrapper.fixAsk();
-                log.info("same position recovery start. ask profit {}, total profit {}", latestInfo.getAskProfit(), latestInfo.getTotalProfit());
+                log.info("same position recovery start. rate {}, ask profit {}, total profit {}", latestInfo.getRate(), latestInfo.getAskProfit(), latestInfo.getTotalProfit());
             }
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && latestInfo.getBidProfit() > 0) {
                 // 上値閾値を超えて利益が出ている場合
                 // Bid決済
                 wrapper.fixBid();
-                log.info("same position recovery start. bid profit {}, total profit {}", latestInfo.getBidProfit(), latestInfo.getTotalProfit());
+                log.info("same position recovery start. rate {}, bid profit {}, total profit {}", latestInfo.getRate(), latestInfo.getBidProfit(), latestInfo.getTotalProfit());
             }
             break;
         default:
