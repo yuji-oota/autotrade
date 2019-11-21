@@ -4,7 +4,9 @@ import java.util.Objects;
 
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.LatestInfo;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class SameManager {
 
     private static SameManager instance;
@@ -17,6 +19,7 @@ public class SameManager {
     public static void setProfit(int todaysProfit) {
         if (Objects.isNull(instance)) {
             instance = new SameManager(todaysProfit);
+            log.info("same position started. todays profit {}", todaysProfit);
         }
     }
     public static SameManager getInstance() {

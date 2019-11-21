@@ -30,7 +30,7 @@ public class AutoTrader {
     private WebDriver driver;
     private WebDriverWrapper wrapper;
     private RateAanalyzer rateAnalyzer;
-    private IndicateAnalyzer indicateAnalyzer;
+    private IndicatorManager indicatorManager;
     private UploadManager uploadManager;
 
     private int targetAmount;
@@ -69,11 +69,11 @@ public class AutoTrader {
 
             // 指標を確認する
             // 本日分
-            List<LocalDateTime> indicates = wrapper.getIndicates(LocalDate.now());
+            List<LocalDateTime> indicators = wrapper.getIndicators(LocalDate.now());
             // 翌日分
-            indicates.addAll(wrapper.getIndicates(LocalDate.now().plusDays(1)));
-            log.info("indicates {}", indicates);
-            indicateAnalyzer = new IndicateAnalyzer(indicates);
+            indicators.addAll(wrapper.getIndicators(LocalDate.now().plusDays(1)));
+            log.info("indicates {}", indicators);
+            indicatorManager = new IndicatorManager(indicators);
 
             // ログイン
             wrapper.login();
@@ -176,7 +176,7 @@ public class AutoTrader {
         switch (latestInfo.getStatus()) {
         case NONE:
         case SAME:
-            if (indicateAnalyzer.isNextIndicateWithin(5) || indicateAnalyzer.isPrevIndicateWithin(10) ) {
+            if (indicatorManager.isNextIndicatorWithin(5) || indicatorManager.isPrevIndicatorWithin(10) ) {
                 // 指標が近い場合は注文しない
                 return false;
             }

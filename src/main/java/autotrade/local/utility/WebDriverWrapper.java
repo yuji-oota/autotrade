@@ -24,7 +24,7 @@ public class WebDriverWrapper {
     public WebDriverWrapper(WebDriver driver) {
         this.driver = driver;
     }
-    public List<LocalDateTime> getIndicates(LocalDate targetDate) {
+    public List<LocalDateTime> getIndicators(LocalDate targetDate) {
         driver.get("https://fx.dmm.com/market/indicators/");
         List<WebElement> elements = driver.findElements(By.xpath(
                 MessageFormat.format("//td[contains(text(),\"{0}月{1}日\")]", targetDate.getMonthValue(), targetDate.getDayOfMonth())));
