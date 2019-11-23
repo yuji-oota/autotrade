@@ -72,7 +72,7 @@ public class AutoTrader {
             List<LocalDateTime> indicators = wrapper.getIndicators(LocalDate.now());
             // 翌日分
             indicators.addAll(wrapper.getIndicators(LocalDate.now().plusDays(1)));
-            log.info("indicates {}", indicators);
+            log.info("indicators {}", indicators);
             indicatorManager = new IndicatorManager(indicators);
 
             // ログイン
