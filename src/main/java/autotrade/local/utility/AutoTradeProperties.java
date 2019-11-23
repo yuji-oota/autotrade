@@ -22,12 +22,17 @@ login:
   password: xxx
 
 autotrade:
-  targetAmount: xxx
-  initialLot: xxx
-  sameLimit: xxx
+  targetAmount:
+    oneTrade: xxx
+    oneDay: xxx
   inactive:
     start: xx:xx
     end: xx:xx
+  lot:
+    initial: xxx
+    sameLimit:
+      positive: xxx
+      negative: xxx
 
 aws:
   s3:

@@ -3,7 +3,6 @@ package autotrade.local.actor;
 import java.util.Objects;
 
 import autotrade.local.exception.ApplicationException;
-import autotrade.local.material.LatestInfo;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -33,8 +32,8 @@ public class SameManager {
         return Objects.nonNull(instance);
     }
 
-    public boolean isRecovered(LatestInfo latestInfo) {
-        if (latestInfo.getTotalProfit() >= todaysProfitWhenSamed) {
+    public boolean isRecovered(int totalProfit) {
+        if (totalProfit >= todaysProfitWhenSamed) {
             return true;
         }
         return false;
