@@ -16,10 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * ymlファイルの設定項目は以下を想定しています
-
-login:
-  username: xxx
-  password: xxx
+dmmfx:
+  login:
+    username: xxx
+    password: xxx
 
 autotrade:
   targetAmount:
@@ -39,6 +39,10 @@ aws:
     bucketName: xxx
     accessKey: xxx
     secretKey: xxx
+  elasticache:
+    redis:
+      uri: xxx
+      channel: xxx
  *
  */
 @Slf4j

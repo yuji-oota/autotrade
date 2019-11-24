@@ -26,6 +26,9 @@ dependencies {
     // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
     compile group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '3.141.59'
 
+    // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
+    compile group: 'io.lettuce', name: 'lettuce-core', version: '5.2.1.RELEASE'
+
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.10'

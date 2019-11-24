@@ -39,8 +39,8 @@ public class WebDriverWrapper {
     }
     public void login() {
         driver.get("https://trade.fx.dmm.com/comportal/Login.do?type=1");
-        driver.findElement(By.id("username")).sendKeys(AutoTradeProperties.get("login.username"));
-        driver.findElement(By.id("passwordShow")).sendKeys(AutoTradeProperties.get("login.password"));
+        driver.findElement(By.id("username")).sendKeys(AutoTradeProperties.get("dmmfx.login.username"));
+        driver.findElement(By.id("passwordShow")).sendKeys(AutoTradeProperties.get("dmmfx.login.password"));
         driver.findElement(By.id("LoginWindowBtn")).click();
     }
     public void startUpTradeTool() {

@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
+import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.material.LatestInfo;
 import autotrade.local.material.Rate;
 import autotrade.local.utility.AutoTradeProperties;
@@ -33,6 +34,7 @@ public class AutoTrader {
     private IndicatorManager indicatorManager;
     private UploadManager uploadManager;
     private LotManager lotManager;
+    private Messenger messenger;
 
     private int targetAmountOneTrade;
     private int targetAmountOneDay;
@@ -51,6 +53,13 @@ public class AutoTrader {
         rateAnalyzer = new RateAanalyzer();
         uploadManager = new UploadManager();
         lotManager = new LotManager();
+
+        MessageListener listener = new MessageListener();
+        listener.putCommand(ReservedMessage.LATESTINFO, v -> messenger.set(ReservedMessage.LATESTINFO.name(), getLatestInfo().toString()));
+        listener.putCommand(ReservedMessage.FIXASK, v -> wrapper.fixAsk());
+        listener.putCommand(ReservedMessage.FIXBID, v -> wrapper.fixBid());
+        listener.putCommand(ReservedMessage.FIXALL, v -> wrapper.fixAll());
+        messenger = new Messenger(listener);
     }
 
     public static AutoTrader getInstance() {
@@ -101,10 +110,8 @@ public class AutoTrader {
 
     }
 
-    private void trade() {
-
-        // 最新情報取得
-        LatestInfo latestInfo = LatestInfo.builder()
+    private LatestInfo getLatestInfo() {
+        return LatestInfo.builder()
                 .askLot(Integer.parseInt(wrapper.getAskLot().replace(",", "")))
                 .bidLot(Integer.parseInt(wrapper.getBidLot().replace(",", "")))
                 .askAverageRate(Integer.parseInt(wrapper.getAskAverageRate().replace(".", "")))
@@ -118,6 +125,12 @@ public class AutoTrader {
                     .timestamp(LocalDateTime.now())
                     .build())
                 .build();
+    }
+
+    private void trade() {
+
+        // 最新情報取得
+        LatestInfo latestInfo = getLatestInfo();
 
         // 最新情報を元に利益確定
         fix(latestInfo);
