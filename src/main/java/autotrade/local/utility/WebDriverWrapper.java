@@ -97,7 +97,6 @@ public class WebDriverWrapper {
             driver.findElement(By.xpath("//input[@uifield='orderQuantity']")).sendKeys(String.valueOf(lot));
             log.info("lot {}", lot);
         }
-
     }
     public void orderAsk() {
         driver.findElement(By.xpath("//div[@uifield='askStreamingButton']")).click();

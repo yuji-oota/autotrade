@@ -54,12 +54,15 @@ public class AutoTrader {
         uploadManager = new UploadManager();
         lotManager = new LotManager();
 
-        MessageListener listener = new MessageListener();
-        listener.putCommand(ReservedMessage.LATESTINFO, v -> messenger.set(ReservedMessage.LATESTINFO.name(), getLatestInfo().toString()));
-        listener.putCommand(ReservedMessage.FIXASK, v -> wrapper.fixAsk());
-        listener.putCommand(ReservedMessage.FIXBID, v -> wrapper.fixBid());
-        listener.putCommand(ReservedMessage.FIXALL, v -> wrapper.fixAll());
-        messenger = new Messenger(listener);
+        messenger = new Messenger(new MessageListener()
+                .putCommand(ReservedMessage.LATESTINFO, v -> messenger.set(ReservedMessage.LATESTINFO.name(), getLatestInfo().toString()))
+                .putCommand(ReservedMessage.FIXASK, v -> wrapper.fixAsk())
+                .putCommand(ReservedMessage.FIXBID, v -> wrapper.fixBid())
+                .putCommand(ReservedMessage.FIXALL, v -> wrapper.fixAll())
+                .putCommand(ReservedMessage.ORDERASK, v -> wrapper.orderAsk())
+                .putCommand(ReservedMessage.ORDERBID, v -> wrapper.orderBid())
+                .putCommand(ReservedMessage.FORCESAME, v -> forceSame())
+                );
     }
 
     public static AutoTrader getInstance() {
@@ -270,6 +273,19 @@ public class AutoTrader {
         default:
         }
 
+    }
+
+    private void forceSame() {
+        int askLot = Integer.parseInt(wrapper.getAskLot().replace(",", ""));
+        int bidLot = Integer.parseInt(wrapper.getBidLot().replace(",", ""));
+        if (bidLot < askLot) {
+            wrapper.setLot(askLot - bidLot);
+            wrapper.orderBid();
+        }
+        if (askLot < bidLot) {
+            wrapper.setLot(bidLot - askLot);
+            wrapper.orderAsk();
+        }
     }
 
     private boolean isInactiveTime() {

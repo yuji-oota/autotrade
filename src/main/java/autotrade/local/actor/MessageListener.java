@@ -16,6 +16,9 @@ public class MessageListener implements RedisPubSubListener<String, String> {
         FIXASK,
         FIXBID,
         FIXALL,
+        ORDERASK,
+        ORDERBID,
+        FORCESAME,
         LATESTINFO,
     }
 
@@ -26,8 +29,9 @@ public class MessageListener implements RedisPubSubListener<String, String> {
         commandMap.put(ReservedMessage.NONE, v -> log.info("message is not available."));
     }
 
-    public void putCommand(ReservedMessage command, Consumer<Void> consumer) {
+    public MessageListener putCommand(ReservedMessage command, Consumer<Void> consumer) {
         commandMap.put(command, consumer);
+        return this;
     }
 
     @Override
