@@ -56,12 +56,12 @@ public class AutoTrader {
 
         messenger = new Messenger(new MessageListener()
                 .putCommand(ReservedMessage.LATESTINFO, () -> messenger.set(ReservedMessage.LATESTINFO.name(), getLatestInfo().toString()))
-                .putCommand(ReservedMessage.FIXASK, wrapper::fixAsk)
-                .putCommand(ReservedMessage.FIXBID, wrapper::fixBid)
-                .putCommand(ReservedMessage.FIXALL, wrapper::fixAll)
-                .putCommand(ReservedMessage.ORDERASK, wrapper::orderAsk)
-                .putCommand(ReservedMessage.ORDERBID, wrapper::orderBid)
-                .putCommand(ReservedMessage.FORCESAME, this::forceSame)
+                .putCommand(ReservedMessage.FIXASK, () -> wrapper.fixAsk())
+                .putCommand(ReservedMessage.FIXBID, () -> wrapper.fixBid())
+                .putCommand(ReservedMessage.FIXALL, () -> wrapper.fixAll())
+                .putCommand(ReservedMessage.ORDERASK, () -> wrapper.orderAsk())
+                .putCommand(ReservedMessage.ORDERBID, () -> wrapper.orderBid())
+                .putCommand(ReservedMessage.FORCESAME, () -> this.forceSame())
                 );
     }
 
