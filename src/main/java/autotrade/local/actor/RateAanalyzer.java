@@ -9,7 +9,9 @@ import java.util.stream.Collectors;
 
 import autotrade.local.material.Rate;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 public class RateAanalyzer {
 
@@ -25,6 +27,9 @@ public class RateAanalyzer {
     }
 
     public void add(Rate rate) {
+        if (rate.getAsk() - rate.getBid() > 60) {
+            log.info("doubtful rate is added {}", rate);
+        }
         currentRate = rate;
         rates.add(currentRate);
         rates = rates.stream()
