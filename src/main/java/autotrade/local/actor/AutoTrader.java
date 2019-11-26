@@ -55,13 +55,13 @@ public class AutoTrader {
         lotManager = new LotManager();
 
         messenger = new Messenger(new MessageListener()
-                .putCommand(ReservedMessage.LATESTINFO, v -> messenger.set(ReservedMessage.LATESTINFO.name(), getLatestInfo().toString()))
-                .putCommand(ReservedMessage.FIXASK, v -> wrapper.fixAsk())
-                .putCommand(ReservedMessage.FIXBID, v -> wrapper.fixBid())
-                .putCommand(ReservedMessage.FIXALL, v -> wrapper.fixAll())
-                .putCommand(ReservedMessage.ORDERASK, v -> wrapper.orderAsk())
-                .putCommand(ReservedMessage.ORDERBID, v -> wrapper.orderBid())
-                .putCommand(ReservedMessage.FORCESAME, v -> forceSame())
+                .putCommand(ReservedMessage.LATESTINFO, () -> messenger.set(ReservedMessage.LATESTINFO.name(), getLatestInfo().toString()))
+                .putCommand(ReservedMessage.FIXASK, wrapper::fixAsk)
+                .putCommand(ReservedMessage.FIXBID, wrapper::fixBid)
+                .putCommand(ReservedMessage.FIXALL, wrapper::fixAll)
+                .putCommand(ReservedMessage.ORDERASK, wrapper::orderAsk)
+                .putCommand(ReservedMessage.ORDERBID, wrapper::orderBid)
+                .putCommand(ReservedMessage.FORCESAME, this::forceSame)
                 );
     }
 

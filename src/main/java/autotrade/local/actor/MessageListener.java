@@ -2,7 +2,6 @@ package autotrade.local.actor;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import io.lettuce.core.pubsub.RedisPubSubListener;
@@ -22,14 +21,14 @@ public class MessageListener implements RedisPubSubListener<String, String> {
         LATESTINFO,
     }
 
-    private Map<ReservedMessage, Consumer<Void>> commandMap;
+    private Map<ReservedMessage, Runnable> commandMap;
 
     public MessageListener() {
         commandMap = new HashMap<>();
-        commandMap.put(ReservedMessage.NONE, v -> log.info("message is not available."));
+        commandMap.put(ReservedMessage.NONE, () -> log.info("message is not available."));
     }
 
-    public MessageListener putCommand(ReservedMessage command, Consumer<Void> consumer) {
+    public MessageListener putCommand(ReservedMessage command, Runnable consumer) {
         commandMap.put(command, consumer);
         return this;
     }
@@ -42,7 +41,7 @@ public class MessageListener implements RedisPubSubListener<String, String> {
                 .findFirst()
                 .orElse(ReservedMessage.NONE);
         if (commandMap.containsKey(command)) {
-            commandMap.get(command).accept(null);
+            commandMap.get(command).run();
         }
     }
 
