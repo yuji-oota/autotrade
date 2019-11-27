@@ -27,7 +27,7 @@ public class RateAanalyzer {
     }
 
     public void add(Rate rate) {
-        if (rate.getAsk() - rate.getBid() > 60) {
+        if (rate.getSpread() > 60) {
             log.info("doubtful rate is added {}", rate);
         }
         currentRate = rate;
@@ -40,14 +40,27 @@ public class RateAanalyzer {
         askThreshold = maxWithin(10);
         bidThreshold = minWithin(10);
         int range = askThreshold - bidThreshold;
-        if (50 < range && range <= 100) {
-            askThreshold = maxWithin(2);
-            bidThreshold = minWithin(2);
+        if (range < 40) {
+            return;
         }
-        if (100 < range) {
-            askThreshold = maxWithin(1);
-            bidThreshold = minWithin(1);
+        int minutes = 5;
+        if (40 <= range) {
+            minutes = 5;
         }
+        if (55 <= range) {
+            minutes = 4;
+        }
+        if (70 <= range) {
+            minutes = 3;
+        }
+        if (85 <= range) {
+            minutes = 2;
+        }
+        if (100 <= range) {
+            minutes = 1;
+        }
+        askThreshold = maxWithin(minutes);
+        bidThreshold = minWithin(minutes);
     }
 
     public int rangeWithin(int minutes) {

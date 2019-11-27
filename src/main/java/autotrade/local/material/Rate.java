@@ -11,4 +11,8 @@ public class Rate {
     private int ask;
     private int bid;
     private LocalDateTime timestamp;
+
+    public int getSpread() {
+        return ask - bid;
+    }
 }
