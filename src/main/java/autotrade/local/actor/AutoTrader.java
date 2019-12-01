@@ -156,6 +156,11 @@ public class AutoTrader {
         case SAME:
             SameManager.setProfit(latestInfo.getTodaysProfit());
 
+            if (rateAnalyzer.rangeWithin(10) < 20) {
+                // 閾値間隔が狭い場合は注文しない
+                break;
+            }
+
             Rate rate = latestInfo.getRate();
             if (rate.getBid() <= rateAnalyzer.getBidThreshold() && latestInfo.getAskProfit() > 0) {
                 // 下値閾値を超えて利益が出ている場合
