@@ -167,12 +167,18 @@ public class AutoTrader {
                 // Ask決済
                 wrapper.fixAsk();
                 log.info("same position recovery start. rate {}, ask profit {}, total profit {}", latestInfo.getRate(), latestInfo.getAskProfit(), latestInfo.getTotalProfit());
+
+                // 残ポジションの利益を保存
+                SameManager.getInstance().setProfitWhenOneSideFixed(latestInfo.getBidProfit());
             }
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && latestInfo.getBidProfit() > 0) {
                 // 上値閾値を超えて利益が出ている場合
                 // Bid決済
                 wrapper.fixBid();
                 log.info("same position recovery start. rate {}, bid profit {}, total profit {}", latestInfo.getRate(), latestInfo.getBidProfit(), latestInfo.getTotalProfit());
+
+                // 残ポジションの利益を保存
+                SameManager.getInstance().setProfitWhenOneSideFixed(latestInfo.getAskProfit());
             }
             break;
         case ASK_SIDE:
@@ -261,6 +267,13 @@ public class AutoTrader {
                 // 逆ポジション取得
                 wrapper.orderBid();
             }
+            if (SameManager.hasInstance()
+                    && rate.getBid() <= rateAnalyzer.minWithin(1)
+                    && SameManager.getInstance().getProfitWhenOneSideFixed() < latestInfo.getAskProfit()) {
+                // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つSameリカバリ開始時よりも利益が出ている（マイナスが減っている）場合
+                // 逆ポジション取得
+                wrapper.orderBid();
+            }
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
@@ -268,6 +281,13 @@ public class AutoTrader {
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
                     && latestInfo.getBidAverageRate() < rate.getAsk()) {
                 // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
+                // 逆ポジション取得
+                wrapper.orderAsk();
+            }
+            if (SameManager.hasInstance()
+                    && rateAnalyzer.maxWithin(1) <= rate.getAsk()
+                    && SameManager.getInstance().getProfitWhenOneSideFixed() < latestInfo.getBidProfit()) {
+                // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つSameリカバリ開始時よりも利益が出ている（マイナスが減っている）場合
                 // 逆ポジション取得
                 wrapper.orderAsk();
             }

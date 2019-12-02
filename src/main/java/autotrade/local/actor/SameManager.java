@@ -3,6 +3,8 @@ package autotrade.local.actor;
 import java.util.Objects;
 
 import autotrade.local.exception.ApplicationException;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -10,6 +12,10 @@ public class SameManager {
 
     private static SameManager instance;
     private int todaysProfitWhenSamed;
+
+    @Setter
+    @Getter
+    private int profitWhenOneSideFixed;
 
     private SameManager(int todaysProfit) {
         this.todaysProfitWhenSamed = todaysProfit;
