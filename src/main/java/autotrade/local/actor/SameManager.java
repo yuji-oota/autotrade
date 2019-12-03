@@ -13,12 +13,22 @@ public class SameManager {
     private static SameManager instance;
     private int todaysProfitWhenSamed;
 
+    @Getter
+    @Setter
+    private RecoveryMode recoveryMode;
+
+    enum RecoveryMode {
+        NORMAL,
+        FORCE,
+    }
+
     @Setter
     @Getter
     private int profitWhenOneSideFixed;
 
     private SameManager(int todaysProfit) {
         this.todaysProfitWhenSamed = todaysProfit;
+        this.recoveryMode = RecoveryMode.NORMAL;
     }
 
     public static void setProfit(int todaysProfit) {
@@ -43,6 +53,10 @@ public class SameManager {
             return true;
         }
         return false;
+    }
+
+    public boolean isForce() {
+        return recoveryMode == RecoveryMode.FORCE;
     }
 
     public static void close() {

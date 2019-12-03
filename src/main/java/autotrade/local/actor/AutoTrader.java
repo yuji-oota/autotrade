@@ -15,6 +15,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import autotrade.local.actor.MessageListener.ReservedMessage;
+import autotrade.local.actor.SameManager.RecoveryMode;
 import autotrade.local.material.LatestInfo;
 import autotrade.local.material.Rate;
 import autotrade.local.utility.AutoTradeProperties;
@@ -62,6 +63,7 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.ORDERASK, () -> wrapper.orderAsk())
                 .putCommand(ReservedMessage.ORDERBID, () -> wrapper.orderBid())
                 .putCommand(ReservedMessage.FORCESAME, () -> this.forceSame())
+                .putCommand(ReservedMessage.FORCERECOVERY, () -> SameManager.getInstance().setRecoveryMode(RecoveryMode.FORCE))
                 );
     }
 
@@ -162,8 +164,8 @@ public class AutoTrader {
             }
 
             Rate rate = latestInfo.getRate();
-            if (rate.getBid() <= rateAnalyzer.getBidThreshold() && latestInfo.getAskProfit() > 0) {
-                // 下値閾値を超えて利益が出ている場合
+            if (rate.getBid() <= rateAnalyzer.getBidThreshold() && (latestInfo.getAskProfit() > 0 || SameManager.getInstance().isForce())) {
+                // 下値閾値を超えて（利益が出ている場合、または強制リカバリモードの場合）
                 // Ask決済
                 wrapper.fixAsk();
                 log.info("same position recovery start. rate {}, ask profit {}, total profit {}", latestInfo.getRate(), latestInfo.getAskProfit(), latestInfo.getTotalProfit());
@@ -171,8 +173,8 @@ public class AutoTrader {
                 // 残ポジションの利益を保存
                 SameManager.getInstance().setProfitWhenOneSideFixed(latestInfo.getBidProfit());
             }
-            if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && latestInfo.getBidProfit() > 0) {
-                // 上値閾値を超えて利益が出ている場合
+            if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && (latestInfo.getBidProfit() > 0 || SameManager.getInstance().isForce())) {
+                // 上値閾値を超えて（利益が出ている場合、または強制リカバリモードの場合）
                 // Bid決済
                 wrapper.fixBid();
                 log.info("same position recovery start. rate {}, bid profit {}, total profit {}", latestInfo.getRate(), latestInfo.getBidProfit(), latestInfo.getTotalProfit());
@@ -193,6 +195,9 @@ public class AutoTrader {
 
             // Sameポジション発生後の利益確定判定
             if (SameManager.hasInstance()) {
+                // モードを戻す
+                SameManager.getInstance().setRecoveryMode(RecoveryMode.NORMAL);
+
                 // Sameポジション回復中の場合
                 if (SameManager.getInstance().isRecovered(latestInfo.getTotalProfit())) {
                     // Sameポジション回復達成で利益確定

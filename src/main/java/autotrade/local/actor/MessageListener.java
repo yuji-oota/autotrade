@@ -19,6 +19,7 @@ public class MessageListener implements RedisPubSubListener<String, String> {
         ORDERBID,
         FORCESAME,
         LATESTINFO,
+        FORCERECOVERY,
     }
 
     private Map<ReservedMessage, Runnable> commandMap;
