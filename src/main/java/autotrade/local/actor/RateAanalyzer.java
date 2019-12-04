@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class RateAanalyzer {
 
-    private Rate currentRate;
     private List<Rate> rates;
     private int askThreshold;
     private int bidThreshold;
@@ -27,11 +26,11 @@ public class RateAanalyzer {
     }
 
     public void add(Rate rate) {
-        if (rate.getSpread() > 60) {
+        if (rate.isDoubtful()) {
             log.info("doubtful rate is added {}", rate);
+        } else {
+            rates.add(rate);
         }
-        currentRate = rate;
-        rates.add(currentRate);
         rates = rates.stream()
                 .filter(r -> ChronoUnit.MINUTES.between(r.getTimestamp(), LocalDateTime.now()) <= 15)
                 .collect(Collectors.toList());

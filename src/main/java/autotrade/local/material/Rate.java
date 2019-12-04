@@ -15,4 +15,11 @@ public class Rate {
     public int getSpread() {
         return ask - bid;
     }
+
+    public boolean isDoubtful() {
+        if (getSpread() > 60) {
+            return true;
+        }
+        return false;
+    }
 }
