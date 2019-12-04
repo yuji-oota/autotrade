@@ -103,9 +103,6 @@ public class AutoTrader {
 
             // 繰り返し実行
             while(true) {
-                // subscribe接続
-                messenger.subscribe();
-
                 // 取引
                 trade();
 
