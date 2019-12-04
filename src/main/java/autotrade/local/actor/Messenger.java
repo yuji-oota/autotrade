@@ -5,7 +5,9 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class Messenger {
 
     private RedisClient redisClient;
@@ -16,9 +18,7 @@ public class Messenger {
         redisClient = RedisClient.create(AutoTradeProperties.get("aws.elasticache.redis.uri"));
         pubSubConnection = redisClient.connectPubSub();
         pubSubConnection.addListener(listener);
-        String channel = AutoTradeProperties.get("aws.elasticache.redis.channel");
-        pubSubConnection.sync().subscribe(channel);
-        set("channel", channel);
+        subscribe();
     }
 
     public void set(String key, String value) {
@@ -27,4 +27,13 @@ public class Messenger {
         }
     }
 
+    public void subscribe() {
+
+        if (!pubSubConnection.isOpen()) {
+            log.info("open subscribe connection.");
+            String channel = AutoTradeProperties.get("aws.elasticache.redis.channel");
+            pubSubConnection.sync().subscribe(channel);
+            set("channel", channel);
+        }
+    }
 }
