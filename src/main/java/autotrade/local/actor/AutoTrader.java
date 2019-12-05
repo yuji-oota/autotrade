@@ -160,26 +160,36 @@ public class AutoTrader {
         case SAME:
             SameManager.setProfit(latestInfo.getTodaysProfit());
 
+            if (latestInfo.getAskAverageRate() - latestInfo.getBidAverageRate() > 100) {
+                // ポジション間隔が広い場合は強制リカバリ
+                SameManager.getInstance().setRecoveryMode(RecoveryMode.FORCEFIXBID);
+                if ((latestInfo.getAskAverageRate() + latestInfo.getBidAverageRate()) / 2 < latestInfo.getRate().getAsk()) {
+                    SameManager.getInstance().setRecoveryMode(RecoveryMode.FORCEFIXASK);
+                }
+            }
+
             if (rateAnalyzer.rangeWithin(10) < 20) {
                 // 閾値間隔が狭い場合は注文しない
                 break;
             }
 
             Rate rate = latestInfo.getRate();
-            if (rate.getBid() <= rateAnalyzer.getBidThreshold() && (latestInfo.getAskProfit() > 0 || SameManager.getInstance().isForce())) {
+            if (rate.getBid() <= rateAnalyzer.getBidThreshold() && (latestInfo.getAskProfit() > 0 || SameManager.getInstance().isForceFixAsk())) {
                 // 下値閾値を超えて（利益が出ている場合、または強制リカバリモードの場合）
                 // Ask決済
                 wrapper.fixAsk();
-                log.info("same position recovery start. rate {}, ask profit {}, total profit {}", latestInfo.getRate(), latestInfo.getAskProfit(), latestInfo.getTotalProfit());
+                log.info("same position recovery start. mode {}, rate {}, ask profit {}, total profit {}",
+                        SameManager.getInstance().getRecoveryMode(), latestInfo.getRate(), latestInfo.getAskProfit(), latestInfo.getTotalProfit());
 
                 // 残ポジションの利益を保存
                 SameManager.getInstance().setProfitWhenOneSideFixed(latestInfo.getBidProfit());
             }
-            if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && (latestInfo.getBidProfit() > 0 || SameManager.getInstance().isForce())) {
+            if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && (latestInfo.getBidProfit() > 0 || SameManager.getInstance().isForceFixBid())) {
                 // 上値閾値を超えて（利益が出ている場合、または強制リカバリモードの場合）
                 // Bid決済
                 wrapper.fixBid();
-                log.info("same position recovery start. rate {}, bid profit {}, total profit {}", latestInfo.getRate(), latestInfo.getBidProfit(), latestInfo.getTotalProfit());
+                log.info("same position recovery start. mode {}, rate {}, bid profit {}, total profit {}",
+                        SameManager.getInstance().getRecoveryMode(), latestInfo.getRate(), latestInfo.getBidProfit(), latestInfo.getTotalProfit());
 
                 // 残ポジションの利益を保存
                 SameManager.getInstance().setProfitWhenOneSideFixed(latestInfo.getAskProfit());
@@ -187,13 +197,6 @@ public class AutoTrader {
             break;
         case ASK_SIDE:
         case BID_SIDE:
-
-            // 通常の利益確定判定
-            if (latestInfo.getProfit() >= targetAmountOneTrade) {
-                // 目標金額達成で利益確定
-                wrapper.fixAll();
-                log.info("achieved target amount. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getProfit(), latestInfo.getTotalProfit());
-            }
 
             // Sameポジション発生後の利益確定判定
             if (SameManager.hasInstance()) {
@@ -206,6 +209,14 @@ public class AutoTrader {
                     wrapper.fixAll();
                     log.info("same position recovery done. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getProfit(), latestInfo.getTotalProfit());
                 }
+                return;
+            }
+
+            // 通常の利益確定判定
+            if (latestInfo.getProfit() >= targetAmountOneTrade) {
+                // 目標金額達成で利益確定
+                wrapper.fixAll();
+                log.info("achieved target amount. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getProfit(), latestInfo.getTotalProfit());
             }
             break;
         default:

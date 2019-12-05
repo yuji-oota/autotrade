@@ -20,6 +20,8 @@ public class SameManager {
     enum RecoveryMode {
         NORMAL,
         FORCE,
+        FORCEFIXASK,
+        FORCEFIXBID,
     }
 
     @Setter
@@ -57,6 +59,12 @@ public class SameManager {
 
     public boolean isForce() {
         return recoveryMode == RecoveryMode.FORCE;
+    }
+    public boolean isForceFixAsk() {
+        return recoveryMode == RecoveryMode.FORCEFIXASK;
+    }
+    public boolean isForceFixBid() {
+        return recoveryMode == RecoveryMode.FORCEFIXBID;
     }
 
     public static void close() {
