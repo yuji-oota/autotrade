@@ -63,7 +63,6 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.ORDERASK, () -> wrapper.orderAsk())
                 .putCommand(ReservedMessage.ORDERBID, () -> wrapper.orderBid())
                 .putCommand(ReservedMessage.FORCESAME, () -> this.forceSame())
-                .putCommand(ReservedMessage.FORCERECOVERY, () -> SameManager.getInstance().setRecoveryMode(RecoveryMode.FORCE))
                 );
     }
 
@@ -105,6 +104,7 @@ public class AutoTrader {
             while(true) {
                 // 取引
                 trade();
+                Thread.sleep(100);
 
                 // ログファイルアップロード
                 uploadManager.upload(logFile);
@@ -241,7 +241,7 @@ public class AutoTrader {
                 AutoTradeUtils.sleep(TimeUnit.MINUTES.toMillis(minutesToActive));
                 return false;
             }
-            if (latestInfo.getRate().getAsk() - latestInfo.getRate().getBid() > 3) {
+            if (latestInfo.getRate().getSpread() > 3) {
                 // スプレッドが開いている場合は注文しない
                 return false;
             }

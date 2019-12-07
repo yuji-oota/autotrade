@@ -19,7 +19,6 @@ public class SameManager {
 
     enum RecoveryMode {
         NONE,
-        FORCE,
         FIXASK,
         FIXBID,
     }
