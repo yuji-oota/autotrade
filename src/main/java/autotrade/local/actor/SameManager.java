@@ -56,9 +56,6 @@ public class SameManager {
         return false;
     }
 
-    public boolean isForce() {
-        return recoveryMode == RecoveryMode.FORCE;
-    }
     public boolean isFixAsk() {
         return recoveryMode == RecoveryMode.FIXASK;
     }
