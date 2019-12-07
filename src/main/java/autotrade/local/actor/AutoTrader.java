@@ -139,10 +139,10 @@ public class AutoTrader {
         // 最新情報取得
         LatestInfo latestInfo = getLatestInfo();
 
-        // 最新情報を元に利益確定
-        fix(latestInfo);
-
         if (isOrderable(latestInfo)) {
+            // 最新情報を元に利益確定
+            fix(latestInfo);
+
             // 最新情報を元に注文
             order(latestInfo);
         }
@@ -160,22 +160,15 @@ public class AutoTrader {
         case SAME:
             SameManager.setProfit(latestInfo.getTodaysProfit());
 
-            if (latestInfo.getAskAverageRate() - latestInfo.getBidAverageRate() > 100) {
-                // ポジション間隔が広い場合は強制リカバリ
-                SameManager.getInstance().setRecoveryMode(RecoveryMode.FORCEFIXBID);
-                if ((latestInfo.getAskAverageRate() + latestInfo.getBidAverageRate()) / 2 < latestInfo.getRate().getAsk()) {
-                    SameManager.getInstance().setRecoveryMode(RecoveryMode.FORCEFIXASK);
-                }
-            }
-
-            if (rateAnalyzer.rangeWithin(10) < 20) {
-                // 閾値間隔が狭い場合は注文しない
-                break;
+            // リカバリモード設定
+            SameManager.getInstance().setRecoveryMode(RecoveryMode.FIXBID);
+            if ((latestInfo.getAskAverageRate() + latestInfo.getBidAverageRate()) / 2 < latestInfo.getRate().getAsk()) {
+                SameManager.getInstance().setRecoveryMode(RecoveryMode.FIXASK);
             }
 
             Rate rate = latestInfo.getRate();
-            if (rate.getBid() <= rateAnalyzer.getBidThreshold() && (latestInfo.getAskProfit() > 0 || SameManager.getInstance().isForceFixAsk())) {
-                // 下値閾値を超えて（利益が出ている場合、または強制リカバリモードの場合）
+            if (rate.getBid() <= rateAnalyzer.getBidThreshold() && SameManager.getInstance().isFixAsk()) {
+                // 下値閾値を超えてFIXASKモードの場合
                 // Ask決済
                 wrapper.fixAsk();
                 log.info("same position recovery start. mode {}, rate {}, ask profit {}, total profit {}",
@@ -184,8 +177,8 @@ public class AutoTrader {
                 // 残ポジションの利益を保存
                 SameManager.getInstance().setProfitWhenOneSideFixed(latestInfo.getBidProfit());
             }
-            if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && (latestInfo.getBidProfit() > 0 || SameManager.getInstance().isForceFixBid())) {
-                // 上値閾値を超えて（利益が出ている場合、または強制リカバリモードの場合）
+            if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && SameManager.getInstance().isFixBid()) {
+                // 上値閾値を超えてFIXBIDモードの場合
                 // Bid決済
                 wrapper.fixBid();
                 log.info("same position recovery start. mode {}, rate {}, bid profit {}, total profit {}",
@@ -201,7 +194,7 @@ public class AutoTrader {
             // Sameポジション発生後の利益確定判定
             if (SameManager.hasInstance()) {
                 // モードを戻す
-                SameManager.getInstance().setRecoveryMode(RecoveryMode.NORMAL);
+                SameManager.getInstance().setRecoveryMode(RecoveryMode.NONE);
 
                 // Sameポジション回復中の場合
                 if (SameManager.getInstance().isRecovered(latestInfo.getTotalProfit())) {
@@ -287,8 +280,8 @@ public class AutoTrader {
             }
             if (SameManager.hasInstance()
                     && rate.getBid() <= rateAnalyzer.minWithin(1)
-                    && SameManager.getInstance().getProfitWhenOneSideFixed() < latestInfo.getAskProfit()) {
-                // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つSameリカバリ開始時よりも利益が出ている（マイナスが減っている）場合
+                    && rate.getBid() < latestInfo.getAskAverageRate()) {
+                // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
                 wrapper.orderBid();
             }
@@ -304,8 +297,8 @@ public class AutoTrader {
             }
             if (SameManager.hasInstance()
                     && rateAnalyzer.maxWithin(1) <= rate.getAsk()
-                    && SameManager.getInstance().getProfitWhenOneSideFixed() < latestInfo.getBidProfit()) {
-                // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つSameリカバリ開始時よりも利益が出ている（マイナスが減っている）場合
+                    && latestInfo.getBidAverageRate() < rate.getAsk()) {
+                // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
                 wrapper.orderAsk();
             }

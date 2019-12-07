@@ -18,10 +18,10 @@ public class SameManager {
     private RecoveryMode recoveryMode;
 
     enum RecoveryMode {
-        NORMAL,
+        NONE,
         FORCE,
-        FORCEFIXASK,
-        FORCEFIXBID,
+        FIXASK,
+        FIXBID,
     }
 
     @Setter
@@ -30,7 +30,7 @@ public class SameManager {
 
     private SameManager(int todaysProfit) {
         this.todaysProfitWhenSamed = todaysProfit;
-        this.recoveryMode = RecoveryMode.NORMAL;
+        this.recoveryMode = RecoveryMode.NONE;
     }
 
     public static void setProfit(int todaysProfit) {
@@ -60,11 +60,11 @@ public class SameManager {
     public boolean isForce() {
         return recoveryMode == RecoveryMode.FORCE;
     }
-    public boolean isForceFixAsk() {
-        return recoveryMode == RecoveryMode.FORCEFIXASK;
+    public boolean isFixAsk() {
+        return recoveryMode == RecoveryMode.FIXASK;
     }
-    public boolean isForceFixBid() {
-        return recoveryMode == RecoveryMode.FORCEFIXBID;
+    public boolean isFixBid() {
+        return recoveryMode == RecoveryMode.FIXBID;
     }
 
     public static void close() {
