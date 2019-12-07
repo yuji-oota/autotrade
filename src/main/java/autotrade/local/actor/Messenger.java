@@ -14,21 +14,36 @@ public class Messenger {
 
     private RedisClient redisClient;
     private StatefulRedisPubSubConnection<String, String> pubSubConnection;
+    private RedisPubSubListener<String, String> listener;
+    private long lastConnected;
 
     public Messenger(RedisPubSubListener<String, String> listener) {
-
+        this.listener = listener;
         redisClient = RedisClient.create(AutoTradeProperties.get("aws.elasticache.redis.uri"));
+        connect();
+    }
+
+    private void connect() {
         pubSubConnection = redisClient.connectPubSub();
         pubSubConnection.addListener(listener);
         String channel = AutoTradeProperties.get("aws.elasticache.redis.channel");
-        pubSubConnection.sync().setTimeout(Duration.ofDays(1));
         pubSubConnection.sync().subscribe(channel);
+        log.info("subscribe start.");
+
         set("channel", channel);
+        lastConnected = System.currentTimeMillis();
     }
 
     public void set(String key, String value) {
         try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {
             connection.sync().set(key, value);
+        }
+    }
+
+    public void reConnect() {
+        if (System.currentTimeMillis() - lastConnected > Duration.ofMinutes(60).toMillis()) {
+            pubSubConnection.close();
+            connect();
         }
     }
 }

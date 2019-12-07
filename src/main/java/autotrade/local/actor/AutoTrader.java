@@ -51,12 +51,13 @@ public class AutoTrader {
         bootDateTime = LocalDateTime.now();
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
+
         rateAnalyzer = new RateAanalyzer();
         uploadManager = new UploadManager();
         lotManager = new LotManager();
-
         messenger = new Messenger(new MessageListener()
                 .putCommand(ReservedMessage.LATESTINFO, () -> messenger.set(ReservedMessage.LATESTINFO.name(), getLatestInfo().toString()))
+                .putCommand(ReservedMessage.UPLOADLOG, () -> uploadManager.upload(logFile))
                 .putCommand(ReservedMessage.FIXASK, () -> wrapper.fixAsk())
                 .putCommand(ReservedMessage.FIXBID, () -> wrapper.fixBid())
                 .putCommand(ReservedMessage.FIXALL, () -> wrapper.fixAll())
@@ -106,8 +107,8 @@ public class AutoTrader {
                 trade();
                 Thread.sleep(100);
 
-                // ログファイルアップロード
-                uploadManager.upload(logFile);
+                // メッセンジャー再接続
+                messenger.reConnect();
             }
         } catch(Exception e) {
             log.error(e.getMessage(), e);

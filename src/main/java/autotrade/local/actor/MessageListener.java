@@ -4,14 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import io.lettuce.core.pubsub.RedisPubSubListener;
+import io.lettuce.core.pubsub.RedisPubSubAdapter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MessageListener implements RedisPubSubListener<String, String> {
+public class MessageListener extends RedisPubSubAdapter<String, String> {
 
     enum ReservedMessage {
         NONE,
+        UPLOADLOG,
         FIXASK,
         FIXBID,
         FIXALL,
@@ -44,26 +45,6 @@ public class MessageListener implements RedisPubSubListener<String, String> {
         if (commandMap.containsKey(command)) {
             commandMap.get(command).run();
         }
-    }
-
-    @Override
-    public void message(String pattern, String channel, String message) {
-    }
-
-    @Override
-    public void subscribed(String channel, long count) {
-    }
-
-    @Override
-    public void psubscribed(String pattern, long count) {
-    }
-
-    @Override
-    public void unsubscribed(String channel, long count) {
-    }
-
-    @Override
-    public void punsubscribed(String pattern, long count) {
     }
 
 }
