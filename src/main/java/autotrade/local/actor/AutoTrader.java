@@ -1,5 +1,7 @@
 package autotrade.local.actor;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
@@ -10,12 +12,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.actor.SameManager.RecoveryMode;
+import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.LatestInfo;
 import autotrade.local.material.Rate;
 import autotrade.local.utility.AutoTradeProperties;
@@ -58,6 +62,16 @@ public class AutoTrader {
         messenger = new Messenger(new MessageListener()
                 .putCommand(ReservedMessage.LATESTINFO, () -> messenger.set(ReservedMessage.LATESTINFO.name(), getLatestInfo().toString()))
                 .putCommand(ReservedMessage.UPLOADLOG, () -> uploadManager.upload(logFile))
+                .putCommand(ReservedMessage.AUTOTRADELOG, () -> {
+                    int logRows = Integer.parseInt(messenger.get("logRows"));
+                    try {
+                        List<String> lines = Files.readAllLines(logFile);
+                        messenger.set(ReservedMessage.AUTOTRADELOG.name(),
+                                lines.subList(Math.max(0, lines.size() - logRows), lines.size()).stream().collect(Collectors.joining("\n")));
+                    } catch (IOException e) {
+                        throw new ApplicationException(e);
+                    }
+                })
                 .putCommand(ReservedMessage.FIXASK, () -> wrapper.fixAsk())
                 .putCommand(ReservedMessage.FIXBID, () -> wrapper.fixBid())
                 .putCommand(ReservedMessage.FIXALL, () -> wrapper.fixAll())

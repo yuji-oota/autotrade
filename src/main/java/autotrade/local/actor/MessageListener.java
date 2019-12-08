@@ -13,6 +13,7 @@ public class MessageListener extends RedisPubSubAdapter<String, String> {
     enum ReservedMessage {
         NONE,
         UPLOADLOG,
+        AUTOTRADELOG,
         FIXASK,
         FIXBID,
         FIXALL,

@@ -28,20 +28,26 @@ public class Messenger {
         pubSubConnection.addListener(listener);
         String channel = AutoTradeProperties.get("aws.elasticache.redis.channel");
         pubSubConnection.sync().subscribe(channel);
-        log.info("subscribe start.");
-
-        set("channel", channel);
         lastConnected = System.currentTimeMillis();
     }
 
     public void set(String key, String value) {
         try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {
             connection.sync().set(key, value);
+        } finally {
+            pubSubConnection.close();
+            connect();
+        }
+    }
+    public String get(String key) {
+        try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {
+            return connection.sync().get(key);
         }
     }
 
     public void reConnect() {
         if (System.currentTimeMillis() - lastConnected > Duration.ofMinutes(60).toMillis()) {
+            log.info("reConnect");
             pubSubConnection.close();
             connect();
         }
