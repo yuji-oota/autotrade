@@ -215,16 +215,16 @@ public class AutoTrader {
                 if (SameManager.getInstance().isRecovered(latestInfo.getTotalProfit())) {
                     // Sameポジション回復達成で利益確定
                     wrapper.fixAll();
-                    log.info("same position recovery done. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getProfit(), latestInfo.getTotalProfit());
+                    log.info("same position recovery done. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getPositionProfit(), latestInfo.getTotalProfit());
                 }
                 return;
             }
 
             // 通常の利益確定判定
-            if (latestInfo.getProfit() >= targetAmountOneTrade) {
+            if (latestInfo.getPositionProfit() >= targetAmountOneTrade) {
                 // 目標金額達成で利益確定
                 wrapper.fixAll();
-                log.info("achieved target amount. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getProfit(), latestInfo.getTotalProfit());
+                log.info("achieved target amount. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getPositionProfit(), latestInfo.getTotalProfit());
             }
             break;
         default:

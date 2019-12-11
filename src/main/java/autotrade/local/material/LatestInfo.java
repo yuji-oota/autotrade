@@ -16,12 +16,12 @@ public class LatestInfo {
     private int todaysProfit;
     private Rate rate;
 
-    public int getProfit() {
+    public int getPositionProfit() {
         return askProfit + bidProfit;
     }
 
     public int getTotalProfit() {
-        return getProfit() + todaysProfit;
+        return getPositionProfit() + todaysProfit;
     }
 
     public PositionStatus getStatus() {
