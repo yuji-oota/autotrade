@@ -28,8 +28,6 @@ public class RateAanalyzer {
     public void add(Rate rate) {
         if (rate.isDoubtful()) {
             log.info("doubtful rate is added {}", rate);
-        } else if (rate.getSpread() > 5) {
-            // スプレッドが広い場合は解析対象外
         } else {
             rates.add(rate);
         }
