@@ -44,6 +44,7 @@ public class AutoTrader {
 
     private int targetAmountOneTrade;
     private int targetAmountOneDay;
+    private int startMargin;
 
     private LocalDateTime bootDateTime;
     private LocalTime inactiveStart;
@@ -112,11 +113,15 @@ public class AutoTrader {
 
             // ツール起動
             wrapper.startUpTradeTool();
-            Thread.sleep(15000);
+            Thread.sleep(1000);
 
             // 設定
             wrapper.settings();
             Thread.sleep(1000);
+
+            // 開始時の証拠金を取得
+            startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
+            messenger.set("startMargin", String.valueOf(startMargin));
 
             // 繰り返し実行
             while(true) {
@@ -137,16 +142,16 @@ public class AutoTrader {
 
     private LatestInfo getLatestInfo() {
         return LatestInfo.builder()
-                .askLot(Integer.parseInt(wrapper.getAskLot().replace(",", "")))
-                .bidLot(Integer.parseInt(wrapper.getBidLot().replace(",", "")))
-                .askAverageRate(Integer.parseInt(wrapper.getAskAverageRate().replace(".", "")))
-                .bidAverageRate(Integer.parseInt(wrapper.getBidAverageRate().replace(".", "")))
-                .askProfit(Integer.parseInt(wrapper.getAskProfit().replace(",", "")))
-                .bidProfit(Integer.parseInt(wrapper.getBidProfit().replace(",", "")))
-                .todaysProfit(Integer.parseInt(wrapper.getTodaysProfit().replace(",", "")))
+                .askLot(AutoTradeUtils.toInt(wrapper.getAskLot().replace("　(0)", "")))
+                .bidLot(AutoTradeUtils.toInt(wrapper.getBidLot().replace("　(0)", "")))
+                .askAverageRate(AutoTradeUtils.toInt(wrapper.getAskAverageRate()))
+                .bidAverageRate(AutoTradeUtils.toInt(wrapper.getBidAverageRate()))
+                .askPipProfit(AutoTradeUtils.toInt(wrapper.getAskPipProfit()))
+                .bidPipProfit(AutoTradeUtils.toInt(wrapper.getBidPipProfit()))
+                .todaysProfit(AutoTradeUtils.toInt(wrapper.getMargin()) - startMargin)
                 .rate(Rate.builder()
-                    .ask(Integer.parseInt(wrapper.getAskRate().replace(".", "")))
-                    .bid(Integer.parseInt(wrapper.getBidRate().replace(".", "")))
+                    .ask(AutoTradeUtils.toInt(wrapper.getAskRate()))
+                    .bid(AutoTradeUtils.toInt(wrapper.getBidRate()))
                     .timestamp(LocalDateTime.now())
                     .build())
                 .build();
@@ -337,8 +342,8 @@ public class AutoTrader {
     }
 
     private void forceSame() {
-        int askLot = Integer.parseInt(wrapper.getAskLot().replace(",", ""));
-        int bidLot = Integer.parseInt(wrapper.getBidLot().replace(",", ""));
+        int askLot = AutoTradeUtils.toInt(wrapper.getAskLot().replace("　(0)", ""));
+        int bidLot = AutoTradeUtils.toInt(wrapper.getBidLot().replace("　(0)", ""));
         if (bidLot < askLot) {
             wrapper.setLot(askLot - bidLot);
             wrapper.orderBid();

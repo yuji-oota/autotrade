@@ -7,6 +7,7 @@ public class Test {
     public static void main(String[] args) {
 
         System.out.println(Duration.ofMinutes(1).toMillis());
+        System.out.println(Integer.parseInt(""));
     }
 
 }

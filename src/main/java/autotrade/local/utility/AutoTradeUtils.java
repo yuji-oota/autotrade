@@ -11,4 +11,12 @@ public class AutoTradeUtils {
             throw new ApplicationException(e);
         }
     }
+
+    public static int toInt(String numStr) {
+        numStr = numStr.replace(",", "").replace(".", "");
+        if (numStr.isEmpty()) {
+            return 0;
+        }
+        return Integer.parseInt(numStr);
+    }
 }

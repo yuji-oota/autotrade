@@ -13,8 +13,17 @@ public class LatestInfo {
     private int bidAverageRate;
     private int askProfit;
     private int bidProfit;
+    private int askPipProfit;
+    private int bidPipProfit;
     private int todaysProfit;
     private Rate rate;
+
+    public int getAskProfit() {
+        return askLot * askPipProfit;
+    }
+    public int getBidProfit() {
+        return bidLot * bidPipProfit;
+    }
 
     public int getPositionProfit() {
         return askProfit + bidProfit;
