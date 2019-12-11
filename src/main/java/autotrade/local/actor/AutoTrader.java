@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -47,6 +48,8 @@ public class AutoTrader {
     private LocalDateTime bootDateTime;
     private LocalTime inactiveStart;
     private LocalTime inactiveEnd;
+
+    private long lastFixed;
 
     private AutoTrader() {
         targetAmountOneTrade = Integer.parseInt(AutoTradeProperties.get("autotrade.targetAmount.oneTrade"));
@@ -216,6 +219,7 @@ public class AutoTrader {
                     // Sameポジション回復達成で利益確定
                     wrapper.fixAll();
                     log.info("same position recovery done. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getPositionProfit(), latestInfo.getTotalProfit());
+                    lastFixed = System.currentTimeMillis();
                 }
                 return;
             }
@@ -225,6 +229,7 @@ public class AutoTrader {
                 // 目標金額達成で利益確定
                 wrapper.fixAll();
                 log.info("achieved target amount. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getPositionProfit(), latestInfo.getTotalProfit());
+                lastFixed = System.currentTimeMillis();
             }
             break;
         default:
@@ -243,6 +248,11 @@ public class AutoTrader {
 
         switch (latestInfo.getStatus()) {
         case NONE:
+            if (System.currentTimeMillis() - lastFixed < Duration.ofMinutes(1).toMillis()) {
+                // 利益確定から１分以内の場合は注文しない
+                return false;
+            }
+            // break無し
         case SAME:
             if (indicatorManager.isNextIndicatorWithin(5) || indicatorManager.isPrevIndicatorWithin(5) ) {
                 // 指標が近い場合は注文しない
