@@ -11,8 +11,8 @@ public class LatestInfo {
     private int bidLot;
     private int askAverageRate;
     private int bidAverageRate;
-    private int askProfit;
-    private int bidProfit;
+//    private int askProfit;
+//    private int bidProfit;
     private int askPipProfit;
     private int bidPipProfit;
     private int todaysProfit;
@@ -26,7 +26,7 @@ public class LatestInfo {
     }
 
     public int getPositionProfit() {
-        return askProfit + bidProfit;
+        return getAskProfit() + getBidProfit();
     }
 
     public int getTotalProfit() {

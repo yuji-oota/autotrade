@@ -1,6 +1,7 @@
 package autotrade.local.actor;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -122,6 +123,9 @@ public class AutoTrader {
             // 開始時の証拠金を取得
             startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
             messenger.set("startMargin", String.valueOf(startMargin));
+
+            // 一日の目標金額設定
+            targetAmountOneDay = new BigDecimal(startMargin).multiply(new BigDecimal(0.01)).intValue();
 
             // 繰り返し実行
             while(true) {

@@ -9,9 +9,10 @@ public class Application {
     public static void main(String[] args) {
 
         try {
-            while(true) {
-                AutoTrader.getInstance().operation();
-            }
+//            while(true) {
+//                AutoTrader.getInstance().operation();
+//            }
+            AutoTrader.getInstance().operation();
         } catch(Exception e) {
             log.error(e.getMessage(), e);
         }
