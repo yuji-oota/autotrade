@@ -130,7 +130,7 @@ public class WebDriverWrapper {
             e.printStackTrace();
         }
         log.info("ask {}", getAskRate());
-        AutoTradeUtils.sleep(1000);
+        AutoTradeUtils.sleep(3000);
     }
     public void orderBid() {
         try {
@@ -139,7 +139,7 @@ public class WebDriverWrapper {
             e.printStackTrace();
         }
         log.info("bid {}", getBidRate());
-        AutoTradeUtils.sleep(1000);
+        AutoTradeUtils.sleep(3000);
     }
     public void fixAll() {
         try {
@@ -147,7 +147,7 @@ public class WebDriverWrapper {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        AutoTradeUtils.sleep(1000);
+        AutoTradeUtils.sleep(1500);
     }
     public void fixAsk() {
         try {
@@ -155,7 +155,7 @@ public class WebDriverWrapper {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        AutoTradeUtils.sleep(1000);
+        AutoTradeUtils.sleep(1500);
     }
     public void fixBid() {
         try {
@@ -163,7 +163,7 @@ public class WebDriverWrapper {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        AutoTradeUtils.sleep(1000);
+        AutoTradeUtils.sleep(1500);
     }
 
 }
