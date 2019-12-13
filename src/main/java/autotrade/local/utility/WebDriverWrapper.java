@@ -55,6 +55,13 @@ public class WebDriverWrapper {
         AutoTradeUtils.sleep(1000);
         driver.findElement(By.id("doLogin")).click();
     }
+    public void cancelMessage() {
+        try {
+            driver.findElement(By.xpath("//button[starts-with(@id, 'message-cancel')]")).click();
+        } catch (Exception e) {
+            // 握りつぶす
+        }
+    }
     public void startUpTradeTool() {
 //        driver.navigate().to("https://trade.fx.dmm.com/comportal/SsoOutbound.do?subSystemType=-20");
         driver.manage().window().maximize();

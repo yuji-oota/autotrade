@@ -110,7 +110,11 @@ public class AutoTrader {
 
             // ログイン
             wrapper.login();
-            Thread.sleep(15000);
+            Thread.sleep(5000);
+
+            // メッセージダイアログクローズ
+            wrapper.cancelMessage();
+            Thread.sleep(1000);
 
             // ツール起動
             wrapper.startUpTradeTool();
@@ -135,6 +139,9 @@ public class AutoTrader {
 
                 // メッセンジャー再接続
                 messenger.reConnect();
+
+                // メッセージダイアログクローズ
+                wrapper.cancelMessage();
             }
         } catch(Exception e) {
             log.error(e.getMessage(), e);
