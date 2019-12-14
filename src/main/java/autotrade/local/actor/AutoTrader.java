@@ -255,7 +255,7 @@ public class AutoTrader {
             // 起動直後は注文しない
             return false;
         }
-        if (rateAnalyzer.rangeWithin(10) < 20) {
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 20) {
             // 閾値間隔が狭い場合は注文しない
             return false;
         }
@@ -316,7 +316,7 @@ public class AutoTrader {
                 orderBid(lotManager.nextBidLot(latestInfo));
             }
             if (SameManager.hasInstance()
-                    && rate.getBid() <= rateAnalyzer.minWithin(1)
+                    && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))
                     && rate.getBid() < latestInfo.getAskAverageRate()) {
                 // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
@@ -332,7 +332,7 @@ public class AutoTrader {
                 orderAsk(lotManager.nextAskLot(latestInfo));
             }
             if (SameManager.hasInstance()
-                    && rateAnalyzer.maxWithin(1) <= rate.getAsk()
+                    && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()
                     && latestInfo.getBidAverageRate() < rate.getAsk()) {
                 // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
@@ -374,7 +374,7 @@ public class AutoTrader {
             if (lot == latestInfo.getAskLot()) {
                 break;
             }
-            if (System.currentTimeMillis() - verifyStarted > 10000) {
+            if (System.currentTimeMillis() - verifyStarted > Duration.ofSeconds(10).toMillis()) {
                 break;
             }
         }
@@ -390,7 +390,7 @@ public class AutoTrader {
             if (lot == latestInfo.getBidLot()) {
                 break;
             }
-            if (System.currentTimeMillis() - verifyStarted > 10000) {
+            if (System.currentTimeMillis() - verifyStarted > Duration.ofSeconds(10).toMillis()) {
                 break;
             }
         }

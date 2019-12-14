@@ -1,5 +1,6 @@
 package autotrade.local.actor;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -36,8 +37,8 @@ public class RateAnalyzer {
                 .collect(Collectors.toList());
 
         // 売買閾値設定
-        askThreshold = maxWithin(10);
-        bidThreshold = minWithin(10);
+        askThreshold = maxWithin(Duration.ofMinutes(10));
+        bidThreshold = minWithin(Duration.ofMinutes(10));
         int range = askThreshold - bidThreshold;
         if (range < 40) {
             return;
@@ -58,24 +59,24 @@ public class RateAnalyzer {
         if (100 <= range) {
             minutes = 1;
         }
-        askThreshold = maxWithin(minutes);
-        bidThreshold = minWithin(minutes);
+        askThreshold = maxWithin(Duration.ofMinutes(minutes));
+        bidThreshold = minWithin(Duration.ofMinutes(minutes));
     }
 
-    public int rangeWithin(int minutes) {
-        return maxWithin(minutes) - minWithin(minutes);
+    public int rangeWithin(Duration duration) {
+        return maxWithin(duration) - minWithin(duration);
     }
 
-    public int maxWithin(int minutes) {
+    public int maxWithin(Duration duration) {
         return rates.stream()
-                .filter(r -> ChronoUnit.MINUTES.between(r.getTimestamp(), LocalDateTime.now()) <= minutes)
+                .filter(r -> ChronoUnit.MILLIS.between(r.getTimestamp(), LocalDateTime.now()) <= duration.toMillis())
                 .map(Rate::getAsk)
                 .max(Comparator.naturalOrder())
                 .orElse(0);
     }
-    public int minWithin(int minutes) {
+    public int minWithin(Duration duration) {
         return rates.stream()
-                .filter(r -> ChronoUnit.MINUTES.between(r.getTimestamp(), LocalDateTime.now()) <= minutes)
+                .filter(r -> ChronoUnit.MILLIS.between(r.getTimestamp(), LocalDateTime.now()) <= duration.toMillis())
                 .map(Rate::getBid)
                 .min(Comparator.naturalOrder())
                 .orElse(0);

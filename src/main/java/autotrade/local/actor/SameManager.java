@@ -1,5 +1,6 @@
 package autotrade.local.actor;
 
+import java.time.Duration;
 import java.util.Objects;
 
 import autotrade.local.exception.ApplicationException;
@@ -70,7 +71,7 @@ public class SameManager {
         if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
             return true;
         }
-        if (rateAnalyzer.rangeWithin(10) > 30 && rate.getBid() <= rateAnalyzer.minWithin(1)) {
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
             return true;
         }
         return false;
@@ -84,7 +85,7 @@ public class SameManager {
         if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
             return true;
         }
-        if (rateAnalyzer.rangeWithin(10) > 30 && rateAnalyzer.maxWithin(1) <= rate.getAsk()) {
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
             return true;
         }
         return false;
