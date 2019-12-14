@@ -13,13 +13,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class RateAanalyzer {
+public class RateAnalyzer {
 
     private List<Rate> rates;
     private int askThreshold;
     private int bidThreshold;
 
-    public RateAanalyzer() {
+    public RateAnalyzer() {
         rates = new ArrayList<>();
         askThreshold = Integer.MAX_VALUE;
         bidThreshold = Integer.MIN_VALUE;

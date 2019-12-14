@@ -3,6 +3,8 @@ package autotrade.local.actor;
 import java.util.Objects;
 
 import autotrade.local.exception.ApplicationException;
+import autotrade.local.material.LatestInfo;
+import autotrade.local.material.Rate;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,12 +17,12 @@ public class SameManager {
 
     @Getter
     @Setter
-    private RecoveryMode recoveryMode;
+    private CutOffMode cutOffMode;
 
-    enum RecoveryMode {
+    enum CutOffMode {
         NONE,
-        FIXASK,
-        FIXBID,
+        ASK,
+        BID,
     }
 
     @Setter
@@ -29,7 +31,7 @@ public class SameManager {
 
     private SameManager(int todaysProfit) {
         this.todaysProfitWhenSamed = todaysProfit;
-        this.recoveryMode = RecoveryMode.NONE;
+        this.cutOffMode = CutOffMode.NONE;
     }
 
     public static void setProfit(int todaysProfit) {
@@ -56,15 +58,36 @@ public class SameManager {
         return false;
     }
 
-    public boolean isFixAsk() {
-        return recoveryMode == RecoveryMode.FIXASK;
-    }
-    public boolean isFixBid() {
-        return recoveryMode == RecoveryMode.FIXBID;
-    }
-
     public static void close() {
         instance = null;
+    }
+
+    public boolean isCutOffAsk(LatestInfo latestInfo, RateAnalyzer rateAnalyzer) {
+        if (!(cutOffMode == CutOffMode.ASK)) {
+            return false;
+        }
+        Rate rate = latestInfo.getRate();
+        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
+            return true;
+        }
+        if (rateAnalyzer.rangeWithin(10) > 30 && rate.getBid() <= rateAnalyzer.minWithin(1)) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isCutOffBid(LatestInfo latestInfo, RateAnalyzer rateAnalyzer) {
+        if (!(cutOffMode == CutOffMode.BID)) {
+            return false;
+        }
+        Rate rate = latestInfo.getRate();
+        if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
+            return true;
+        }
+        if (rateAnalyzer.rangeWithin(10) > 30 && rateAnalyzer.maxWithin(1) <= rate.getAsk()) {
+            return true;
+        }
+        return false;
     }
 
 }

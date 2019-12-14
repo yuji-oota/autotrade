@@ -20,7 +20,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import autotrade.local.actor.MessageListener.ReservedMessage;
-import autotrade.local.actor.SameManager.RecoveryMode;
+import autotrade.local.actor.SameManager.CutOffMode;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.LatestInfo;
 import autotrade.local.material.Rate;
@@ -37,7 +37,7 @@ public class AutoTrader {
 
     private WebDriver driver;
     private WebDriverWrapper wrapper;
-    private RateAanalyzer rateAnalyzer;
+    private RateAnalyzer rateAnalyzer;
     private IndicatorManager indicatorManager;
     private UploadManager uploadManager;
     private LotManager lotManager;
@@ -61,7 +61,7 @@ public class AutoTrader {
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
 
-        rateAnalyzer = new RateAanalyzer();
+        rateAnalyzer = new RateAnalyzer();
         uploadManager = new UploadManager();
         lotManager = new LotManager();
         messenger = new Messenger(new MessageListener()
@@ -193,33 +193,33 @@ public class AutoTrader {
             break;
         case SAME:
             SameManager.setProfit(latestInfo.getTodaysProfit());
+            SameManager sameManager = SameManager.getInstance();
 
-            // リカバリモード設定
-            SameManager.getInstance().setRecoveryMode(RecoveryMode.FIXBID);
+            // 切り離しモード設定
+            sameManager.setCutOffMode(CutOffMode.BID);
             if ((latestInfo.getAskAverageRate() + latestInfo.getBidAverageRate()) / 2 < latestInfo.getRate().getAsk()) {
-                SameManager.getInstance().setRecoveryMode(RecoveryMode.FIXASK);
+                sameManager.setCutOffMode(CutOffMode.ASK);
             }
 
-            Rate rate = latestInfo.getRate();
-            if (rate.getBid() <= rateAnalyzer.getBidThreshold() && SameManager.getInstance().isFixAsk()) {
-                // 下値閾値を超えてFIXASKモードの場合
+            // Ask切り離し判定
+            if (sameManager.isCutOffAsk(latestInfo, rateAnalyzer)) {
                 // Ask決済
                 wrapper.fixAsk();
-                log.info("same position recovery start. mode {}, rate {}, ask profit {}, total profit {}",
-                        SameManager.getInstance().getRecoveryMode(), latestInfo.getRate(), latestInfo.getAskProfit(), latestInfo.getTotalProfit());
+                log.info("same position recovery start. cut off mode {}, rate {}, ask profit {}, total profit {}",
+                        sameManager.getCutOffMode(), latestInfo.getRate(), latestInfo.getAskProfit(), latestInfo.getTotalProfit());
 
                 // 残ポジションの利益を保存
-                SameManager.getInstance().setProfitWhenOneSideFixed(latestInfo.getBidProfit());
+                sameManager.setProfitWhenOneSideFixed(latestInfo.getBidProfit());
             }
-            if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && SameManager.getInstance().isFixBid()) {
-                // 上値閾値を超えてFIXBIDモードの場合
+            // Bid切り離し判定
+            if (sameManager.isCutOffBid(latestInfo, rateAnalyzer)) {
                 // Bid決済
                 wrapper.fixBid();
-                log.info("same position recovery start. mode {}, rate {}, bid profit {}, total profit {}",
-                        SameManager.getInstance().getRecoveryMode(), latestInfo.getRate(), latestInfo.getBidProfit(), latestInfo.getTotalProfit());
+                log.info("same position recovery start. cut off mode {}, rate {}, bid profit {}, total profit {}",
+                        sameManager.getCutOffMode(), latestInfo.getRate(), latestInfo.getBidProfit(), latestInfo.getTotalProfit());
 
                 // 残ポジションの利益を保存
-                SameManager.getInstance().setProfitWhenOneSideFixed(latestInfo.getAskProfit());
+                sameManager.setProfitWhenOneSideFixed(latestInfo.getAskProfit());
             }
             break;
         case ASK_SIDE:
@@ -228,7 +228,7 @@ public class AutoTrader {
             // Sameポジション発生後の利益確定判定
             if (SameManager.hasInstance()) {
                 // モードを戻す
-                SameManager.getInstance().setRecoveryMode(RecoveryMode.NONE);
+                SameManager.getInstance().setCutOffMode(CutOffMode.NONE);
 
                 // Sameポジション回復中の場合
                 if (SameManager.getInstance().isRecovered(latestInfo.getTotalProfit())) {
