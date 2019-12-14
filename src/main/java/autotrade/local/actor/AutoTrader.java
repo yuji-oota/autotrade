@@ -80,8 +80,6 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.FIXASK, () -> wrapper.fixAsk())
                 .putCommand(ReservedMessage.FIXBID, () -> wrapper.fixBid())
                 .putCommand(ReservedMessage.FIXALL, () -> wrapper.fixAll())
-                .putCommand(ReservedMessage.ORDERASK, () -> wrapper.orderAsk())
-                .putCommand(ReservedMessage.ORDERBID, () -> wrapper.orderBid())
                 .putCommand(ReservedMessage.FORCESAME, () -> this.forceSame())
                 );
     }
@@ -302,46 +300,43 @@ public class AutoTrader {
         switch (latestInfo.getStatus()) {
         case NONE:
             // ポジションがない場合
-            wrapper.setLot(lotManager.getInitialLot());
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
-                wrapper.orderAsk();
+                orderAsk(lotManager.getInitialLot());
             }
             if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
-                wrapper.orderBid();
+                orderBid(lotManager.getInitialLot());
             }
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合
-            wrapper.setLot(lotManager.nextBidLot(latestInfo));
             if (rate.getBid() <= rateAnalyzer.getBidThreshold()
                     && rate.getBid() < latestInfo.getAskAverageRate()) {
                 // 下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
-                wrapper.orderBid();
+                orderBid(lotManager.nextBidLot(latestInfo));
             }
             if (SameManager.hasInstance()
                     && rate.getBid() <= rateAnalyzer.minWithin(1)
                     && rate.getBid() < latestInfo.getAskAverageRate()) {
                 // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
-                wrapper.orderBid();
+                orderBid(lotManager.nextBidLot(latestInfo));
             }
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
-            wrapper.setLot(lotManager.nextAskLot(latestInfo));
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
                     && latestInfo.getBidAverageRate() < rate.getAsk()) {
                 // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
-                wrapper.orderAsk();
+                orderAsk(lotManager.nextAskLot(latestInfo));
             }
             if (SameManager.hasInstance()
                     && rateAnalyzer.maxWithin(1) <= rate.getAsk()
                     && latestInfo.getBidAverageRate() < rate.getAsk()) {
                 // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
-                wrapper.orderAsk();
+                orderAsk(lotManager.nextAskLot(latestInfo));
             }
             break;
         case SAME:
@@ -353,15 +348,14 @@ public class AutoTrader {
     }
 
     private void forceSame() {
-        int askLot = AutoTradeUtils.toInt(wrapper.getAskLot().replace("　(0)", ""));
-        int bidLot = AutoTradeUtils.toInt(wrapper.getBidLot().replace("　(0)", ""));
+        LatestInfo latestInfo = getLatestInfo();
+        int askLot = latestInfo.getAskLot();
+        int bidLot = latestInfo.getBidLot();
         if (bidLot < askLot) {
-            wrapper.setLot(askLot - bidLot);
-            wrapper.orderBid();
+            orderBid(askLot - bidLot);
         }
         if (askLot < bidLot) {
-            wrapper.setLot(bidLot - askLot);
-            wrapper.orderAsk();
+            orderAsk(bidLot - askLot);
         }
     }
 
@@ -369,4 +363,36 @@ public class AutoTrader {
         return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
     }
 
+    private void orderAsk(int lot) {
+        wrapper.setLot(lot);
+        wrapper.orderAsk();
+        long verifyStarted = System.currentTimeMillis();
+        while (true) {
+            AutoTradeUtils.sleep(500);
+            LatestInfo latestInfo = getLatestInfo();
+            rateAnalyzer.add(latestInfo.getRate());
+            if (lot == latestInfo.getAskLot()) {
+                break;
+            }
+            if (System.currentTimeMillis() - verifyStarted > 10000) {
+                break;
+            }
+        }
+    }
+    private void orderBid(int lot) {
+        wrapper.setLot(lot);
+        wrapper.orderBid();
+        long verifyStarted = System.currentTimeMillis();
+        while (true) {
+            AutoTradeUtils.sleep(500);
+            LatestInfo latestInfo = getLatestInfo();
+            rateAnalyzer.add(latestInfo.getRate());
+            if (lot == latestInfo.getBidLot()) {
+                break;
+            }
+            if (System.currentTimeMillis() - verifyStarted > 10000) {
+                break;
+            }
+        }
+    }
 }
