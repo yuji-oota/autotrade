@@ -65,7 +65,7 @@ public class AutoTrader {
         uploadManager = new UploadManager();
         lotManager = new LotManager();
         messenger = new Messenger(new MessageListener()
-                .putCommand(ReservedMessage.LATESTINFO, () -> messenger.set(ReservedMessage.LATESTINFO.name(), getLatestInfo().toString()))
+                .putCommand(ReservedMessage.LATESTINFO, () -> messenger.set(ReservedMessage.LATESTINFO.name(), AutoTradeUtils.toJson(getLatestInfo())))
                 .putCommand(ReservedMessage.UPLOADLOG, () -> uploadManager.upload(logFile))
                 .putCommand(ReservedMessage.AUTOTRADELOG, () -> {
                     int logRows = Integer.parseInt(messenger.get("logRows"));

@@ -29,6 +29,9 @@ dependencies {
     // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
     compile group: 'io.lettuce', name: 'lettuce-core', version: '5.2.1.RELEASE'
 
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.10.1'
+
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
