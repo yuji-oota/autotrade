@@ -43,7 +43,7 @@ public class WebDriverWrapper {
 
         String currentWindow = driver.getWindowHandle();
         driver.findElement(By.xpath("//a[@href='https://lionfx.hirose-fx.co.jp/WTChartWeb/index.html']")).click();
-        AutoTradeUtils.sleep(15000);
+        AutoTradeUtils.sleep(5000);
 
         driver.switchTo().window(driver.getWindowHandles().stream()
                 .filter(window -> !window.equals(currentWindow))
