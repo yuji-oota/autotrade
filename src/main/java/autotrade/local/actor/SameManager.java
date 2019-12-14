@@ -63,7 +63,7 @@ public class SameManager {
     }
 
     public boolean isCutOffAsk(LatestInfo latestInfo, RateAnalyzer rateAnalyzer) {
-        if (!(cutOffMode == CutOffMode.ASK)) {
+        if (cutOffMode != CutOffMode.ASK) {
             return false;
         }
         Rate rate = latestInfo.getRate();
@@ -77,7 +77,7 @@ public class SameManager {
     }
 
     public boolean isCutOffBid(LatestInfo latestInfo, RateAnalyzer rateAnalyzer) {
-        if (!(cutOffMode == CutOffMode.BID)) {
+        if (cutOffMode != CutOffMode.BID) {
             return false;
         }
         Rate rate = latestInfo.getRate();
