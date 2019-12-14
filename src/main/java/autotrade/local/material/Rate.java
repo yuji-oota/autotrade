@@ -17,9 +17,13 @@ public class Rate {
     }
 
     public boolean isDoubtful() {
-        if (getSpread() > 60) {
+        if (getSpread() > 70) {
             return true;
         }
         return false;
+    }
+
+    public boolean isWideSpread() {
+        return getSpread() > 2;
     }
 }

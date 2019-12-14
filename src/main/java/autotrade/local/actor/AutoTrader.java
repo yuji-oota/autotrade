@@ -280,7 +280,7 @@ public class AutoTrader {
                 AutoTradeUtils.sleep(TimeUnit.MINUTES.toMillis(minutesToActive));
                 return false;
             }
-            if (latestInfo.getRate().getSpread() > 3) {
+            if (latestInfo.getRate().isWideSpread()) {
                 // スプレッドが開いている場合は注文しない
                 return false;
             }
