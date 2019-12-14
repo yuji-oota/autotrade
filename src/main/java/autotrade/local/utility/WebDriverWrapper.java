@@ -59,7 +59,7 @@ public class WebDriverWrapper {
         try {
             driver.findElement(By.xpath("//button[starts-with(@id, 'message-cancel')]")).click();
         } catch (Exception e) {
-            e.printStackTrace();
+            // 何もしない
         }
     }
     public void startUpTradeTool() {
