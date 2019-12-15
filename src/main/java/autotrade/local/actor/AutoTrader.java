@@ -10,10 +10,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
@@ -264,7 +262,7 @@ public class AutoTrader {
     }
 
     private boolean isOrderable(LatestInfo latestInfo) {
-        if (ChronoUnit.MILLIS.between(bootDateTime, LocalDateTime.now()) < Duration.ofMinutes(10).toMillis()) {
+        if (Duration.between(bootDateTime, LocalDateTime.now()).toMillis() < Duration.ofMinutes(10).toMillis()) {
             // 起動直後は注文しない
             return false;
         }
@@ -281,16 +279,16 @@ public class AutoTrader {
             }
             // break無し
         case SAME:
-            if (indicatorManager.isNextIndicatorWithin(5) || indicatorManager.isPrevIndicatorWithin(5) ) {
+            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(5)) || indicatorManager.isPrevIndicatorWithin(Duration.ofMinutes(5))) {
                 // 指標が近い場合は注文しない
                 return false;
             }
             if (isInactiveTime()) {
                 // 非活性時間は注文しない
                 // 非活性時間の終了までスリープする
-                long minutesToActive = ChronoUnit.MINUTES.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
-                log.info("application will sleep {} minutes, because of inactive time.", minutesToActive);
-                AutoTradeUtils.sleep(TimeUnit.MINUTES.toMillis(minutesToActive));
+                Duration durationToActive = Duration.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
+                log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
+                AutoTradeUtils.sleep(durationToActive.toMillis());
                 return false;
             }
             if (latestInfo.getRate().isWideSpread()) {

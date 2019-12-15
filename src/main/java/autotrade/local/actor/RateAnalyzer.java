@@ -2,7 +2,6 @@ package autotrade.local.actor;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -33,7 +32,7 @@ public class RateAnalyzer {
             rates.add(rate);
         }
         rates = rates.stream()
-                .filter(r -> ChronoUnit.MILLIS.between(r.getTimestamp(), LocalDateTime.now()) <= Duration.ofMinutes(15).toMillis())
+                .filter(r -> Duration.between(r.getTimestamp(), LocalDateTime.now()).toMillis() <= Duration.ofMinutes(15).toMillis())
                 .collect(Collectors.toList());
 
         // 売買閾値設定
@@ -69,14 +68,14 @@ public class RateAnalyzer {
 
     public int maxWithin(Duration duration) {
         return rates.stream()
-                .filter(r -> ChronoUnit.MILLIS.between(r.getTimestamp(), LocalDateTime.now()) <= duration.toMillis())
+                .filter(r -> Duration.between(r.getTimestamp(), LocalDateTime.now()).toMillis() <= duration.toMillis())
                 .map(Rate::getAsk)
                 .max(Comparator.naturalOrder())
                 .orElse(0);
     }
     public int minWithin(Duration duration) {
         return rates.stream()
-                .filter(r -> ChronoUnit.MILLIS.between(r.getTimestamp(), LocalDateTime.now()) <= duration.toMillis())
+                .filter(r -> Duration.between(r.getTimestamp(), LocalDateTime.now()).toMillis() <= duration.toMillis())
                 .map(Rate::getBid)
                 .min(Comparator.naturalOrder())
                 .orElse(0);

@@ -1,7 +1,7 @@
 package autotrade.local.actor;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,14 +31,14 @@ public class IndicatorManager {
         return nextIndicator;
     }
 
-    public boolean isNextIndicatorWithin(long minute) {
-        if (ChronoUnit.MINUTES.between(LocalDateTime.now(), getNextIndicate()) < minute) {
+    public boolean isNextIndicatorWithin(Duration duration) {
+        if (Duration.between(LocalDateTime.now(), getNextIndicate()).toMillis() < duration.toMillis()) {
             return true;
         }
         return false;
     }
-    public boolean isPrevIndicatorWithin(long minute) {
-        if (ChronoUnit.MINUTES.between(prevIndicator, LocalDateTime.now()) < minute) {
+    public boolean isPrevIndicatorWithin(Duration duration) {
+        if (Duration.between(prevIndicator, LocalDateTime.now()).toMillis() < duration.toMillis()) {
             return true;
         }
         return false;
