@@ -70,13 +70,13 @@ public class RateAnalyzer {
                 .filter(r -> r.toCurrent().toMillis() <= duration.toMillis())
                 .map(Rate::getAsk)
                 .max(Comparator.naturalOrder())
-                .orElse(0);
+                .orElse(Integer.MAX_VALUE);
     }
     public int minWithin(Duration duration) {
         return rates.stream()
                 .filter(r -> r.toCurrent().toMillis() <= duration.toMillis())
                 .map(Rate::getBid)
                 .min(Comparator.naturalOrder())
-                .orElse(0);
+                .orElse(Integer.MIN_VALUE);
     }
 }

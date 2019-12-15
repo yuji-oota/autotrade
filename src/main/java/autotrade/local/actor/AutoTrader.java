@@ -108,19 +108,19 @@ public class AutoTrader {
 
             // ログイン
             wrapper.login();
-            Thread.sleep(Duration.ofSeconds(5).toMillis());
+            AutoTradeUtils.sleep(Duration.ofSeconds(5));
 
             // メッセージダイアログクローズ
             wrapper.cancelMessage();
-            Thread.sleep(Duration.ofSeconds(1).toMillis());
+            AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
             // ツール起動
             wrapper.startUpTradeTool();
-            Thread.sleep(Duration.ofSeconds(1).toMillis());
+            AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
             // 設定
             wrapper.settings();
-            Thread.sleep(Duration.ofSeconds(1).toMillis());
+            AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
             // 開始時の証拠金を取得
             switch (StartMarginMode.valueOf(messenger.get("startMarginMode"))) {
@@ -141,7 +141,7 @@ public class AutoTrader {
             while(true) {
                 // 取引
                 trade();
-                Thread.sleep(100);
+                AutoTradeUtils.sleep(Duration.ofMillis(100));
 
                 // メッセンジャー再接続
                 messenger.reConnect();
@@ -159,8 +159,8 @@ public class AutoTrader {
 
     private LatestInfo getLatestInfo() {
         return LatestInfo.builder()
-                .askLot(AutoTradeUtils.toInt(wrapper.getAskLot().replace("　(0)", "")))
-                .bidLot(AutoTradeUtils.toInt(wrapper.getBidLot().replace("　(0)", "")))
+                .askLot(AutoTradeUtils.toInt(wrapper.getAskLot()))
+                .bidLot(AutoTradeUtils.toInt(wrapper.getBidLot()))
                 .askAverageRate(AutoTradeUtils.toInt(wrapper.getAskAverageRate()))
                 .bidAverageRate(AutoTradeUtils.toInt(wrapper.getBidAverageRate()))
                 .askPipProfit(AutoTradeUtils.toInt(wrapper.getAskPipProfit()))
@@ -219,6 +219,9 @@ public class AutoTrader {
 
                 // 残ポジションの利益を保存
                 sameManager.setProfitWhenOneSideFixed(latestInfo.getBidProfit());
+
+                // ベリファイ
+                verifyOrder(0, LatestInfo::getAskLot);
             }
             // Bid切り離し判定
             if (sameManager.isCutOffBid(latestInfo, rateAnalyzer)) {
@@ -229,6 +232,9 @@ public class AutoTrader {
 
                 // 残ポジションの利益を保存
                 sameManager.setProfitWhenOneSideFixed(latestInfo.getAskProfit());
+
+                // ベリファイ
+                verifyOrder(0, LatestInfo::getBidLot);
             }
             break;
         case ASK_SIDE:
@@ -262,7 +268,7 @@ public class AutoTrader {
     }
 
     private boolean isOrderable(LatestInfo latestInfo) {
-        if (Duration.between(bootDateTime, LocalDateTime.now()).toMillis() < Duration.ofMinutes(10).toMillis()) {
+        if (Duration.between(bootDateTime, LocalDateTime.now()).toMillis() < Duration.ofMinutes(3).toMillis()) {
             // 起動直後は注文しない
             return false;
         }
@@ -288,7 +294,7 @@ public class AutoTrader {
                 // 非活性時間の終了までスリープする
                 Duration durationToActive = Duration.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
                 log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
-                AutoTradeUtils.sleep(durationToActive.toMillis());
+                AutoTradeUtils.sleep(durationToActive);
                 return false;
             }
             if (latestInfo.getRate().isWideSpread()) {
@@ -375,19 +381,21 @@ public class AutoTrader {
     }
 
     private void orderAsk(int lot) {
+        int beforeLot = AutoTradeUtils.toInt(wrapper.getAskLot());
         wrapper.setLot(lot);
         wrapper.orderAsk();
-        verifyOrder(lot, LatestInfo::getAskLot);
+        verifyOrder(beforeLot + lot, LatestInfo::getAskLot);
     }
     private void orderBid(int lot) {
+        int beforeLot = AutoTradeUtils.toInt(wrapper.getBidLot());
         wrapper.setLot(lot);
         wrapper.orderBid();
-        verifyOrder(lot, LatestInfo::getBidLot);
+        verifyOrder(beforeLot + lot, LatestInfo::getBidLot);
     }
     private void verifyOrder(int lot, ToIntFunction<LatestInfo> lotAfterOrder) {
         long verifyStarted = System.currentTimeMillis();
         while (true) {
-            AutoTradeUtils.sleep(500);
+            AutoTradeUtils.sleep(Duration.ofMillis(500));
             LatestInfo latestInfo = getLatestInfo();
             rateAnalyzer.add(latestInfo.getRate());
             if (lot == lotAfterOrder.applyAsInt(latestInfo)) {

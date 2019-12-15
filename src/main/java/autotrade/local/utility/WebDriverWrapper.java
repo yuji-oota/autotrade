@@ -1,6 +1,7 @@
 package autotrade.local.utility;
 
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -39,11 +40,11 @@ public class WebDriverWrapper {
     public void login() {
 
         driver.get("https://hirose-fx.co.jp/landing/tool_lp/#web");
-        AutoTradeUtils.sleep(1000);
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
         String currentWindow = driver.getWindowHandle();
         driver.findElement(By.xpath("//a[@href='https://lionfx.hirose-fx.co.jp/WTChartWeb/index.html']")).click();
-        AutoTradeUtils.sleep(5000);
+        AutoTradeUtils.sleep(Duration.ofSeconds(5));
 
         driver.switchTo().window(driver.getWindowHandles().stream()
                 .filter(window -> !window.equals(currentWindow))
@@ -52,7 +53,7 @@ public class WebDriverWrapper {
                 );
         driver.findElement(By.id("login-id")).sendKeys(AutoTradeProperties.get("fx.login.username"));
         driver.findElement(By.id("login-pw")).sendKeys(AutoTradeProperties.get("fx.login.password"));
-        AutoTradeUtils.sleep(1000);
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
         driver.findElement(By.id("doLogin")).click();
     }
     public void cancelMessage() {
@@ -86,10 +87,10 @@ public class WebDriverWrapper {
         return driver.findElement(By.xpath("//div[@id='account-status-01-value']")).getText();
     }
     public String getAskLot() {
-        return driver.findElement(By.xpath("//div[@id='order-quick']/div[3]/div[2]/div/div[3]")).getText();
+        return driver.findElement(By.xpath("//div[@id='order-quick']/div[3]/div[2]/div/div[3]")).getText().replace("　(0)", "");
     }
     public String getBidLot() {
-        return driver.findElement(By.xpath("//div[@id='order-quick']/div[3]/div[2]/div/div[1]")).getText();
+        return driver.findElement(By.xpath("//div[@id='order-quick']/div[3]/div[2]/div/div[1]")).getText().replace("　(0)", "");
     }
     public String getAskAverageRate() {
         return driver.findElement(By.xpath("//div[@class='buy-avg-rate total-row-base']")).getText();
@@ -137,7 +138,6 @@ public class WebDriverWrapper {
             e.printStackTrace();
         }
         log.info("ask {}", getAskRate());
-        AutoTradeUtils.sleep(3000);
     }
     public void orderBid() {
         try {
@@ -146,7 +146,6 @@ public class WebDriverWrapper {
             e.printStackTrace();
         }
         log.info("bid {}", getBidRate());
-        AutoTradeUtils.sleep(3000);
     }
     public void fixAll() {
         try {
@@ -154,7 +153,6 @@ public class WebDriverWrapper {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        AutoTradeUtils.sleep(1500);
     }
     public void fixAsk() {
         try {
@@ -162,7 +160,6 @@ public class WebDriverWrapper {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        AutoTradeUtils.sleep(1500);
     }
     public void fixBid() {
         try {
@@ -170,7 +167,6 @@ public class WebDriverWrapper {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        AutoTradeUtils.sleep(1500);
     }
 
 }
