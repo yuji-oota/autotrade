@@ -33,7 +33,7 @@ public class RateAnalyzer {
             rates.add(rate);
         }
         rates = rates.stream()
-                .filter(r -> ChronoUnit.MINUTES.between(r.getTimestamp(), LocalDateTime.now()) <= 15)
+                .filter(r -> ChronoUnit.MILLIS.between(r.getTimestamp(), LocalDateTime.now()) <= Duration.ofMinutes(15).toMillis())
                 .collect(Collectors.toList());
 
         // 売買閾値設定
