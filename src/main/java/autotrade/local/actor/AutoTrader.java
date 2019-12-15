@@ -14,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.WebDriver;
@@ -108,19 +109,19 @@ public class AutoTrader {
 
             // ログイン
             wrapper.login();
-            Thread.sleep(5000);
+            Thread.sleep(Duration.ofSeconds(5).toMillis());
 
             // メッセージダイアログクローズ
             wrapper.cancelMessage();
-            Thread.sleep(1000);
+            Thread.sleep(Duration.ofSeconds(1).toMillis());
 
             // ツール起動
             wrapper.startUpTradeTool();
-            Thread.sleep(1000);
+            Thread.sleep(Duration.ofSeconds(1).toMillis());
 
             // 設定
             wrapper.settings();
-            Thread.sleep(1000);
+            Thread.sleep(Duration.ofSeconds(1).toMillis());
 
             // 開始時の証拠金を取得
             startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
@@ -366,28 +367,20 @@ public class AutoTrader {
     private void orderAsk(int lot) {
         wrapper.setLot(lot);
         wrapper.orderAsk();
-        long verifyStarted = System.currentTimeMillis();
-        while (true) {
-            AutoTradeUtils.sleep(500);
-            LatestInfo latestInfo = getLatestInfo();
-            rateAnalyzer.add(latestInfo.getRate());
-            if (lot == latestInfo.getAskLot()) {
-                break;
-            }
-            if (System.currentTimeMillis() - verifyStarted > Duration.ofSeconds(10).toMillis()) {
-                break;
-            }
-        }
+        verifyOrder(lot, LatestInfo::getAskLot);
     }
     private void orderBid(int lot) {
         wrapper.setLot(lot);
         wrapper.orderBid();
+        verifyOrder(lot, LatestInfo::getBidLot);
+    }
+    private void verifyOrder(int lot, ToIntFunction<LatestInfo> lotAfterOrder) {
         long verifyStarted = System.currentTimeMillis();
         while (true) {
             AutoTradeUtils.sleep(500);
             LatestInfo latestInfo = getLatestInfo();
             rateAnalyzer.add(latestInfo.getRate());
-            if (lot == latestInfo.getBidLot()) {
+            if (lot == lotAfterOrder.applyAsInt(latestInfo)) {
                 break;
             }
             if (System.currentTimeMillis() - verifyStarted > Duration.ofSeconds(10).toMillis()) {
