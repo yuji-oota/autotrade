@@ -1,6 +1,6 @@
 package autotrade.local.material;
 
-public enum NextBootMargin {
+public enum StartMarginMode {
     NEW,
     CARRY_OVER,
 }

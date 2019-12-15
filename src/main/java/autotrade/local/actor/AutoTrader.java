@@ -24,8 +24,8 @@ import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.actor.SameManager.CutOffMode;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.LatestInfo;
-import autotrade.local.material.NextBootMargin;
 import autotrade.local.material.Rate;
+import autotrade.local.material.StartMarginMode;
 import autotrade.local.utility.AutoTradeProperties;
 import autotrade.local.utility.AutoTradeUtils;
 import autotrade.local.utility.WebDriverWrapper;
@@ -125,7 +125,7 @@ public class AutoTrader {
             Thread.sleep(Duration.ofSeconds(1).toMillis());
 
             // 開始時の証拠金を取得
-            switch (NextBootMargin.valueOf(messenger.get("nextBootMargin"))) {
+            switch (StartMarginMode.valueOf(messenger.get("startMarginMode"))) {
             case NEW:
                 startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
                 break;
@@ -134,7 +134,7 @@ public class AutoTrader {
                 break;
             }
             messenger.set("startMargin", String.valueOf(startMargin));
-            messenger.set("nextBootMargin", NextBootMargin.CARRY_OVER.name());
+            messenger.set("startMarginMode", StartMarginMode.CARRY_OVER.name());
 
             // 一日の目標金額設定
             targetAmountOneDay = new BigDecimal(startMargin).multiply(new BigDecimal(0.01)).intValue();
@@ -405,7 +405,7 @@ public class AutoTrader {
         switch (latestInfo.getStatus()) {
         case NONE:
             if (isInactiveTime()) {
-                messenger.set("nextBootMargin", NextBootMargin.NEW.name());
+                messenger.set("startMarginMode", StartMarginMode.NEW.name());
             }
             break;
         default:
