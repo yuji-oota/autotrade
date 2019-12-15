@@ -182,7 +182,7 @@ public class AutoTrader {
         LatestInfo latestInfo = getLatestInfo();
 
         // 次回起動時設定
-        nextBootSetting(latestInfo);
+        startMarginSetting(latestInfo);
 
         if (isOrderable(latestInfo)) {
             // 最新情報を元に利益確定
@@ -401,7 +401,7 @@ public class AutoTrader {
         }
     }
 
-    private void nextBootSetting(LatestInfo latestInfo) {
+    private void startMarginSetting(LatestInfo latestInfo) {
         switch (latestInfo.getStatus()) {
         case NONE:
             if (isInactiveTime()) {
