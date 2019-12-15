@@ -24,6 +24,7 @@ import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.actor.SameManager.CutOffMode;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.LatestInfo;
+import autotrade.local.material.NextBootMargin;
 import autotrade.local.material.Rate;
 import autotrade.local.utility.AutoTradeProperties;
 import autotrade.local.utility.AutoTradeUtils;
@@ -124,8 +125,16 @@ public class AutoTrader {
             Thread.sleep(Duration.ofSeconds(1).toMillis());
 
             // 開始時の証拠金を取得
-            startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
+            switch (NextBootMargin.valueOf(messenger.get("nextBootMargin"))) {
+            case NEW:
+                startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
+                break;
+            default:
+                startMargin = Integer.parseInt(messenger.get("startMargin"));
+                break;
+            }
             messenger.set("startMargin", String.valueOf(startMargin));
+            messenger.set("nextBootMargin", NextBootMargin.CARRY_OVER.name());
 
             // 一日の目標金額設定
             targetAmountOneDay = new BigDecimal(startMargin).multiply(new BigDecimal(0.01)).intValue();
@@ -171,6 +180,9 @@ public class AutoTrader {
 
         // 最新情報取得
         LatestInfo latestInfo = getLatestInfo();
+
+        // 次回起動時設定
+        nextBootSetting(latestInfo);
 
         if (isOrderable(latestInfo)) {
             // 最新情報を元に利益確定
@@ -386,6 +398,17 @@ public class AutoTrader {
             if (System.currentTimeMillis() - verifyStarted > Duration.ofSeconds(10).toMillis()) {
                 break;
             }
+        }
+    }
+
+    private void nextBootSetting(LatestInfo latestInfo) {
+        switch (latestInfo.getStatus()) {
+        case NONE:
+            if (isInactiveTime()) {
+                messenger.set("nextBootMargin", NextBootMargin.NEW.name());
+            }
+            break;
+        default:
         }
     }
 }
