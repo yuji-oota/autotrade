@@ -1,5 +1,6 @@
 package autotrade.local.material;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 import lombok.Builder;
@@ -25,5 +26,9 @@ public class Rate {
 
     public boolean isWideSpread() {
         return getSpread() > 2;
+    }
+
+    public Duration toCurrent() {
+        return Duration.between(timestamp, LocalDateTime.now());
     }
 }
