@@ -252,7 +252,7 @@ public class AutoTrader {
     }
 
     private boolean isOrderable(LatestInfo latestInfo) {
-        if (ChronoUnit.MINUTES.between(bootDateTime, LocalDateTime.now()) < 10) {
+        if (ChronoUnit.MILLIS.between(bootDateTime, LocalDateTime.now()) < Duration.ofMinutes(10).toMillis()) {
             // 起動直後は注文しない
             return false;
         }
