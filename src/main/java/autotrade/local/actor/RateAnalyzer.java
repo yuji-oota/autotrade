@@ -79,4 +79,11 @@ public class RateAnalyzer {
                 .min(Comparator.naturalOrder())
                 .orElse(Integer.MIN_VALUE);
     }
+
+    public boolean isMoving() {
+        if (rangeWithin(Duration.ofSeconds(1)) == 2) {
+            return false;
+        }
+        return true;
+    }
 }

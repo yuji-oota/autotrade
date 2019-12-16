@@ -79,6 +79,9 @@ public class SameManager {
         if (cutOffMode != CutOffMode.ASK) {
             return false;
         }
+        if (!rateAnalyzer.isMoving()) {
+            return false;
+        }
         Rate rate = latestInfo.getRate();
 //        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
 //            return true;
@@ -91,6 +94,9 @@ public class SameManager {
 
     public boolean isCutOffBid(LatestInfo latestInfo, RateAnalyzer rateAnalyzer) {
         if (cutOffMode != CutOffMode.BID) {
+            return false;
+        }
+        if (!rateAnalyzer.isMoving()) {
             return false;
         }
         Rate rate = latestInfo.getRate();
