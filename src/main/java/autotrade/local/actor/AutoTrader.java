@@ -422,7 +422,7 @@ public class AutoTrader {
                 break;
             }
             if (System.currentTimeMillis() - verifyStarted > Duration.ofSeconds(10).toMillis()) {
-                break;
+                throw new ApplicationException("verify is failed.");
             }
         }
     }
