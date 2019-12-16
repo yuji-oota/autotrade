@@ -346,11 +346,12 @@ public class AutoTrader {
                 // 逆ポジション取得
                 orderBid(lotManager.nextBidLot(latestInfo));
             }
-//            if (SameManager.hasInstance()
-//                    && rate.getBid() - SameManager.getInstance().getAskWhenCutOff() > 5) {
-//                // 小刻みにSame戻し
-//                orderBid(lotManager.nextBidLot(latestInfo));
-//            }
+            if (SameManager.hasInstance()
+                    && rate.getBid() - SameManager.getInstance().getAskWhenCutOff() >= 5) {
+                // 小刻みにSame戻し
+                orderBid(lotManager.nextBidLot(latestInfo));
+                log.info("margin is recovered just a little.");
+            }
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
@@ -370,11 +371,12 @@ public class AutoTrader {
                 // 逆ポジション取得
                 orderAsk(lotManager.nextAskLot(latestInfo));
             }
-//            if (SameManager.hasInstance()
-//                    && SameManager.getInstance().getBidWhenCutOff() - rate.getAsk() > 5) {
-//                // 小刻みにSame戻し
-//                orderBid(lotManager.nextBidLot(latestInfo));
-//            }
+            if (SameManager.hasInstance()
+                    && SameManager.getInstance().getBidWhenCutOff() - rate.getAsk() >= 5) {
+                // 小刻みにSame戻し
+                orderBid(lotManager.nextBidLot(latestInfo));
+                log.info("margin is recovered just a little.");
+            }
             break;
         case SAME:
             // ポジションが同数の場合
