@@ -28,7 +28,19 @@ public class SameManager {
 
     @Setter
     @Getter
-    private int profitWhenOneSideFixed;
+    private int askProfitWhenCutOff;
+
+    @Setter
+    @Getter
+    private int bidProfitWhenCutOff;
+
+    @Setter
+    @Getter
+    private int askWhenCutOff;
+
+    @Setter
+    @Getter
+    private int bidWhenCutOff;
 
     private SameManager(int todaysProfit) {
         this.todaysProfitWhenSamed = todaysProfit;
@@ -68,9 +80,9 @@ public class SameManager {
             return false;
         }
         Rate rate = latestInfo.getRate();
-        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
-            return true;
-        }
+//        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
+//            return true;
+//        }
         if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
             return true;
         }
@@ -82,9 +94,9 @@ public class SameManager {
             return false;
         }
         Rate rate = latestInfo.getRate();
-        if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
-            return true;
-        }
+//        if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
+//            return true;
+//        }
         if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
             return true;
         }

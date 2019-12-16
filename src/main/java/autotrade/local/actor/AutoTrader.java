@@ -217,8 +217,10 @@ public class AutoTrader {
                 log.info("same position recovery start. cut off mode {}, rate {}, ask profit {}, total profit {}",
                         sameManager.getCutOffMode(), latestInfo.getRate(), latestInfo.getAskProfit(), latestInfo.getTotalProfit());
 
-                // 残ポジションの利益を保存
-                sameManager.setProfitWhenOneSideFixed(latestInfo.getBidProfit());
+                // 切り離し時点の情報を保存
+                sameManager.setAskWhenCutOff(latestInfo.getRate().getAsk());
+                sameManager.setBidWhenCutOff(latestInfo.getRate().getBid());
+                sameManager.setBidProfitWhenCutOff(latestInfo.getBidProfit());
 
                 // ベリファイ
                 verifyOrder(0, LatestInfo::getAskLot);
@@ -230,8 +232,10 @@ public class AutoTrader {
                 log.info("same position recovery start. cut off mode {}, rate {}, bid profit {}, total profit {}",
                         sameManager.getCutOffMode(), latestInfo.getRate(), latestInfo.getBidProfit(), latestInfo.getTotalProfit());
 
-                // 残ポジションの利益を保存
-                sameManager.setProfitWhenOneSideFixed(latestInfo.getAskProfit());
+                // 切り離し時点の情報を保存
+                sameManager.setAskWhenCutOff(latestInfo.getRate().getAsk());
+                sameManager.setBidWhenCutOff(latestInfo.getRate().getBid());
+                sameManager.setAskProfitWhenCutOff(latestInfo.getAskProfit());
 
                 // ベリファイ
                 verifyOrder(0, LatestInfo::getBidLot);
@@ -342,6 +346,11 @@ public class AutoTrader {
                 // 逆ポジション取得
                 orderBid(lotManager.nextBidLot(latestInfo));
             }
+//            if (SameManager.hasInstance()
+//                    && rate.getBid() - SameManager.getInstance().getAskWhenCutOff() > 5) {
+//                // 小刻みにSame戻し
+//                orderBid(lotManager.nextBidLot(latestInfo));
+//            }
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
@@ -361,6 +370,11 @@ public class AutoTrader {
                 // 逆ポジション取得
                 orderAsk(lotManager.nextAskLot(latestInfo));
             }
+//            if (SameManager.hasInstance()
+//                    && SameManager.getInstance().getBidWhenCutOff() - rate.getAsk() > 5) {
+//                // 小刻みにSame戻し
+//                orderBid(lotManager.nextBidLot(latestInfo));
+//            }
             break;
         case SAME:
             // ポジションが同数の場合

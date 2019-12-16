@@ -15,8 +15,8 @@ public class IndicatorManager {
 
     public IndicatorManager(List<LocalDateTime> indicators) {
         this.indicators = indicators;
-        this.nextIndicator = LocalDateTime.MIN;
-        this.prevIndicator = LocalDateTime.MIN;
+        this.nextIndicator = LocalDateTime.now().plusDays(5);
+        this.prevIndicator = LocalDateTime.now().minusDays(5);
     }
 
     private LocalDateTime getNextIndicate() {
