@@ -21,8 +21,8 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.actor.SameManager.CutOffMode;
 import autotrade.local.exception.ApplicationException;
-import autotrade.local.material.LatestInfo;
 import autotrade.local.material.Rate;
+import autotrade.local.material.Snapshot;
 import autotrade.local.material.StartMarginMode;
 import autotrade.local.utility.AutoTradeProperties;
 import autotrade.local.utility.AutoTradeUtils;
@@ -65,7 +65,7 @@ public class AutoTrader {
         uploadManager = new UploadManager();
         lotManager = new LotManager();
         messenger = new Messenger(new MessageListener()
-                .putCommand(ReservedMessage.LATESTINFO, () -> messenger.set(ReservedMessage.LATESTINFO.name(), AutoTradeUtils.toJson(getLatestInfo())))
+                .putCommand(ReservedMessage.SNAPSHOT, () -> messenger.set(ReservedMessage.SNAPSHOT.name(), AutoTradeUtils.toJson(getSnapshot())))
                 .putCommand(ReservedMessage.UPLOADLOG, () -> uploadManager.upload(logFile))
                 .putCommand(ReservedMessage.AUTOTRADELOG, () -> {
                     int logRows = Integer.parseInt(messenger.get("logRows"));
@@ -157,8 +157,8 @@ public class AutoTrader {
 
     }
 
-    private LatestInfo getLatestInfo() {
-        return LatestInfo.builder()
+    private Snapshot getSnapshot() {
+        return Snapshot.builder()
                 .askLot(AutoTradeUtils.toInt(wrapper.getAskLot()))
                 .bidLot(AutoTradeUtils.toInt(wrapper.getBidLot()))
                 .askAverageRate(AutoTradeUtils.toInt(wrapper.getAskAverageRate()))
@@ -177,68 +177,68 @@ public class AutoTrader {
     private void trade() {
 
         // 最新情報取得
-        LatestInfo latestInfo = getLatestInfo();
+        Snapshot snapshot = getSnapshot();
 
         // 次回起動時設定
-        startMarginSetting(latestInfo);
+        startMarginSetting(snapshot);
 
-        if (isOrderable(latestInfo)) {
+        if (isOrderable(snapshot)) {
             // 最新情報を元に利益確定
-            fix(latestInfo);
+            fix(snapshot);
 
             // 最新情報を元に注文
-            order(latestInfo);
+            order(snapshot);
         }
 
         // analizerにレート追加
-        rateAnalyzer.add(latestInfo.getRate());
+        rateAnalyzer.add(snapshot.getRate());
     }
 
-    private void fix(LatestInfo latestInfo) {
+    private void fix(Snapshot snapshot) {
 
-        switch (latestInfo.getStatus()) {
+        switch (snapshot.getStatus()) {
         case NONE:
             SameManager.close();
             break;
         case SAME:
-            SameManager.setProfit(latestInfo.getTodaysProfit());
+            SameManager.setProfit(snapshot.getTodaysProfit());
             SameManager sameManager = SameManager.getInstance();
 
             // 切り離しモード設定
             sameManager.setCutOffMode(CutOffMode.BID);
-            if ((latestInfo.getAskAverageRate() + latestInfo.getBidAverageRate()) / 2 < latestInfo.getRate().getAsk()) {
+            if ((snapshot.getAskAverageRate() + snapshot.getBidAverageRate()) / 2 < snapshot.getRate().getAsk()) {
                 sameManager.setCutOffMode(CutOffMode.ASK);
             }
 
             // Ask切り離し判定
-            if (sameManager.isCutOffAsk(latestInfo, rateAnalyzer)) {
+            if (sameManager.isCutOffAsk(snapshot, rateAnalyzer)) {
                 // Ask決済
                 wrapper.fixAsk();
                 log.info("same position recovery start. cut off mode {}, rate {}, ask profit {}, total profit {}",
-                        sameManager.getCutOffMode(), latestInfo.getRate(), latestInfo.getAskProfit(), latestInfo.getTotalProfit());
+                        sameManager.getCutOffMode(), snapshot.getRate(), snapshot.getAskProfit(), snapshot.getTotalProfit());
 
                 // 切り離し時点の情報を保存
-                sameManager.setAskWhenCutOff(latestInfo.getRate().getAsk());
-                sameManager.setBidWhenCutOff(latestInfo.getRate().getBid());
-                sameManager.setBidProfitWhenCutOff(latestInfo.getBidProfit());
+                sameManager.setAskWhenCutOff(snapshot.getRate().getAsk());
+                sameManager.setBidWhenCutOff(snapshot.getRate().getBid());
+                sameManager.setBidProfitWhenCutOff(snapshot.getBidProfit());
 
                 // ベリファイ
-                verifyOrder(0, LatestInfo::getAskLot);
+                verifyOrder(0, Snapshot::getAskLot);
             }
             // Bid切り離し判定
-            if (sameManager.isCutOffBid(latestInfo, rateAnalyzer)) {
+            if (sameManager.isCutOffBid(snapshot, rateAnalyzer)) {
                 // Bid決済
                 wrapper.fixBid();
                 log.info("same position recovery start. cut off mode {}, rate {}, bid profit {}, total profit {}",
-                        sameManager.getCutOffMode(), latestInfo.getRate(), latestInfo.getBidProfit(), latestInfo.getTotalProfit());
+                        sameManager.getCutOffMode(), snapshot.getRate(), snapshot.getBidProfit(), snapshot.getTotalProfit());
 
                 // 切り離し時点の情報を保存
-                sameManager.setAskWhenCutOff(latestInfo.getRate().getAsk());
-                sameManager.setBidWhenCutOff(latestInfo.getRate().getBid());
-                sameManager.setAskProfitWhenCutOff(latestInfo.getAskProfit());
+                sameManager.setAskWhenCutOff(snapshot.getRate().getAsk());
+                sameManager.setBidWhenCutOff(snapshot.getRate().getBid());
+                sameManager.setAskProfitWhenCutOff(snapshot.getAskProfit());
 
                 // ベリファイ
-                verifyOrder(0, LatestInfo::getBidLot);
+                verifyOrder(0, Snapshot::getBidLot);
             }
             break;
         case ASK_SIDE:
@@ -250,20 +250,20 @@ public class AutoTrader {
                 SameManager.getInstance().setCutOffMode(CutOffMode.NONE);
 
                 // Sameポジション回復中の場合
-                if (SameManager.getInstance().isRecovered(latestInfo.getTotalProfit())) {
+                if (SameManager.getInstance().isRecovered(snapshot.getTotalProfit())) {
                     // Sameポジション回復達成で利益確定
                     wrapper.fixAll();
-                    log.info("same position recovery done. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getPositionProfit(), latestInfo.getTotalProfit());
+                    log.info("same position recovery done. rate {}, profit {}, total profit {}", snapshot.getRate(), snapshot.getPositionProfit(), snapshot.getTotalProfit());
                     lastFixed = System.currentTimeMillis();
                 }
                 return;
             }
 
             // 通常の利益確定判定
-            if (latestInfo.getPositionProfit() >= targetAmountOneTrade) {
+            if (snapshot.getPositionProfit() >= targetAmountOneTrade) {
                 // 目標金額達成で利益確定
                 wrapper.fixAll();
-                log.info("achieved target amount. rate {}, profit {}, total profit {}", latestInfo.getRate(), latestInfo.getPositionProfit(), latestInfo.getTotalProfit());
+                log.info("achieved target amount. rate {}, profit {}, total profit {}", snapshot.getRate(), snapshot.getPositionProfit(), snapshot.getTotalProfit());
                 lastFixed = System.currentTimeMillis();
             }
             break;
@@ -271,7 +271,7 @@ public class AutoTrader {
         }
     }
 
-    private boolean isOrderable(LatestInfo latestInfo) {
+    private boolean isOrderable(Snapshot snapshot) {
         if (Duration.between(bootDateTime, LocalDateTime.now()).toMillis() < Duration.ofMinutes(3).toMillis()) {
             // 起動直後は注文しない
             return false;
@@ -285,7 +285,7 @@ public class AutoTrader {
             return false;
         }
 
-        switch (latestInfo.getStatus()) {
+        switch (snapshot.getStatus()) {
         case NONE:
             if (System.currentTimeMillis() - lastFixed < Duration.ofMinutes(1).toMillis()) {
                 // 利益確定から１分以内の場合は注文しない
@@ -305,7 +305,7 @@ public class AutoTrader {
                 AutoTradeUtils.sleep(durationToActive);
                 return false;
             }
-            if (latestInfo.getRate().isWideSpread()) {
+            if (snapshot.getRate().isWideSpread()) {
                 // スプレッドが開いている場合は注文しない
                 return false;
             }
@@ -315,14 +315,14 @@ public class AutoTrader {
         return true;
     }
 
-    private void order(LatestInfo latestInfo) {
-        Rate rate = latestInfo.getRate();
-        if (latestInfo.getTotalProfit() > targetAmountOneDay) {
+    private void order(Snapshot snapshot) {
+        Rate rate = snapshot.getRate();
+        if (snapshot.getTotalProfit() > targetAmountOneDay) {
             // 一日の目標金額を達成した場合は消極的に取引する
             lotManager.modeNegative();
         }
 
-        switch (latestInfo.getStatus()) {
+        switch (snapshot.getStatus()) {
         case NONE:
             // ポジションがない場合
             if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
@@ -337,24 +337,24 @@ public class AutoTrader {
             // Same前
             if (!SameManager.hasInstance()
                     && rate.getBid() <= rateAnalyzer.getBidThreshold()
-                    && rate.getBid() < latestInfo.getAskAverageRate()) {
+                    && rate.getBid() < snapshot.getAskAverageRate()) {
                 // 下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
-                orderBid(lotManager.nextBidLot(latestInfo));
+                orderBid(lotManager.nextBidLot(snapshot));
             }
             // Same後
             if (SameManager.hasInstance()
                     && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))
-                    && rate.getBid() < latestInfo.getAskAverageRate()) {
+                    && rate.getBid() < snapshot.getAskAverageRate()) {
                 // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
-                orderBid(lotManager.nextBidLot(latestInfo));
+                orderBid(lotManager.nextBidLot(snapshot));
             }
             if (SameManager.hasInstance()
                     && rate.getBid() - SameManager.getInstance().getAskWhenCutOff() >= 5
-                    && rate.getBid() < latestInfo.getAskAverageRate()) {
+                    && rate.getBid() < snapshot.getAskAverageRate()) {
                 // 小刻みにSame戻し
-                orderBid(lotManager.nextBidLot(latestInfo));
+                orderBid(lotManager.nextBidLot(snapshot));
                 log.info("margin is recovered just a little.");
             }
             break;
@@ -363,24 +363,24 @@ public class AutoTrader {
             // Same前
             if (!SameManager.hasInstance()
                     && rateAnalyzer.getAskThreshold() <= rate.getAsk()
-                    && latestInfo.getBidAverageRate() < rate.getAsk()) {
+                    && snapshot.getBidAverageRate() < rate.getAsk()) {
                 // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
-                orderAsk(lotManager.nextAskLot(latestInfo));
+                orderAsk(lotManager.nextAskLot(snapshot));
             }
             // Same後
             if (SameManager.hasInstance()
                     && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()
-                    && latestInfo.getBidAverageRate() < rate.getAsk()) {
+                    && snapshot.getBidAverageRate() < rate.getAsk()) {
                 // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
-                orderAsk(lotManager.nextAskLot(latestInfo));
+                orderAsk(lotManager.nextAskLot(snapshot));
             }
             if (SameManager.hasInstance()
                     && SameManager.getInstance().getBidWhenCutOff() - rate.getAsk() >= 5
-                    && latestInfo.getBidAverageRate() < rate.getAsk()) {
+                    && snapshot.getBidAverageRate() < rate.getAsk()) {
                 // 小刻みにSame戻し
-                orderAsk(lotManager.nextAskLot(latestInfo));
+                orderAsk(lotManager.nextAskLot(snapshot));
                 log.info("margin is recovered just a little.");
             }
             break;
@@ -393,9 +393,9 @@ public class AutoTrader {
     }
 
     private void forceSame() {
-        LatestInfo latestInfo = getLatestInfo();
-        int askLot = latestInfo.getAskLot();
-        int bidLot = latestInfo.getBidLot();
+        Snapshot snapshot = getSnapshot();
+        int askLot = snapshot.getAskLot();
+        int bidLot = snapshot.getBidLot();
         if (bidLot < askLot) {
             orderBid(askLot - bidLot);
         }
@@ -412,21 +412,21 @@ public class AutoTrader {
         int beforeLot = AutoTradeUtils.toInt(wrapper.getAskLot());
         wrapper.setLot(lot);
         wrapper.orderAsk();
-        verifyOrder(beforeLot + lot, LatestInfo::getAskLot);
+        verifyOrder(beforeLot + lot, Snapshot::getAskLot);
     }
     private void orderBid(int lot) {
         int beforeLot = AutoTradeUtils.toInt(wrapper.getBidLot());
         wrapper.setLot(lot);
         wrapper.orderBid();
-        verifyOrder(beforeLot + lot, LatestInfo::getBidLot);
+        verifyOrder(beforeLot + lot, Snapshot::getBidLot);
     }
-    private void verifyOrder(int lot, ToIntFunction<LatestInfo> lotAfterOrder) {
+    private void verifyOrder(int lot, ToIntFunction<Snapshot> lotAfterOrder) {
         long verifyStarted = System.currentTimeMillis();
         while (true) {
             AutoTradeUtils.sleep(Duration.ofMillis(500));
-            LatestInfo latestInfo = getLatestInfo();
-            rateAnalyzer.add(latestInfo.getRate());
-            if (lot == lotAfterOrder.applyAsInt(latestInfo)) {
+            Snapshot snapshot = getSnapshot();
+            rateAnalyzer.add(snapshot.getRate());
+            if (lot == lotAfterOrder.applyAsInt(snapshot)) {
                 break;
             }
             if (System.currentTimeMillis() - verifyStarted > Duration.ofSeconds(10).toMillis()) {
@@ -435,8 +435,8 @@ public class AutoTrader {
         }
     }
 
-    private void startMarginSetting(LatestInfo latestInfo) {
-        switch (latestInfo.getStatus()) {
+    private void startMarginSetting(Snapshot snapshot) {
+        switch (snapshot.getStatus()) {
         case NONE:
             if (isInactiveTime()) {
                 messenger.set("startMarginMode", StartMarginMode.NEW.name());

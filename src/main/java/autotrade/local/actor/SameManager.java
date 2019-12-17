@@ -4,8 +4,8 @@ import java.time.Duration;
 import java.util.Objects;
 
 import autotrade.local.exception.ApplicationException;
-import autotrade.local.material.LatestInfo;
 import autotrade.local.material.Rate;
+import autotrade.local.material.Snapshot;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -75,11 +75,11 @@ public class SameManager {
         instance = null;
     }
 
-    public boolean isCutOffAsk(LatestInfo latestInfo, RateAnalyzer rateAnalyzer) {
+    public boolean isCutOffAsk(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
         if (cutOffMode != CutOffMode.ASK) {
             return false;
         }
-        Rate rate = latestInfo.getRate();
+        Rate rate = snapshot.getRate();
 //        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
 //            return true;
 //        }
@@ -89,11 +89,11 @@ public class SameManager {
         return false;
     }
 
-    public boolean isCutOffBid(LatestInfo latestInfo, RateAnalyzer rateAnalyzer) {
+    public boolean isCutOffBid(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
         if (cutOffMode != CutOffMode.BID) {
             return false;
         }
-        Rate rate = latestInfo.getRate();
+        Rate rate = snapshot.getRate();
 //        if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
 //            return true;
 //        }

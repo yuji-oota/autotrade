@@ -1,6 +1,6 @@
 package autotrade.local.actor;
 
-import autotrade.local.material.LatestInfo;
+import autotrade.local.material.Snapshot;
 import autotrade.local.utility.AutoTradeProperties;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,15 +27,15 @@ public class LotManager {
         modePositive();
     }
 
-    public int nextAskLot(LatestInfo latestInfo) {
+    public int nextAskLot(Snapshot snapshot) {
         int sameLimit = getSameLimit();
-        int askLot = latestInfo.getBidLot() * 2 - latestInfo.getAskLot();
-        return latestInfo.getBidLot() >= sameLimit ? sameLimit - latestInfo.getAskLot() : askLot;
+        int askLot = snapshot.getBidLot() * 2 - snapshot.getAskLot();
+        return snapshot.getBidLot() >= sameLimit ? sameLimit - snapshot.getAskLot() : askLot;
     }
-    public int nextBidLot(LatestInfo latestInfo) {
+    public int nextBidLot(Snapshot snapshot) {
         int sameLimit = getSameLimit();
-        int bidLot = latestInfo.getAskLot() * 2 - latestInfo.getBidLot();
-        return latestInfo.getAskLot() >= sameLimit ? sameLimit - latestInfo.getBidLot() : bidLot;
+        int bidLot = snapshot.getAskLot() * 2 - snapshot.getBidLot();
+        return snapshot.getAskLot() >= sameLimit ? sameLimit - snapshot.getBidLot() : bidLot;
     }
 
     public void modePositive() {

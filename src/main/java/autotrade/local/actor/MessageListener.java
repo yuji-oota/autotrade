@@ -18,7 +18,7 @@ public class MessageListener extends RedisPubSubAdapter<String, String> {
         FIXBID,
         FIXALL,
         FORCESAME,
-        LATESTINFO,
+        SNAPSHOT,
     }
 
     private Map<ReservedMessage, Runnable> commandMap;

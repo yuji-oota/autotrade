@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class LatestInfo {
+public class Snapshot {
 
     private int askLot;
     private int bidLot;
