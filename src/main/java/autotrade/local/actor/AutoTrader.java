@@ -351,7 +351,8 @@ public class AutoTrader {
                 orderBid(lotManager.nextBidLot(latestInfo));
             }
             if (SameManager.hasInstance()
-                    && rate.getBid() - SameManager.getInstance().getAskWhenCutOff() >= 5) {
+                    && rate.getBid() - SameManager.getInstance().getAskWhenCutOff() >= 5
+                    && rate.getBid() < latestInfo.getAskAverageRate()) {
                 // 小刻みにSame戻し
                 orderBid(lotManager.nextBidLot(latestInfo));
                 log.info("margin is recovered just a little.");
@@ -376,7 +377,8 @@ public class AutoTrader {
                 orderAsk(lotManager.nextAskLot(latestInfo));
             }
             if (SameManager.hasInstance()
-                    && SameManager.getInstance().getBidWhenCutOff() - rate.getAsk() >= 5) {
+                    && SameManager.getInstance().getBidWhenCutOff() - rate.getAsk() >= 5
+                    && latestInfo.getBidAverageRate() < rate.getAsk()) {
                 // 小刻みにSame戻し
                 orderAsk(lotManager.nextAskLot(latestInfo));
                 log.info("margin is recovered just a little.");
