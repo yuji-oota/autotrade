@@ -280,6 +280,10 @@ public class AutoTrader {
             // 閾値間隔が狭い場合は注文しない
             return false;
         }
+        if (!rateAnalyzer.isMovingWithin(Duration.ofSeconds(1))) {
+            // 動いていない場合は注文しない
+            return false;
+        }
 
         switch (latestInfo.getStatus()) {
         case NONE:
@@ -374,7 +378,7 @@ public class AutoTrader {
             if (SameManager.hasInstance()
                     && SameManager.getInstance().getBidWhenCutOff() - rate.getAsk() >= 5) {
                 // 小刻みにSame戻し
-                orderBid(lotManager.nextBidLot(latestInfo));
+                orderAsk(lotManager.nextAskLot(latestInfo));
                 log.info("margin is recovered just a little.");
             }
             break;

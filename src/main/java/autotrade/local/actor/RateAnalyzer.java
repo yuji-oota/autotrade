@@ -80,8 +80,8 @@ public class RateAnalyzer {
                 .orElse(Integer.MIN_VALUE);
     }
 
-    public boolean isMoving() {
-        if (rangeWithin(Duration.ofSeconds(1)) == 2) {
+    public boolean isMovingWithin(Duration duration) {
+        if (rangeWithin(duration) == 2) {
             return false;
         }
         return true;
