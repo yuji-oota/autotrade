@@ -339,10 +339,17 @@ public class AutoTrader {
                 orderBid(lotManager.nextBidLot(snapshot));
             }
             // Same後
+//            if (SameManager.hasInstance()
+//                    && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(5))
+//                    && rate.getBid() < snapshot.getAskAverageRate()) {
+//                // Sameリカバリ中の場合、且つ下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
+//                // 逆ポジション取得
+//                orderBid(lotManager.nextBidLot(snapshot));
+//            }
             if (SameManager.hasInstance()
-                    && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(5))
+                    && SameManager.getInstance().getShapshotWhenCutOff().getRate().getAsk() - rate.getBid() >= 5
                     && rate.getBid() < snapshot.getAskAverageRate()) {
-                // Sameリカバリ中の場合、且つ下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
+                // Sameリカバリ中の場合、0.5pips逆行
                 // 逆ポジション取得
                 orderBid(lotManager.nextBidLot(snapshot));
             }
@@ -366,10 +373,17 @@ public class AutoTrader {
                 orderAsk(lotManager.nextAskLot(snapshot));
             }
             // Same後
+//            if (SameManager.hasInstance()
+//                    && rateAnalyzer.maxWithin(Duration.ofMinutes(5)) <= rate.getAsk()
+//                    && snapshot.getBidAverageRate() < rate.getAsk()) {
+//                // Sameリカバリ中の場合、且つ上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
+//                // 逆ポジション取得
+//                orderAsk(lotManager.nextAskLot(snapshot));
+//            }
             if (SameManager.hasInstance()
-                    && rateAnalyzer.maxWithin(Duration.ofMinutes(5)) <= rate.getAsk()
+                    && rate.getAsk() - SameManager.getInstance().getShapshotWhenCutOff().getRate().getBid() >= 5
                     && snapshot.getBidAverageRate() < rate.getAsk()) {
-                // Sameリカバリ中の場合、且つ上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
+                // Sameリカバリ中の場合、0.5pips逆行
                 // 逆ポジション取得
                 orderAsk(lotManager.nextAskLot(snapshot));
             }
