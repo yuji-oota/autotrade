@@ -218,9 +218,7 @@ public class AutoTrader {
                         sameManager.getCutOffMode(), snapshot.getRate(), snapshot.getAskProfit(), snapshot.getTotalProfit());
 
                 // 切り離し時点の情報を保存
-                sameManager.setAskWhenCutOff(snapshot.getRate().getAsk());
-                sameManager.setBidWhenCutOff(snapshot.getRate().getBid());
-                sameManager.setBidProfitWhenCutOff(snapshot.getBidProfit());
+                sameManager.setShapshotWhenCutOff(snapshot);
 
                 // ベリファイ
                 verifyOrder(0, Snapshot::getAskLot);
@@ -233,9 +231,7 @@ public class AutoTrader {
                         sameManager.getCutOffMode(), snapshot.getRate(), snapshot.getBidProfit(), snapshot.getTotalProfit());
 
                 // 切り離し時点の情報を保存
-                sameManager.setAskWhenCutOff(snapshot.getRate().getAsk());
-                sameManager.setBidWhenCutOff(snapshot.getRate().getBid());
-                sameManager.setAskProfitWhenCutOff(snapshot.getAskProfit());
+                sameManager.setShapshotWhenCutOff(snapshot);
 
                 // ベリファイ
                 verifyOrder(0, Snapshot::getBidLot);
@@ -344,14 +340,15 @@ public class AutoTrader {
             }
             // Same後
             if (SameManager.hasInstance()
-                    && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))
+                    && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(5))
                     && rate.getBid() < snapshot.getAskAverageRate()) {
-                // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
+                // Sameリカバリ中の場合、且つ下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
                 orderBid(lotManager.nextBidLot(snapshot));
             }
             if (SameManager.hasInstance()
-                    && rate.getBid() - SameManager.getInstance().getAskWhenCutOff() >= 5
+                    && rate.getBid() - SameManager.getInstance().getShapshotWhenCutOff().getRate().getAsk() >= 5
+                            && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))
                     && rate.getBid() < snapshot.getAskAverageRate()) {
                 // 小刻みにSame戻し
                 orderBid(lotManager.nextBidLot(snapshot));
@@ -370,14 +367,15 @@ public class AutoTrader {
             }
             // Same後
             if (SameManager.hasInstance()
-                    && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()
+                    && rateAnalyzer.maxWithin(Duration.ofMinutes(5)) <= rate.getAsk()
                     && snapshot.getBidAverageRate() < rate.getAsk()) {
-                // Sameリカバリ中の場合、且つ１分足の下値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
+                // Sameリカバリ中の場合、且つ上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
                 orderAsk(lotManager.nextAskLot(snapshot));
             }
             if (SameManager.hasInstance()
-                    && SameManager.getInstance().getBidWhenCutOff() - rate.getAsk() >= 5
+                    && SameManager.getInstance().getShapshotWhenCutOff().getRate().getBid() - rate.getAsk() >= 5
+                            && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()
                     && snapshot.getBidAverageRate() < rate.getAsk()) {
                 // 小刻みにSame戻し
                 orderAsk(lotManager.nextAskLot(snapshot));

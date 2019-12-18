@@ -1,6 +1,5 @@
 package autotrade.local.actor;
 
-import java.time.Duration;
 import java.util.Objects;
 
 import autotrade.local.exception.ApplicationException;
@@ -28,19 +27,7 @@ public class SameManager {
 
     @Setter
     @Getter
-    private int askProfitWhenCutOff;
-
-    @Setter
-    @Getter
-    private int bidProfitWhenCutOff;
-
-    @Setter
-    @Getter
-    private int askWhenCutOff;
-
-    @Setter
-    @Getter
-    private int bidWhenCutOff;
+    private Snapshot shapshotWhenCutOff;
 
     private SameManager(int todaysProfit) {
         this.todaysProfitWhenSamed = todaysProfit;
@@ -80,12 +67,12 @@ public class SameManager {
             return false;
         }
         Rate rate = snapshot.getRate();
-//        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
-//            return true;
-//        }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
+        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
             return true;
         }
+//        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
+//            return true;
+//        }
         return false;
     }
 
@@ -94,12 +81,12 @@ public class SameManager {
             return false;
         }
         Rate rate = snapshot.getRate();
-//        if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
-//            return true;
-//        }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
+        if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
             return true;
         }
+//        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
+//            return true;
+//        }
         return false;
     }
 
