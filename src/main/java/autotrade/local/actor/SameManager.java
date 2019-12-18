@@ -67,15 +67,17 @@ public class SameManager {
         if (cutOffMode != CutOffMode.ASK) {
             return false;
         }
-        Rate rate = snapshot.getRate();
-        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
-            return true;
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 20) {
+            return false;
         }
+        Rate rate = snapshot.getRate();
+//        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
+//            return true;
+//        }
 //        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
 //            return true;
 //        }
-        if (snapshot.getAskProfit() > 0
-                && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
+        if (rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
             return true;
         }
         return false;
@@ -85,15 +87,17 @@ public class SameManager {
         if (cutOffMode != CutOffMode.BID) {
             return false;
         }
-        Rate rate = snapshot.getRate();
-        if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
-            return true;
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 20) {
+            return false;
         }
+        Rate rate = snapshot.getRate();
+//        if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
+//            return true;
+//        }
 //        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
 //            return true;
 //        }
-        if (snapshot.getBidProfit() > 0
-                && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
+        if (rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
             return true;
         }
         return false;
