@@ -346,13 +346,13 @@ public class AutoTrader {
                 // 逆ポジション取得
                 orderBid(lotManager.nextBidLot(snapshot));
             }
-            if (SameManager.hasInstance()
-                    && SameManager.getInstance().getShapshotWhenCutOff().getRate().getAsk() - rate.getBid() >= 5
-                    && rate.getBid() < snapshot.getAskAverageRate()) {
-                // Sameリカバリ中の場合、0.5pips逆行
-                // 逆ポジション取得
-                orderBid(lotManager.nextBidLot(snapshot));
-            }
+//            if (SameManager.hasInstance()
+//                    && SameManager.getInstance().getShapshotWhenCutOff().getRate().getAsk() - rate.getBid() >= 5
+//                    && rate.getBid() < snapshot.getAskAverageRate()) {
+//                // Sameリカバリ中の場合、0.5pips逆行
+//                // 逆ポジション取得
+//                orderBid(lotManager.nextBidLot(snapshot));
+//            }
 //            if (SameManager.hasInstance()
 //                    && rate.getBid() - SameManager.getInstance().getShapshotWhenCutOff().getRate().getAsk() >= 1
 //                            && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))
@@ -380,13 +380,13 @@ public class AutoTrader {
                 // 逆ポジション取得
                 orderAsk(lotManager.nextAskLot(snapshot));
             }
-            if (SameManager.hasInstance()
-                    && rate.getAsk() - SameManager.getInstance().getShapshotWhenCutOff().getRate().getBid() >= 5
-                    && snapshot.getBidAverageRate() < rate.getAsk()) {
-                // Sameリカバリ中の場合、0.5pips逆行
-                // 逆ポジション取得
-                orderAsk(lotManager.nextAskLot(snapshot));
-            }
+//            if (SameManager.hasInstance()
+//                    && rate.getAsk() - SameManager.getInstance().getShapshotWhenCutOff().getRate().getBid() >= 5
+//                    && snapshot.getBidAverageRate() < rate.getAsk()) {
+//                // Sameリカバリ中の場合、0.5pips逆行
+//                // 逆ポジション取得
+//                orderAsk(lotManager.nextAskLot(snapshot));
+//            }
 //            if (SameManager.hasInstance()
 //                    && SameManager.getInstance().getShapshotWhenCutOff().getRate().getBid() - rate.getAsk() >= 1
 //                            && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()
