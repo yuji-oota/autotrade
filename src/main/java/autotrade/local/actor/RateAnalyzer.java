@@ -86,4 +86,7 @@ public class RateAnalyzer {
         }
         return true;
     }
+    public int halfWithin(Duration duration) {
+        return rangeWithin(duration) / 2;
+    }
 }
