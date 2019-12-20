@@ -201,7 +201,7 @@ public class AutoTrader {
             SameManager.close();
             break;
         case SAME:
-            SameManager.setProfit(snapshot.getTodaysProfit());
+            SameManager.setSnapshot(snapshot);
             SameManager sameManager = SameManager.getInstance();
 
             // 切り離しモード設定
@@ -246,7 +246,7 @@ public class AutoTrader {
                 SameManager.getInstance().setCutOffMode(CutOffMode.NONE);
 
                 // Sameポジション回復中の場合
-                if (SameManager.getInstance().isRecovered(snapshot.getTotalProfit())) {
+                if (SameManager.getInstance().isRecovered(snapshot)) {
                     // Sameポジション回復達成で利益確定
                     wrapper.fixAll();
                     log.info("same position recovery done. rate {}, profit {}, total profit {}", snapshot.getRate(), snapshot.getPositionProfit(), snapshot.getTotalProfit());

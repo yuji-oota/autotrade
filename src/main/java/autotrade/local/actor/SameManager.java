@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SameManager {
 
     private static SameManager instance;
-    private int todaysProfitWhenSamed;
+    private Snapshot shapshotWhenSamed;
 
     @Getter
     @Setter
@@ -30,15 +30,15 @@ public class SameManager {
     @Getter
     private Snapshot shapshotWhenCutOff;
 
-    private SameManager(int todaysProfit) {
-        this.todaysProfitWhenSamed = todaysProfit;
+    private SameManager(Snapshot snapshot) {
+        this.shapshotWhenSamed = snapshot;
         this.cutOffMode = CutOffMode.NONE;
     }
 
-    public static void setProfit(int todaysProfit) {
+    public static void setSnapshot(Snapshot snapshot) {
         if (Objects.isNull(instance)) {
-            instance = new SameManager(todaysProfit);
-            log.info("same position started. todays profit {}", todaysProfit);
+            instance = new SameManager(snapshot);
+            log.info("same position started. snapshot {}", snapshot);
         }
     }
     public static SameManager getInstance() {
@@ -52,8 +52,8 @@ public class SameManager {
         return Objects.nonNull(instance);
     }
 
-    public boolean isRecovered(int totalProfit) {
-        if (totalProfit >= todaysProfitWhenSamed) {
+    public boolean isRecovered(Snapshot snapshot) {
+        if (snapshot.getTotalProfit() >= shapshotWhenSamed.getTodaysProfit()) {
             return true;
         }
         return false;
@@ -74,9 +74,6 @@ public class SameManager {
 //      if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
 //      return true;
 //  }
-        if (rate.getBid() <= rateAnalyzer.getBidThreshold() && rate.getBid() <= rateAnalyzer.halfWithin(Duration.ofMinutes(10))) {
-            return true;
-        }
 //        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
 //            return true;
 //        }
@@ -97,9 +94,6 @@ public class SameManager {
 //      if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
 //      return true;
 //  }
-        if (rateAnalyzer.getAskThreshold() <= rate.getAsk() && rateAnalyzer.halfWithin(Duration.ofMinutes(10)) <= rate.getAsk()) {
-            return true;
-        }
 //        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
 //            return true;
 //        }
