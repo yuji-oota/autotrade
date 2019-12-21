@@ -17,11 +17,15 @@ public class RateAnalyzer {
     private List<Rate> rates;
     private int askThreshold;
     private int bidThreshold;
+    private Rate highWaterMark;
+    private Rate lowWaterMark;
 
     public RateAnalyzer() {
         rates = new ArrayList<>();
         askThreshold = Integer.MAX_VALUE;
         bidThreshold = Integer.MIN_VALUE;
+        highWaterMark = Rate.builder().ask(Integer.MIN_VALUE).build();
+        lowWaterMark = Rate.builder().bid(Integer.MAX_VALUE).build();
     }
 
     public void add(Rate rate) {
@@ -29,6 +33,7 @@ public class RateAnalyzer {
             log.info("doubtful rate is added {}", rate);
         } else {
             rates.add(rate);
+            updateWaterMark(rate);
         }
         rates = rates.stream()
                 .filter(r -> r.toCurrent().toMillis() <= Duration.ofMinutes(15).toMillis())
@@ -88,5 +93,14 @@ public class RateAnalyzer {
     }
     public int halfWithin(Duration duration) {
         return rangeWithin(duration) / 2;
+    }
+
+    private void updateWaterMark(Rate rate) {
+        if (highWaterMark.getAsk() < rate.getAsk()) {
+            highWaterMark = rate;
+        }
+        if (rate.getBid() < lowWaterMark.getBid()) {
+            lowWaterMark = rate;
+        }
     }
 }
