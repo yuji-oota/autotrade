@@ -330,22 +330,20 @@ public class AutoTrader {
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合
-            // Same前
-            if (!SameManager.hasInstance()
-                    && rate.getBid() <= rateAnalyzer.getBidThreshold()
+            if (rate.getBid() <= rateAnalyzer.getBidThreshold()
                     && rate.getBid() < snapshot.getAskAverageRate()) {
                 // 下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
                 orderBid(lotManager.nextBidLot(snapshot));
             }
             // Same後
-            if (SameManager.hasInstance()
-                    && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))
-                    && rate.getBid() < snapshot.getAskAverageRate()) {
-                // Sameリカバリ中の場合、且つ下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
-                // 逆ポジション取得
-                orderBid(lotManager.nextBidLot(snapshot));
-            }
+//            if (SameManager.hasInstance()
+//                    && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))
+//                    && rate.getBid() < snapshot.getAskAverageRate()) {
+//                // Sameリカバリ中の場合、且つ下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
+//                // 逆ポジション取得
+//                orderBid(lotManager.nextBidLot(snapshot));
+//            }
 //            if (SameManager.hasInstance()
 //                    && SameManager.getInstance().getShapshotWhenCutOff().getRate().getAsk() - rate.getBid() >= 5
 //                    && rate.getBid() < snapshot.getAskAverageRate()) {
@@ -353,33 +351,31 @@ public class AutoTrader {
 //                // 逆ポジション取得
 //                orderBid(lotManager.nextBidLot(snapshot));
 //            }
-//            if (SameManager.hasInstance()
-//                    && rate.getBid() - SameManager.getInstance().getShapshotWhenCutOff().getRate().getAsk() >= 1
-//                            && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))
-//                    && rate.getBid() < snapshot.getAskAverageRate()) {
-//                // 小刻みにSame戻し
-//                orderBid(lotManager.nextBidLot(snapshot));
-//                log.info("margin is recovered just a little.");
-//            }
+            if (SameManager.hasInstance()
+                    && rate.getBid() - SameManager.getInstance().getShapshotWhenCutOff().getRate().getAsk() > 0
+                            && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))
+                    && rate.getBid() < snapshot.getAskAverageRate()) {
+                // 小刻みにSame戻し
+                orderBid(lotManager.nextBidLot(snapshot));
+                log.info("margin is recovered just a little.");
+            }
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
-            // Same前
-            if (!SameManager.hasInstance()
-                    && rateAnalyzer.getAskThreshold() <= rate.getAsk()
+            if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
                     && snapshot.getBidAverageRate() < rate.getAsk()) {
                 // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
                 orderAsk(lotManager.nextAskLot(snapshot));
             }
             // Same後
-            if (SameManager.hasInstance()
-                    && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()
-                    && snapshot.getBidAverageRate() < rate.getAsk()) {
-                // Sameリカバリ中の場合、且つ上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
-                // 逆ポジション取得
-                orderAsk(lotManager.nextAskLot(snapshot));
-            }
+//            if (SameManager.hasInstance()
+//                    && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()
+//                    && snapshot.getBidAverageRate() < rate.getAsk()) {
+//                // Sameリカバリ中の場合、且つ上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
+//                // 逆ポジション取得
+//                orderAsk(lotManager.nextAskLot(snapshot));
+//            }
 //            if (SameManager.hasInstance()
 //                    && rate.getAsk() - SameManager.getInstance().getShapshotWhenCutOff().getRate().getBid() >= 5
 //                    && snapshot.getBidAverageRate() < rate.getAsk()) {
@@ -387,14 +383,14 @@ public class AutoTrader {
 //                // 逆ポジション取得
 //                orderAsk(lotManager.nextAskLot(snapshot));
 //            }
-//            if (SameManager.hasInstance()
-//                    && SameManager.getInstance().getShapshotWhenCutOff().getRate().getBid() - rate.getAsk() >= 1
-//                            && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()
-//                    && snapshot.getBidAverageRate() < rate.getAsk()) {
-//                // 小刻みにSame戻し
-//                orderAsk(lotManager.nextAskLot(snapshot));
-//                log.info("margin is recovered just a little.");
-//            }
+            if (SameManager.hasInstance()
+                    && SameManager.getInstance().getShapshotWhenCutOff().getRate().getBid() - rate.getAsk() > 0
+                            && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()
+                    && snapshot.getBidAverageRate() < rate.getAsk()) {
+                // 小刻みにSame戻し
+                orderAsk(lotManager.nextAskLot(snapshot));
+                log.info("margin is recovered just a little.");
+            }
             break;
         case SAME:
             // ポジションが同数の場合
