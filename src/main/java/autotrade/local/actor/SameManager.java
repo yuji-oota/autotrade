@@ -29,15 +29,9 @@ public class SameManager {
     @Getter
     private Snapshot shapshotWhenCutOff;
 
-    private int askThresholdLastCutOffJudged;
-    private int bidThresholdLastCutOffJudged;
-
     private SameManager(Snapshot snapshot) {
         this.shapshotWhenSamed = snapshot;
         this.cutOffMode = CutOffMode.NONE;
-        // 初回は平均値を設定
-        this.askThresholdLastCutOffJudged = snapshot.getAskAverageRate();
-        this.bidThresholdLastCutOffJudged = snapshot.getBidAverageRate();
     }
 
     public static void setSnapshot(Snapshot snapshot) {
@@ -77,10 +71,9 @@ public class SameManager {
 //        }
         Rate rate = snapshot.getRate();
         if (rate.getBid() <= rateAnalyzer.getBidThreshold()
-                && rateAnalyzer.getAskThreshold() < askThresholdLastCutOffJudged) {
+                && rateAnalyzer.isDownward()) {
             return true;
         }
-        askThresholdLastCutOffJudged = rateAnalyzer.getAskThreshold();
 //        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
 //            return true;
 //        }
@@ -99,10 +92,9 @@ public class SameManager {
 //        }
         Rate rate = snapshot.getRate();
         if (rateAnalyzer.getAskThreshold() <= rate.getAsk()
-                && bidThresholdLastCutOffJudged < rateAnalyzer.getBidThreshold()) {
+                && rateAnalyzer.isUpward()) {
             return true;
         }
-        bidThresholdLastCutOffJudged = rateAnalyzer.getBidThreshold();
 //        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
 //            return true;
 //        }

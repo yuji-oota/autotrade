@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import autotrade.local.material.Rate;
@@ -20,12 +21,15 @@ public class RateAnalyzer {
     private Rate highWaterMark;
     private Rate lowWaterMark;
 
+    private static Predicate<Rate> filterRates10MinutesBefore;
+
     public RateAnalyzer() {
         rates = new ArrayList<>();
         askThreshold = Integer.MAX_VALUE;
         bidThreshold = Integer.MIN_VALUE;
         highWaterMark = Rate.builder().ask(Integer.MIN_VALUE).build();
         lowWaterMark = Rate.builder().bid(Integer.MAX_VALUE).build();
+        filterRates10MinutesBefore = r -> r.toCurrent().toMillis() <= Duration.ofMinutes(20).toMillis() && Duration.ofMinutes(10).toMillis() <= r.toCurrent().toMillis();
     }
 
     public void add(Rate rate) {
@@ -36,7 +40,7 @@ public class RateAnalyzer {
             updateWaterMark(rate);
         }
         rates = rates.stream()
-                .filter(r -> r.toCurrent().toMillis() <= Duration.ofMinutes(15).toMillis())
+                .filter(r -> r.toCurrent().toMillis() <= Duration.ofMinutes(20).toMillis())
                 .collect(Collectors.toList());
 
         // 売買閾値設定
@@ -102,5 +106,20 @@ public class RateAnalyzer {
         if (rate.getBid() < lowWaterMark.getBid()) {
             lowWaterMark = rate;
         }
+    }
+
+    public boolean isUpward() {
+        return rates.stream()
+                .filter(filterRates10MinutesBefore)
+                .map(Rate::getBid)
+                .min(Comparator.naturalOrder())
+                .orElse(Integer.MAX_VALUE) < bidThreshold;
+    }
+    public boolean isDownward() {
+        return rates.stream()
+                .filter(filterRates10MinutesBefore)
+                .map(Rate::getAsk)
+                .max(Comparator.naturalOrder())
+                .orElse(Integer.MIN_VALUE) > askThreshold;
     }
 }
