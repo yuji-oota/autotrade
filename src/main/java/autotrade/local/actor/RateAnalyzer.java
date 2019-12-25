@@ -21,7 +21,10 @@ public class RateAnalyzer {
     private Rate highWaterMark;
     private Rate lowWaterMark;
 
-    private static Predicate<Rate> filterRates10MinutesBefore;
+    private static Predicate<Rate> rate10MinutesBefore;
+    static {
+        rate10MinutesBefore = r -> r.toCurrent().toMillis() <= Duration.ofMinutes(20).toMillis() && Duration.ofMinutes(10).toMillis() <= r.toCurrent().toMillis();
+    }
 
     public RateAnalyzer() {
         rates = new ArrayList<>();
@@ -29,7 +32,6 @@ public class RateAnalyzer {
         bidThreshold = Integer.MIN_VALUE;
         highWaterMark = Rate.builder().ask(Integer.MIN_VALUE).build();
         lowWaterMark = Rate.builder().bid(Integer.MAX_VALUE).build();
-        filterRates10MinutesBefore = r -> r.toCurrent().toMillis() <= Duration.ofMinutes(20).toMillis() && Duration.ofMinutes(10).toMillis() <= r.toCurrent().toMillis();
     }
 
     public void add(Rate rate) {
@@ -110,14 +112,14 @@ public class RateAnalyzer {
 
     public boolean isUpward() {
         return rates.stream()
-                .filter(filterRates10MinutesBefore)
+                .filter(rate10MinutesBefore)
                 .map(Rate::getBid)
                 .min(Comparator.naturalOrder())
                 .orElse(Integer.MAX_VALUE) < bidThreshold;
     }
     public boolean isDownward() {
         return rates.stream()
-                .filter(filterRates10MinutesBefore)
+                .filter(rate10MinutesBefore)
                 .map(Rate::getAsk)
                 .max(Comparator.naturalOrder())
                 .orElse(Integer.MIN_VALUE) > askThreshold;
