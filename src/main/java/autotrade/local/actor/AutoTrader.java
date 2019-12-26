@@ -205,8 +205,15 @@ public class AutoTrader {
             SameManager sameManager = SameManager.getInstance();
 
             // 切り離しモード設定
-            sameManager.setCutOffMode(CutOffMode.BID);
-            if ((snapshot.getAskAverageRate() + snapshot.getBidAverageRate()) / 2 < snapshot.getRate().getAsk()) {
+//            sameManager.setCutOffMode(CutOffMode.BID);
+//            if ((snapshot.getAskAverageRate() + snapshot.getBidAverageRate()) / 2 < snapshot.getRate().getAsk()) {
+//                sameManager.setCutOffMode(CutOffMode.ASK);
+//            }
+            sameManager.setCutOffMode(CutOffMode.NONE);
+            if (rateAnalyzer.isUpward() && !rateAnalyzer.isDownward()) {
+                sameManager.setCutOffMode(CutOffMode.BID);
+            }
+            if (!rateAnalyzer.isUpward() && rateAnalyzer.isDownward()) {
                 sameManager.setCutOffMode(CutOffMode.ASK);
             }
 
