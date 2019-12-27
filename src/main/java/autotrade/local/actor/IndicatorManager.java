@@ -25,7 +25,7 @@ public class IndicatorManager {
             nextIndicator = indicators.stream()
                     .filter(LocalDateTime.now()::isBefore)
                     .min(LocalDateTime::compareTo)
-                    .orElse(LocalDateTime.MAX);
+                    .orElse(LocalDateTime.now().plusDays(2));
             log.info("next indicator will come at {}", nextIndicator);
         }
         return nextIndicator;
