@@ -1,5 +1,6 @@
 package autotrade.local.actor;
 
+import java.time.Duration;
 import java.util.Objects;
 
 import autotrade.local.exception.ApplicationException;
@@ -66,19 +67,10 @@ public class SameManager {
         if (cutOffMode != CutOffMode.ASK) {
             return false;
         }
-//        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 30) {
-//            return false;
-//        }
         Rate rate = snapshot.getRate();
         if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
             return true;
         }
-//        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
-//            return true;
-//        }
-//        if (rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
-//            return true;
-//        }
         return false;
     }
 
@@ -86,20 +78,36 @@ public class SameManager {
         if (cutOffMode != CutOffMode.BID) {
             return false;
         }
-//        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 30) {
-//            return false;
-//        }
         Rate rate = snapshot.getRate();
         if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
             return true;
         }
-//        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) > 30 && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
-//            return true;
-//        }
-//        if (rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
-//            return true;
-//        }
         return false;
     }
 
+    public boolean isReSameAsk(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
+        Rate rate = snapshot.getRate();
+        if (shapshotWhenCutOff.getRate().getBid() - rate.getAsk() > 0
+                && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
+            log.info("margin is recovered just a little.");
+            return true;
+        }
+        if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isReSameBid(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
+        Rate rate = snapshot.getRate();
+        if (rate.getBid() - shapshotWhenCutOff.getRate().getAsk() > 0
+                && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
+            log.info("margin is recovered just a little.");
+            return true;
+        }
+        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
+            return true;
+        }
+        return false;
+    }
 }
