@@ -68,7 +68,7 @@ public class SameManager {
             return false;
         }
         Rate rate = snapshot.getRate();
-        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
+        if (rateAnalyzer.isReachedBidThreshold(rate)) {
             return true;
         }
         return false;
@@ -79,7 +79,7 @@ public class SameManager {
             return false;
         }
         Rate rate = snapshot.getRate();
-        if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
+        if (rateAnalyzer.isReachedAskThreshold(rate)) {
             return true;
         }
         return false;
@@ -92,7 +92,7 @@ public class SameManager {
             log.info("margin is recovered just a little.");
             return true;
         }
-        if (rateAnalyzer.getAskThreshold() <= rate.getAsk()) {
+        if (rateAnalyzer.isReachedAskThreshold(rate)) {
             return true;
         }
         return false;
@@ -105,7 +105,7 @@ public class SameManager {
             log.info("margin is recovered just a little.");
             return true;
         }
-        if (rate.getBid() <= rateAnalyzer.getBidThreshold()) {
+        if (rateAnalyzer.isReachedBidThreshold(rate)) {
             return true;
         }
         return false;

@@ -124,4 +124,12 @@ public class RateAnalyzer {
                 .max(Comparator.naturalOrder())
                 .orElse(Integer.MIN_VALUE) > askThreshold;
     }
+
+    public boolean isReachedAskThreshold(Rate rate) {
+        return askThreshold <= rate.getAsk();
+    }
+    public boolean isReachedBidThreshold(Rate rate) {
+        return rate.getBid() <= bidThreshold;
+    }
+
 }
