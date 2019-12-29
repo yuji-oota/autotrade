@@ -91,12 +91,6 @@ public class RateAnalyzer {
                 .orElse(Integer.MIN_VALUE);
     }
 
-    public boolean isMovingWithin(Duration duration) {
-        if (rangeWithin(duration) == 2) {
-            return false;
-        }
-        return true;
-    }
     public int halfWithin(Duration duration) {
         return rangeWithin(duration) / 2;
     }

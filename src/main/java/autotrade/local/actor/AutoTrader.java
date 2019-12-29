@@ -21,6 +21,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.actor.SameManager.CutOffMode;
 import autotrade.local.exception.ApplicationException;
+import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.material.StartMarginMode;
@@ -34,6 +35,8 @@ public class AutoTrader {
 
     private static AutoTrader instance;
     private static Path logFile = Paths.get("log", "autotrade-local.log");
+
+    private CurrencyPair pair;
 
     private WebDriver driver;
     private WebDriverWrapper wrapper;
@@ -54,6 +57,8 @@ public class AutoTrader {
     private long lastFixed;
 
     private AutoTrader() {
+        pair = CurrencyPair.USDJPY;
+
         targetAmountOneTrade = Integer.parseInt(AutoTradeProperties.get("autotrade.targetAmount.oneTrade"));
         targetAmountOneDay = Integer.parseInt(AutoTradeProperties.get("autotrade.targetAmount.oneDay"));
 
@@ -205,10 +210,6 @@ public class AutoTrader {
             SameManager sameManager = SameManager.getInstance();
 
             // 切り離しモード設定
-//            sameManager.setCutOffMode(CutOffMode.BID);
-//            if ((snapshot.getAskAverageRate() + snapshot.getBidAverageRate()) / 2 < snapshot.getRate().getAsk()) {
-//                sameManager.setCutOffMode(CutOffMode.ASK);
-//            }
             sameManager.setCutOffMode(CutOffMode.NONE);
             if (rateAnalyzer.isUpward() && !rateAnalyzer.isDownward()) {
                 sameManager.setCutOffMode(CutOffMode.BID);
@@ -283,7 +284,7 @@ public class AutoTrader {
             // 閾値間隔が狭い場合は注文しない
             return false;
         }
-        if (!rateAnalyzer.isMovingWithin(Duration.ofSeconds(1))) {
+        if (rateAnalyzer.rangeWithin(Duration.ofSeconds(1)) == pair.getMinSpread()) {
             // 動いていない場合は注文しない
             return false;
         }
@@ -308,7 +309,7 @@ public class AutoTrader {
                 AutoTradeUtils.sleep(durationToActive);
                 return false;
             }
-            if (snapshot.getRate().isWideSpread()) {
+            if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
                 // スプレッドが開いている場合は注文しない
                 return false;
             }

@@ -24,10 +24,6 @@ public class Rate {
         return false;
     }
 
-    public boolean isWideSpread() {
-        return getSpread() > 2;
-    }
-
     public Duration toCurrent() {
         return Duration.between(timestamp, LocalDateTime.now());
     }
