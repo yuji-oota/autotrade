@@ -1,6 +1,8 @@
 package autotrade.local.actor;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -21,11 +23,6 @@ public class RateAnalyzer {
     private Rate highWaterMark;
     private Rate lowWaterMark;
 
-    private static Predicate<Rate> rate10MinutesBefore;
-    static {
-        rate10MinutesBefore = r -> r.toCurrent().toMillis() <= Duration.ofMinutes(20).toMillis() && Duration.ofMinutes(10).toMillis() <= r.toCurrent().toMillis();
-    }
-
     public RateAnalyzer() {
         rates = new ArrayList<>();
         askThreshold = Integer.MAX_VALUE;
@@ -42,7 +39,7 @@ public class RateAnalyzer {
             updateWaterMark(rate);
         }
         rates = rates.stream()
-                .filter(r -> r.toCurrent().toMillis() <= Duration.ofMinutes(20).toMillis())
+                .filter(r -> r.passed().toMillis() <= Duration.ofMinutes(20).toMillis())
                 .collect(Collectors.toList());
 
         // 売買閾値設定
@@ -78,14 +75,28 @@ public class RateAnalyzer {
 
     public int maxWithin(Duration duration) {
         return rates.stream()
-                .filter(r -> r.toCurrent().toMillis() <= duration.toMillis())
+                .filter(r -> r.passed().toMillis() <= duration.toMillis())
                 .map(Rate::getAsk)
                 .max(Comparator.naturalOrder())
                 .orElse(Integer.MAX_VALUE);
     }
     public int minWithin(Duration duration) {
         return rates.stream()
-                .filter(r -> r.toCurrent().toMillis() <= duration.toMillis())
+                .filter(r -> r.passed().toMillis() <= duration.toMillis())
+                .map(Rate::getBid)
+                .min(Comparator.naturalOrder())
+                .orElse(Integer.MIN_VALUE);
+    }
+    public int maxBetween(Temporal from, Temporal to) {
+        return rates.stream()
+                .filter(rateBetweenFilter(from, to))
+                .map(Rate::getAsk)
+                .max(Comparator.naturalOrder())
+                .orElse(Integer.MAX_VALUE);
+    }
+    public int minBetween(Temporal from, Temporal to) {
+        return rates.stream()
+                .filter(rateBetweenFilter(from, to))
                 .map(Rate::getBid)
                 .min(Comparator.naturalOrder())
                 .orElse(Integer.MIN_VALUE);
@@ -104,19 +115,16 @@ public class RateAnalyzer {
         }
     }
 
+    private Predicate<Rate> rateBetweenFilter(Temporal from, Temporal to) {
+        return r -> r.passed().toMillis() <= Duration.between(from, LocalDateTime.now()).toMillis()
+                && Duration.between(to, LocalDateTime.now()).toMillis() <= r.passed().toMillis();
+    }
+
     public boolean isUpward() {
-        return rates.stream()
-                .filter(rate10MinutesBefore)
-                .map(Rate::getBid)
-                .min(Comparator.naturalOrder())
-                .orElse(Integer.MAX_VALUE) < bidThreshold;
+        return minBetween(LocalDateTime.now().minusMinutes(20), LocalDateTime.now().minusMinutes(10)) < bidThreshold;
     }
     public boolean isDownward() {
-        return rates.stream()
-                .filter(rate10MinutesBefore)
-                .map(Rate::getAsk)
-                .max(Comparator.naturalOrder())
-                .orElse(Integer.MIN_VALUE) > askThreshold;
+        return maxBetween(LocalDateTime.now().minusMinutes(20), LocalDateTime.now().minusMinutes(10)) > askThreshold;
     }
 
     public boolean isReachedAskThreshold(Rate rate) {

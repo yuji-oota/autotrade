@@ -24,7 +24,7 @@ public class Rate {
         return false;
     }
 
-    public Duration toCurrent() {
+    public Duration passed() {
         return Duration.between(timestamp, LocalDateTime.now());
     }
 }
