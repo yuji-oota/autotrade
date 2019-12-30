@@ -259,6 +259,9 @@ public class AutoTrader {
                     wrapper.fixAll();
                     log.info("same position recovery done. rate {}, profit {}, total profit {}", snapshot.getRate(), snapshot.getPositionProfit(), snapshot.getTotalProfit());
                     lastFixed = System.currentTimeMillis();
+                    // ベリファイ
+                    verifyOrder(0, Snapshot::getAskLot);
+                    verifyOrder(0, Snapshot::getBidLot);
                 }
                 return;
             }
@@ -269,6 +272,9 @@ public class AutoTrader {
                 wrapper.fixAll();
                 log.info("achieved target amount. rate {}, profit {}, total profit {}", snapshot.getRate(), snapshot.getPositionProfit(), snapshot.getTotalProfit());
                 lastFixed = System.currentTimeMillis();
+                // ベリファイ
+                verifyOrder(0, Snapshot::getAskLot);
+                verifyOrder(0, Snapshot::getBidLot);
             }
             break;
         default:
