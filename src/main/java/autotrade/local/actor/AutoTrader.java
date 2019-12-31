@@ -34,7 +34,10 @@ import lombok.extern.slf4j.Slf4j;
 public class AutoTrader {
 
     private static AutoTrader instance;
-    private static Path logFile = Paths.get("log", "autotrade-local.log");
+    private static Path logFile;
+    static {
+        logFile = Paths.get("log", "autotrade-local.log");
+    }
 
     private CurrencyPair pair;
 
