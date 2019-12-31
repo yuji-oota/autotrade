@@ -74,18 +74,10 @@ public class RateAnalyzer {
     }
 
     public int maxWithin(Duration duration) {
-        return rates.stream()
-                .filter(r -> r.passed().toMillis() <= duration.toMillis())
-                .map(Rate::getAsk)
-                .max(Comparator.naturalOrder())
-                .orElse(Integer.MAX_VALUE);
+        return maxBetween(LocalDateTime.now().minus(duration), LocalDateTime.now());
     }
     public int minWithin(Duration duration) {
-        return rates.stream()
-                .filter(r -> r.passed().toMillis() <= duration.toMillis())
-                .map(Rate::getBid)
-                .min(Comparator.naturalOrder())
-                .orElse(Integer.MIN_VALUE);
+        return minBetween(LocalDateTime.now().minus(duration), LocalDateTime.now());
     }
     public int maxBetween(Temporal from, Temporal to) {
         return rates.stream()
@@ -116,8 +108,8 @@ public class RateAnalyzer {
     }
 
     private Predicate<Rate> rateBetweenFilter(Temporal from, Temporal to) {
-        return r -> r.passed().toMillis() <= Duration.between(from, LocalDateTime.now()).toMillis()
-                && Duration.between(to, LocalDateTime.now()).toMillis() <= r.passed().toMillis();
+        return r -> !Duration.between(from, r.getTimestamp()).isNegative()
+                    && !Duration.between(r.getTimestamp(), to).isNegative();
     }
 
     public boolean isUpward() {
