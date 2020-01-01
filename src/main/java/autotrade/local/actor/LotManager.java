@@ -10,7 +10,7 @@ public class LotManager {
 
     @Getter
     private int initialLot;
-
+    private int nextMagnification;
     private int sameLimitPositive;
     private int sameLimitNegative;
     private Mode mode;
@@ -22,6 +22,7 @@ public class LotManager {
 
     public LotManager() {
         initialLot = Integer.parseInt(AutoTradeProperties.get("autotrade.lot.initial"));
+        nextMagnification = Integer.parseInt(AutoTradeProperties.get("autotrade.lot.nextMagnification"));
         sameLimitPositive = Integer.parseInt(AutoTradeProperties.get("autotrade.lot.sameLimit.positive"));
         sameLimitNegative = Integer.parseInt(AutoTradeProperties.get("autotrade.lot.sameLimit.negative"));
         modePositive();
@@ -29,13 +30,13 @@ public class LotManager {
 
     public int nextAskLot(Snapshot snapshot) {
         int sameLimit = getSameLimit();
-        int askLot = snapshot.getBidLot() * 2 - snapshot.getAskLot();
-        return snapshot.getBidLot() >= sameLimit ? sameLimit - snapshot.getAskLot() : askLot;
+        int nextLot = snapshot.getBidLot() * nextMagnification - snapshot.getAskLot();
+        return snapshot.getBidLot() >= sameLimit ? snapshot.getBidLot() - snapshot.getAskLot() : nextLot;
     }
     public int nextBidLot(Snapshot snapshot) {
         int sameLimit = getSameLimit();
-        int bidLot = snapshot.getAskLot() * 2 - snapshot.getBidLot();
-        return snapshot.getAskLot() >= sameLimit ? sameLimit - snapshot.getBidLot() : bidLot;
+        int nextLot = snapshot.getAskLot() * nextMagnification - snapshot.getBidLot();
+        return snapshot.getAskLot() >= sameLimit ? snapshot.getAskLot() - snapshot.getBidLot() : nextLot;
     }
 
     public void modePositive() {

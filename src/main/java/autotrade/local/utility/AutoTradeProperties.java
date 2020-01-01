@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * ymlファイルの設定項目は以下を想定しています
-dmmfx:
+fx:
   login:
     username: xxx
     password: xxx
@@ -30,6 +30,7 @@ autotrade:
     end: xx:xx
   lot:
     initial: xxx
+    nextMagnification: xxx
     sameLimit:
       positive: xxx
       negative: xxx
