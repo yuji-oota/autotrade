@@ -62,8 +62,8 @@ public class AutoTrader {
     private AutoTrader() {
         pair = CurrencyPair.USDJPY;
 
-        targetAmountOneTrade = Integer.parseInt(AutoTradeProperties.get("autotrade.targetAmount.oneTrade"));
-        targetAmountOneDay = Integer.parseInt(AutoTradeProperties.get("autotrade.targetAmount.oneDay"));
+        targetAmountOneTrade = AutoTradeProperties.getInt("autotrade.targetAmount.oneTrade");
+        targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
 
         bootDateTime = LocalDateTime.now();
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));

@@ -21,10 +21,10 @@ public class LotManager {
     }
 
     public LotManager() {
-        initialLot = Integer.parseInt(AutoTradeProperties.get("autotrade.lot.initial"));
-        nextMagnification = Integer.parseInt(AutoTradeProperties.get("autotrade.lot.nextMagnification"));
-        sameLimitPositive = Integer.parseInt(AutoTradeProperties.get("autotrade.lot.sameLimit.positive"));
-        sameLimitNegative = Integer.parseInt(AutoTradeProperties.get("autotrade.lot.sameLimit.negative"));
+        initialLot = AutoTradeProperties.getInt("autotrade.lot.initial");
+        nextMagnification = AutoTradeProperties.getInt("autotrade.lot.nextMagnification");
+        sameLimitPositive = AutoTradeProperties.getInt("autotrade.lot.sameLimit.positive");
+        sameLimitNegative = AutoTradeProperties.getInt("autotrade.lot.sameLimit.negative");
         modePositive();
     }
 

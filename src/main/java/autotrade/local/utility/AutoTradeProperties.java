@@ -70,6 +70,9 @@ public class AutoTradeProperties {
     public static String get(String key) {
         return resolvePropertie(new LinkedList<>(Arrays.asList(key.split("\\."))), properties);
     }
+    public static int getInt(String key) {
+        return Integer.parseInt(get(key));
+    }
 
     @SuppressWarnings("unchecked")
     private static String resolvePropertie(List<String> keys, Map<String, Object> map) {
