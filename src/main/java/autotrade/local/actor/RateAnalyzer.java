@@ -113,10 +113,10 @@ public class RateAnalyzer {
     }
 
     public boolean isUpward() {
-        return minBetween(LocalDateTime.now().minusMinutes(20), LocalDateTime.now().minusMinutes(10)) < bidThreshold;
+        return minBetween(LocalDateTime.now().minusMinutes(20), LocalDateTime.now().minusMinutes(10)) < minWithin(Duration.ofMinutes(10));
     }
     public boolean isDownward() {
-        return maxBetween(LocalDateTime.now().minusMinutes(20), LocalDateTime.now().minusMinutes(10)) > askThreshold;
+        return maxBetween(LocalDateTime.now().minusMinutes(20), LocalDateTime.now().minusMinutes(10)) > maxWithin(Duration.ofMinutes(10));
     }
 
     public boolean isReachedAskThreshold(Rate rate) {
