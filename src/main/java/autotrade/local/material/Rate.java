@@ -1,5 +1,6 @@
 package autotrade.local.material;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -8,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class Rate {
+public class Rate implements Serializable {
     private int ask;
     private int bid;
     private LocalDateTime timestamp;

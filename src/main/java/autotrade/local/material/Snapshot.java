@@ -1,11 +1,13 @@
 package autotrade.local.material;
 
+import java.io.Serializable;
+
 import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
-public class Snapshot {
+@Builder()
+public class Snapshot implements Serializable {
 
     private int askLot;
     private int bidLot;

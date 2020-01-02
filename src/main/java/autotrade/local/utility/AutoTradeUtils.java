@@ -1,5 +1,10 @@
 package autotrade.local.utility;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.time.Duration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -36,6 +41,23 @@ public class AutoTradeUtils {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
+            throw new ApplicationException(e);
+        }
+    }
+
+    public static byte[] serialize(Object object) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(object);
+            return baos.toByteArray();
+        } catch (IOException e) {
+            throw new ApplicationException(e);
+        }
+    }
+    @SuppressWarnings("unchecked")
+    public static <T> T deserialize(byte[] bytes) {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bais)) {
+            return (T) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
             throw new ApplicationException(e);
         }
     }

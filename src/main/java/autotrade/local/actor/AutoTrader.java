@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.ToIntFunction;
@@ -22,6 +23,7 @@ import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.actor.SameManager.CutOffMode;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.CurrencyPair;
+import autotrade.local.material.PositionStatus;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.material.StartMarginMode;
@@ -145,6 +147,11 @@ public class AutoTrader {
             // 一日の目標金額設定
             targetAmountOneDay = new BigDecimal(startMargin).multiply(new BigDecimal(0.01)).intValue();
 
+            // Same引き継ぎ
+            if (getSnapshot().getStatus() == PositionStatus.SAME) {
+                SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(messenger.get("shapshotWhenSamed"))));
+            }
+
             // 繰り返し実行
             while(true) {
                 // 取引
@@ -209,6 +216,10 @@ public class AutoTrader {
             SameManager.close();
             break;
         case SAME:
+            if (!SameManager.hasInstance()) {
+                // Snapshotを保存
+                messenger.set("shapshotWhenSamed", Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(snapshot)));
+            }
             SameManager.setSnapshot(snapshot);
             SameManager sameManager = SameManager.getInstance();
 
