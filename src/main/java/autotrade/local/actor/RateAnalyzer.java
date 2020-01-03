@@ -125,5 +125,11 @@ public class RateAnalyzer {
     public boolean isReachedBidThreshold(Rate rate) {
         return rate.getBid() <= bidThreshold;
     }
+    public boolean isReachedAskThresholdWithin(Rate rate, Duration duration) {
+        return maxWithin(duration) <= rate.getAsk();
+    }
+    public boolean isReachedBidThresholdWithin(Rate rate, Duration duration) {
+        return rate.getBid() <= minWithin(duration);
+    }
 
 }

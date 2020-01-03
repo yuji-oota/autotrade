@@ -68,7 +68,7 @@ public class SameManager {
             return false;
         }
         Rate rate = snapshot.getRate();
-        if (rateAnalyzer.isReachedBidThreshold(rate)) {
+        if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
             return true;
         }
         return false;
@@ -79,7 +79,7 @@ public class SameManager {
             return false;
         }
         Rate rate = snapshot.getRate();
-        if (rateAnalyzer.isReachedAskThreshold(rate)) {
+        if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
             return true;
         }
         return false;
