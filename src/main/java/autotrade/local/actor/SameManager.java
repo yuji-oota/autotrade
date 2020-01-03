@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SameManager {
 
     private static SameManager instance;
-    private Snapshot shapshotWhenSamed;
+    private Snapshot snapshotWhenSamed;
 
     @Getter
     @Setter
@@ -31,7 +31,7 @@ public class SameManager {
     private Snapshot shapshotWhenCutOff;
 
     private SameManager(Snapshot snapshot) {
-        this.shapshotWhenSamed = snapshot;
+        this.snapshotWhenSamed = snapshot;
         this.cutOffMode = CutOffMode.NONE;
     }
 
@@ -53,7 +53,7 @@ public class SameManager {
     }
 
     public boolean isRecovered(Snapshot snapshot) {
-        if (snapshot.getTotalProfit() >= shapshotWhenSamed.getTodaysProfit()) {
+        if (snapshot.getTotalProfit() >= snapshotWhenSamed.getTodaysProfit()) {
             return true;
         }
         return false;

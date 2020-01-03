@@ -149,7 +149,7 @@ public class AutoTrader {
 
             // Same引き継ぎ
             if (getSnapshot().getStatus() == PositionStatus.SAME) {
-                SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(messenger.get("shapshotWhenSamed"))));
+                SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(messenger.get("snapshotWhenSamed"))));
             }
 
             // 繰り返し実行
@@ -218,7 +218,7 @@ public class AutoTrader {
         case SAME:
             if (!SameManager.hasInstance()) {
                 // Snapshotを保存
-                messenger.set("shapshotWhenSamed", Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(snapshot)));
+                messenger.set("snapshotWhenSamed", Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(snapshot)));
             }
             SameManager.setSnapshot(snapshot);
             SameManager sameManager = SameManager.getInstance();
