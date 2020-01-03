@@ -74,24 +74,7 @@ public class AutoTrader {
         rateAnalyzer = new RateAnalyzer();
         uploadManager = new UploadManager();
         lotManager = new LotManager();
-        messenger = new Messenger(new MessageListener()
-                .putCommand(ReservedMessage.SNAPSHOT, () -> messenger.set(ReservedMessage.SNAPSHOT.name(), AutoTradeUtils.toJson(getSnapshot())))
-                .putCommand(ReservedMessage.UPLOADLOG, () -> uploadManager.upload(logFile))
-                .putCommand(ReservedMessage.AUTOTRADELOG, () -> {
-                    int logRows = Integer.parseInt(messenger.get("logRows"));
-                    try {
-                        List<String> lines = Files.readAllLines(logFile);
-                        messenger.set(ReservedMessage.AUTOTRADELOG.name(),
-                                lines.subList(Math.max(0, lines.size() - logRows), lines.size()).stream().collect(Collectors.joining("\n")));
-                    } catch (IOException e) {
-                        throw new ApplicationException(e);
-                    }
-                })
-                .putCommand(ReservedMessage.FIXASK, () -> wrapper.fixAsk())
-                .putCommand(ReservedMessage.FIXBID, () -> wrapper.fixBid())
-                .putCommand(ReservedMessage.FIXALL, () -> wrapper.fixAll())
-                .putCommand(ReservedMessage.FORCESAME, () -> this.forceSame())
-                );
+        messenger = new Messenger(customizeMessageListener());
     }
 
     public static AutoTrader getInstance() {
@@ -446,5 +429,28 @@ public class AutoTrader {
             break;
         default:
         }
+    }
+
+    private MessageListener customizeMessageListener() {
+        return new MessageListener()
+                .putCommand(ReservedMessage.SNAPSHOT, () -> messenger.set(ReservedMessage.SNAPSHOT.name(), AutoTradeUtils.toJson(getSnapshot())))
+                .putCommand(ReservedMessage.UPLOADLOG, () -> uploadManager.upload(logFile))
+                .putCommand(ReservedMessage.AUTOTRADELOG, () -> {
+                    int logRows = Integer.parseInt(messenger.get("logRows"));
+                    try {
+                        List<String> lines = Files.readAllLines(logFile);
+                        messenger.set(ReservedMessage.AUTOTRADELOG.name(),
+                                lines.subList(Math.max(0, lines.size() - logRows), lines.size()).stream().collect(Collectors.joining("\n")));
+                    } catch (IOException e) {
+                        throw new ApplicationException(e);
+                    }
+                })
+                .putCommand(ReservedMessage.FIXASK, () -> wrapper.fixAsk())
+                .putCommand(ReservedMessage.FIXBID, () -> wrapper.fixBid())
+                .putCommand(ReservedMessage.FIXALL, () -> wrapper.fixAll())
+                .putCommand(ReservedMessage.FORCESAME, () -> this.forceSame())
+                .putCommand(ReservedMessage.LOTPOSITIVE, () -> lotManager.modePositive())
+                .putCommand(ReservedMessage.LOTNEGATIVE, () -> lotManager.modeNegative())
+                ;
     }
 }
