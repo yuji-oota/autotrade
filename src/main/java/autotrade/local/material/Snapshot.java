@@ -9,6 +9,13 @@ import lombok.Data;
 @Builder()
 public class Snapshot implements Serializable {
 
+    // Tostring用
+    @SuppressWarnings("unused")
+    private int positionProfit;
+    @SuppressWarnings("unused")
+    private int totalProfit;
+
+    private Rate rate;
     private int askLot;
     private int bidLot;
     private int askAverageRate;
@@ -18,7 +25,6 @@ public class Snapshot implements Serializable {
     private int askPipProfit;
     private int bidPipProfit;
     private int todaysProfit;
-    private Rate rate;
 
     public int getAskProfit() {
         return askLot * askPipProfit;

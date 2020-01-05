@@ -217,8 +217,7 @@ public class AutoTrader {
             if (sameManager.isCutOffAsk(snapshot, rateAnalyzer)) {
                 // Ask決済
                 wrapper.fixAsk();
-                log.info("same position recovery start. cut off mode {}, rate {}, ask profit {}, total profit {}",
-                        sameManager.getCutOffMode(), snapshot.getRate(), snapshot.getAskProfit(), snapshot.getTotalProfit());
+                log.info("same position recovery start. cut off mode {}, snapshot {}", sameManager.getCutOffMode(), snapshot);
 
                 // 切り離し時点の情報を保存
                 sameManager.setShapshotWhenCutOff(snapshot);
@@ -230,8 +229,7 @@ public class AutoTrader {
             if (sameManager.isCutOffBid(snapshot, rateAnalyzer)) {
                 // Bid決済
                 wrapper.fixBid();
-                log.info("same position recovery start. cut off mode {}, rate {}, bid profit {}, total profit {}",
-                        sameManager.getCutOffMode(), snapshot.getRate(), snapshot.getBidProfit(), snapshot.getTotalProfit());
+                log.info("same position recovery start. cut off mode {}, snapshot {}", sameManager.getCutOffMode(), snapshot);
 
                 // 切り離し時点の情報を保存
                 sameManager.setShapshotWhenCutOff(snapshot);
@@ -252,7 +250,7 @@ public class AutoTrader {
                 if (SameManager.getInstance().isRecovered(snapshot)) {
                     // Sameポジション回復達成で利益確定
                     wrapper.fixAll();
-                    log.info("same position recovery done. rate {}, profit {}, total profit {}", snapshot.getRate(), snapshot.getPositionProfit(), snapshot.getTotalProfit());
+                    log.info("same position recovery done. snapshot {}", snapshot);
                     lastFixed = System.currentTimeMillis();
                     // ベリファイ
                     verifyOrder(0, Snapshot::getAskLot);
@@ -265,7 +263,7 @@ public class AutoTrader {
             if (snapshot.getPositionProfit() >= targetAmountOneTrade) {
                 // 目標金額達成で利益確定
                 wrapper.fixAll();
-                log.info("achieved target amount. rate {}, profit {}, total profit {}", snapshot.getRate(), snapshot.getPositionProfit(), snapshot.getTotalProfit());
+                log.info("achieved target amount. snapshot {}", snapshot);
                 lastFixed = System.currentTimeMillis();
                 // ベリファイ
                 verifyOrder(0, Snapshot::getAskLot);
