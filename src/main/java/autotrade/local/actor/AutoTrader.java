@@ -296,7 +296,7 @@ public class AutoTrader {
             }
             // break無し
         case SAME:
-            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(5)) || indicatorManager.isPrevIndicatorWithin(Duration.ofMinutes(5))) {
+            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(5)) || indicatorManager.isPrevIndicatorWithin(Duration.ofMinutes(1))) {
                 // 指標が近い場合は注文しない
                 return false;
             }
