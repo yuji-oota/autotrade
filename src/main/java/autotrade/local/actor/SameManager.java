@@ -88,7 +88,7 @@ public class SameManager {
     public boolean isReSameAsk(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
         Rate rate = snapshot.getRate();
         if (shapshotWhenCutOff.getRate().getBid() - rate.getAsk() > 0
-                && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
+                && rateAnalyzer.maxWithin(Duration.ofSeconds(30)) <= rate.getAsk()) {
             log.info("margin is recovered just a little. snapshot {}", snapshot);
             return true;
         }
@@ -101,7 +101,7 @@ public class SameManager {
     public boolean isReSameBid(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
         Rate rate = snapshot.getRate();
         if (rate.getBid() - shapshotWhenCutOff.getRate().getAsk() > 0
-                && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
+                && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofSeconds(30))) {
             log.info("margin is recovered just a little. snapshot {}", snapshot);
             return true;
         }

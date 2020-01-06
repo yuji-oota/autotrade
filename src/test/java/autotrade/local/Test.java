@@ -3,9 +3,11 @@ package autotrade.local;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Base64;
 
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
+import autotrade.local.utility.AutoTradeUtils;
 
 public class Test {
 
@@ -20,6 +22,7 @@ public class Test {
                 .rate(Rate.builder().ask(110).bid(118).timestamp(LocalDateTime.now()).build())
                 .build();
         System.out.println(snapshot);
+        Snapshot dec = AutoTradeUtils.deserialize(Base64.getDecoder().decode(null));
     }
 
 
