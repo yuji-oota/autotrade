@@ -67,6 +67,9 @@ public class SameManager {
         if (cutOffMode != CutOffMode.ASK) {
             return false;
         }
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 40) {
+            return false;
+        }
         Rate rate = snapshot.getRate();
         if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
             return true;
@@ -76,6 +79,9 @@ public class SameManager {
 
     public boolean isCutOffBid(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
         if (cutOffMode != CutOffMode.BID) {
+            return false;
+        }
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 40) {
             return false;
         }
         Rate rate = snapshot.getRate();

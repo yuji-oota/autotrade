@@ -206,10 +206,10 @@ public class AutoTrader {
 
             // 切り離しモード設定
             sameManager.setCutOffMode(CutOffMode.NONE);
-            if (rateAnalyzer.isUpward() && !rateAnalyzer.isDownward()) {
+            if (rateAnalyzer.isUpward(snapshot.getRate())) {
                 sameManager.setCutOffMode(CutOffMode.BID);
             }
-            if (!rateAnalyzer.isUpward() && rateAnalyzer.isDownward()) {
+            if (rateAnalyzer.isDownward(snapshot.getRate())) {
                 sameManager.setCutOffMode(CutOffMode.ASK);
             }
 

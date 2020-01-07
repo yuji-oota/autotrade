@@ -48,7 +48,9 @@ public class Messenger {
     public void reConnect() {
         if (System.currentTimeMillis() - lastConnected > Duration.ofMinutes(60).toMillis()) {
             log.info("reConnect");
-            pubSubConnection.close();
+            if (pubSubConnection.isOpen()) {
+                pubSubConnection.close();
+            }
             connect();
         }
     }
