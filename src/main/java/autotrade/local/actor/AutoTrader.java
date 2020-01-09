@@ -90,6 +90,10 @@ public class AutoTrader {
             driver = new ChromeDriver();
             wrapper = new WebDriverWrapper(driver);
 
+            // Messenger初期化
+            messenger.close();
+            messenger = new Messenger(customizeMessageListener());
+
             // 指標を確認する
             // 本日分
             List<LocalDateTime> indicators = wrapper.getIndicators(LocalDate.now());
