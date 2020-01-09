@@ -67,9 +67,9 @@ public class SameManager {
         if (cutOffMode != CutOffMode.ASK) {
             return false;
         }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 40) {
-            return false;
-        }
+//        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 40) {
+//            return false;
+//        }
         Rate rate = snapshot.getRate();
         if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
             return true;
@@ -81,9 +81,9 @@ public class SameManager {
         if (cutOffMode != CutOffMode.BID) {
             return false;
         }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 40) {
-            return false;
-        }
+//        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 40) {
+//            return false;
+//        }
         Rate rate = snapshot.getRate();
         if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
             return true;
@@ -94,7 +94,7 @@ public class SameManager {
     public boolean isReSameAsk(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
         Rate rate = snapshot.getRate();
         if (shapshotWhenCutOff.getRate().getBid() - rate.getAsk() > 0
-                && rateAnalyzer.maxWithin(Duration.ofSeconds(30)) <= rate.getAsk()) {
+                && rateAnalyzer.maxWithin(Duration.ofSeconds(15)) <= rate.getAsk()) {
             log.info("margin is recovered just a little. snapshot {}", snapshot);
             return true;
         }
@@ -107,7 +107,7 @@ public class SameManager {
     public boolean isReSameBid(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
         Rate rate = snapshot.getRate();
         if (rate.getBid() - shapshotWhenCutOff.getRate().getAsk() > 0
-                && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofSeconds(30))) {
+                && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofSeconds(15))) {
             log.info("margin is recovered just a little. snapshot {}", snapshot);
             return true;
         }
