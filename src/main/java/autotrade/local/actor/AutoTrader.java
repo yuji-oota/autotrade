@@ -279,10 +279,6 @@ public class AutoTrader {
             // 起動直後は注文しない
             return false;
         }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 20) {
-            // 閾値間隔が狭い場合は注文しない
-            return false;
-        }
         if (rateAnalyzer.rangeWithin(Duration.ofSeconds(1)) == pair.getMinSpread()) {
             // 動いていない場合は注文しない
             return false;
@@ -296,7 +292,11 @@ public class AutoTrader {
             }
             // break無し
         case SAME:
-            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(5)) || indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15))) {
+            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 20) {
+                // 閾値間隔が狭い場合は注文しない
+                return false;
+            }
+            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(2)) || indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15))) {
                 // 指標が近い場合は注文しない
                 return false;
             }
