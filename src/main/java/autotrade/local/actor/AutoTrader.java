@@ -337,7 +337,8 @@ public class AutoTrader {
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合
-            if (rateAnalyzer.isReachedBidThreshold(rate)
+            if (!SameManager.hasInstance()
+                    && rateAnalyzer.isReachedBidThreshold(rate)
                     && rate.getBid() < snapshot.getAskAverageRate()) {
                 // 下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
@@ -352,7 +353,8 @@ public class AutoTrader {
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
-            if (rateAnalyzer.isReachedAskThreshold(rate)
+            if (!SameManager.hasInstance()
+                    && rateAnalyzer.isReachedAskThreshold(rate)
                     && snapshot.getBidAverageRate() < rate.getAsk()) {
                 // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
