@@ -90,10 +90,6 @@ public class AutoTrader {
             driver = new ChromeDriver();
             wrapper = new WebDriverWrapper(driver);
 
-            // Messenger初期化
-            messenger.close();
-            messenger = new Messenger(customizeMessageListener());
-
             // 指標を確認する
             // 本日分
             List<LocalDateTime> indicators = wrapper.getIndicators(LocalDate.now());
@@ -143,7 +139,7 @@ public class AutoTrader {
                 AutoTradeUtils.sleep(Duration.ofMillis(100));
 
                 // メッセンジャー再接続
-                messenger.reConnect();
+//                messenger.reConnect();
 
                 // メッセージダイアログクローズ
                 wrapper.cancelMessage();
@@ -300,7 +296,7 @@ public class AutoTrader {
             }
             // break無し
         case SAME:
-            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(5)) || indicatorManager.isPrevIndicatorWithin(Duration.ofMinutes(1))) {
+            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(5)) || indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15))) {
                 // 指標が近い場合は注文しない
                 return false;
             }

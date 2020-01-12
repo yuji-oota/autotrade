@@ -16,14 +16,16 @@ public class Messenger {
     private StatefulRedisPubSubConnection<String, String> pubSubConnection;
     private RedisPubSubListener<String, String> listener;
     private long lastConnected;
+    private String redisUri;
 
     public Messenger(RedisPubSubListener<String, String> listener) {
         this.listener = listener;
-        redisClient = RedisClient.create(AutoTradeProperties.get("aws.elasticache.redis.uri"));
-        connect();
+        redisUri = AutoTradeProperties.get("aws.elasticache.redis.uri");
+        redisClient = RedisClient.create(redisUri);
+        connectPubSub();
     }
 
-    private void connect() {
+    private void connectPubSub() {
         pubSubConnection = redisClient.connectPubSub();
         pubSubConnection.addListener(listener);
         String channel = AutoTradeProperties.get("aws.elasticache.redis.channel");
@@ -32,30 +34,30 @@ public class Messenger {
     }
 
     public void set(String key, String value) {
-        try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {
+        RedisClient client = RedisClient.create(redisUri);
+        try (StatefulRedisConnection<String, String> connection = client.connect()) {
             connection.sync().set(key, value);
         } finally {
-            pubSubConnection.close();
-            connect();
+            client.shutdown();
         }
     }
     public String get(String key) {
-        try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {
+        RedisClient client = RedisClient.create(redisUri);
+        try (StatefulRedisConnection<String, String> connection = client.connect()) {
             return connection.sync().get(key);
+        } finally {
+            client.shutdown();
         }
     }
 
-    public void reConnect() {
+    public void reConnectPubSub() {
         if (System.currentTimeMillis() - lastConnected > Duration.ofMinutes(60).toMillis()) {
             log.info("reConnect");
-            close();
-            connect();
+            if (pubSubConnection.isOpen()) {
+                pubSubConnection.close();
+            }
+            connectPubSub();
         }
     }
 
-    public void close() {
-        if (pubSubConnection.isOpen()) {
-            pubSubConnection.close();
-        }
-    }
 }
