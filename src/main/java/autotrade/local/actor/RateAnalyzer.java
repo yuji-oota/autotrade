@@ -93,6 +93,22 @@ public class RateAnalyzer {
                 .min(Comparator.naturalOrder())
                 .orElse(Integer.MIN_VALUE);
     }
+    public int averageWithin(Duration duration) {
+        return averageBetween(LocalDateTime.now().minus(duration), LocalDateTime.now());
+    }
+    public int averageBetween(Temporal from, Temporal to) {
+        int averageAsk = (int) rates.stream()
+                .filter(rateBetweenFilter(from, to))
+                .mapToInt(Rate::getAsk)
+                .average()
+                .orElse(0.0);
+        int averageBid = (int) rates.stream()
+                .filter(rateBetweenFilter(from, to))
+                .mapToInt(Rate::getBid)
+                .average()
+                .orElse(0.0);
+        return (averageAsk + averageBid) / 2;
+    }
 
     public int halfWithin(Duration duration) {
         return rangeWithin(duration) / 2;
@@ -113,10 +129,10 @@ public class RateAnalyzer {
     }
 
     public boolean isUpward(Rate rate) {
-        return maxBetween(LocalDateTime.now().minusMinutes(11), LocalDateTime.now().minusMinutes(10)) < rate.getAsk();
+        return averageWithin(Duration.ofMinutes(20)) < rate.getAsk();
     }
     public boolean isDownward(Rate rate) {
-        return minBetween(LocalDateTime.now().minusMinutes(11), LocalDateTime.now().minusMinutes(10)) > rate.getBid();
+        return averageWithin(Duration.ofMinutes(20)) > rate.getBid();
     }
 
     public boolean isReachedAskThreshold(Rate rate) {
