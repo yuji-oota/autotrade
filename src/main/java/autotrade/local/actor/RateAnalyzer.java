@@ -97,17 +97,11 @@ public class RateAnalyzer {
         return averageBetween(LocalDateTime.now().minus(duration), LocalDateTime.now());
     }
     public int averageBetween(Temporal from, Temporal to) {
-        int averageAsk = (int) rates.stream()
+        return (int) rates.stream()
                 .filter(rateBetweenFilter(from, to))
-                .mapToInt(Rate::getAsk)
+                .mapToInt(r -> (r.getAsk() + r.getBid()) / 2)
                 .average()
                 .orElse(0.0);
-        int averageBid = (int) rates.stream()
-                .filter(rateBetweenFilter(from, to))
-                .mapToInt(Rate::getBid)
-                .average()
-                .orElse(0.0);
-        return (averageAsk + averageBid) / 2;
     }
 
     public int halfWithin(Duration duration) {
