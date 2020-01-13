@@ -206,18 +206,18 @@ public class AutoTrader {
 
             // 切り離しモード設定
             sameManager.setCutOffMode(CutOffMode.NONE);
-            if (rateAnalyzer.isUpward(snapshot.getRate())) {
-                sameManager.setCutOffMode(CutOffMode.BID);
-            }
-            if (rateAnalyzer.isDownward(snapshot.getRate())) {
-                sameManager.setCutOffMode(CutOffMode.ASK);
-            }
+//            if (rateAnalyzer.isUpward(snapshot.getRate())) {
+//                sameManager.setCutOffMode(CutOffMode.BID);
+//            }
+//            if (rateAnalyzer.isDownward(snapshot.getRate())) {
+//                sameManager.setCutOffMode(CutOffMode.ASK);
+//            }
 
             // Ask切り離し判定
             if (sameManager.isCutOffAsk(snapshot, rateAnalyzer)) {
                 // Ask決済
                 wrapper.fixAsk();
-                log.info("same position recovery start. cut off mode {}, snapshot {}", sameManager.getCutOffMode(), snapshot);
+                log.info("same position recovery start. cut off ask. snapshot {}", snapshot);
 
                 // 切り離し時点の情報を保存
                 sameManager.setShapshotWhenCutOff(snapshot);
@@ -229,7 +229,7 @@ public class AutoTrader {
             if (sameManager.isCutOffBid(snapshot, rateAnalyzer)) {
                 // Bid決済
                 wrapper.fixBid();
-                log.info("same position recovery start. cut off mode {}, snapshot {}", sameManager.getCutOffMode(), snapshot);
+                log.info("same position recovery start. cut off bid. snapshot {}", snapshot);
 
                 // 切り離し時点の情報を保存
                 sameManager.setShapshotWhenCutOff(snapshot);

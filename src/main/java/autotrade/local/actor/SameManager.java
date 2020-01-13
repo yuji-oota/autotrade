@@ -64,9 +64,9 @@ public class SameManager {
     }
 
     public boolean isCutOffAsk(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
-        if (cutOffMode != CutOffMode.ASK) {
-            return false;
-        }
+//        if (cutOffMode != CutOffMode.ASK) {
+//            return false;
+//        }
         if (rateAnalyzer.rangeWithin(Duration.ofMinutes(20)) < 40) {
             return false;
         }
@@ -78,9 +78,9 @@ public class SameManager {
     }
 
     public boolean isCutOffBid(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
-        if (cutOffMode != CutOffMode.BID) {
-            return false;
-        }
+//        if (cutOffMode != CutOffMode.BID) {
+//            return false;
+//        }
         if (rateAnalyzer.rangeWithin(Duration.ofMinutes(20)) < 40) {
             return false;
         }
