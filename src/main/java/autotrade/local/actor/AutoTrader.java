@@ -329,10 +329,10 @@ public class AutoTrader {
         case NONE:
             // ポジションがない場合
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
-                orderAsk(lotManager.getInitialLot());
+                orderAsk(snapshot);
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
-                orderBid(lotManager.getInitialLot());
+                orderBid(snapshot);
             }
             break;
         case ASK_SIDE:
@@ -342,13 +342,13 @@ public class AutoTrader {
                     && rate.getBid() < snapshot.getAskAverageRate()) {
                 // 下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
-                orderBid(lotManager.nextBidLot(snapshot));
+                orderBid(snapshot);
             }
             // Same後
             if (SameManager.hasInstance()
                     && SameManager.getInstance().isReSameBid(snapshot, rateAnalyzer)) {
                 // Same戻し
-                orderBid(lotManager.nextBidLot(snapshot));
+                orderBid(snapshot);
             }
             break;
         case BID_SIDE:
@@ -358,13 +358,13 @@ public class AutoTrader {
                     && snapshot.getBidAverageRate() < rate.getAsk()) {
                 // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得
-                orderAsk(lotManager.nextAskLot(snapshot));
+                orderAsk(snapshot);
             }
             // Same後
             if (SameManager.hasInstance()
                     && SameManager.getInstance().isReSameAsk(snapshot, rateAnalyzer)) {
                 // Same戻し
-                orderAsk(lotManager.nextAskLot(snapshot));
+                orderAsk(snapshot);
             }
             break;
         case SAME:
@@ -391,6 +391,16 @@ public class AutoTrader {
         return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
     }
 
+    private void orderAsk(Snapshot snapshot) {
+        int lot = lotManager.nextAskLot(snapshot);
+        orderAsk(lot);
+        log.info("order ask. lot {}, snapshot {}", lot, snapshot);
+    }
+    private void orderBid(Snapshot snapshot) {
+        int lot = lotManager.nextBidLot(snapshot);
+        orderBid(lot);
+        log.info("order bid. lot {}, snapshot {}", lot, snapshot);
+    }
     private void orderAsk(int lot) {
         int beforeLot = AutoTradeUtils.toInt(wrapper.getAskLot());
         wrapper.setLot(lot);

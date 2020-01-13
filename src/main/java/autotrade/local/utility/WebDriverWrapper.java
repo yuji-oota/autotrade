@@ -128,7 +128,6 @@ public class WebDriverWrapper {
         if (!lastLot.equals(String.valueOf(lot))) {
             driver.findElement(By.id("lot-param-quick-val")).sendKeys(Keys.chord(Keys.CONTROL,"a"));
             driver.findElement(By.id("lot-param-quick-val")).sendKeys(String.valueOf(lot));
-            log.info("lot {}", lot);
         }
     }
     public void orderAsk() {
@@ -137,7 +136,6 @@ public class WebDriverWrapper {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        log.info("ask {}", getAskRate());
     }
     public void orderBid() {
         try {
@@ -145,7 +143,6 @@ public class WebDriverWrapper {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        log.info("bid {}", getBidRate());
     }
     public void fixAll() {
         try {

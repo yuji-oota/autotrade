@@ -29,11 +29,17 @@ public class LotManager {
     }
 
     public int nextAskLot(Snapshot snapshot) {
+        if (snapshot.getBidLot() == 0) {
+            return initialLot;
+        }
         int sameLimit = getSameLimit();
         int nextLot = snapshot.getBidLot() * nextMagnification - snapshot.getAskLot();
         return snapshot.getBidLot() >= sameLimit ? snapshot.getBidLot() - snapshot.getAskLot() : nextLot;
     }
     public int nextBidLot(Snapshot snapshot) {
+        if (snapshot.getAskLot() == 0) {
+            return initialLot;
+        }
         int sameLimit = getSameLimit();
         int nextLot = snapshot.getAskLot() * nextMagnification - snapshot.getBidLot();
         return snapshot.getAskLot() >= sameLimit ? snapshot.getAskLot() - snapshot.getBidLot() : nextLot;
