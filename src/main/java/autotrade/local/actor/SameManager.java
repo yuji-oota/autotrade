@@ -53,7 +53,7 @@ public class SameManager {
     }
 
     public boolean isRecovered(Snapshot snapshot) {
-        if (snapshot.getTotalProfit() >= snapshotWhenSamed.getTodaysProfit()) {
+        if (snapshot.getTotalProfit() >= snapshotWhenSamed.getTodaysProfit() + (snapshotWhenSamed.getPositionProfit() / 2)) {
             return true;
         }
         return false;
@@ -67,7 +67,7 @@ public class SameManager {
 //        if (cutOffMode != CutOffMode.ASK) {
 //            return false;
 //        }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(20)) < 40) {
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 20) {
             return false;
         }
         Rate rate = snapshot.getRate();
@@ -81,7 +81,7 @@ public class SameManager {
 //        if (cutOffMode != CutOffMode.BID) {
 //            return false;
 //        }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(20)) < 40) {
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 20) {
             return false;
         }
         Rate rate = snapshot.getRate();
@@ -95,10 +95,10 @@ public class SameManager {
         Rate rate = snapshot.getRate();
         if (shapshotWhenCutOff.getRate().getBid() - rate.getAsk() > 0
                 && rateAnalyzer.maxWithin(Duration.ofSeconds(15)) <= rate.getAsk()) {
-            log.info("margin is recovered just a little. snapshot {}", snapshot);
+            log.info("margin is recovered just a little.");
             return true;
         }
-        if (rateAnalyzer.isReachedAskThreshold(rate)) {
+        if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(2))) {
             return true;
         }
         return false;
@@ -108,10 +108,10 @@ public class SameManager {
         Rate rate = snapshot.getRate();
         if (rate.getBid() - shapshotWhenCutOff.getRate().getAsk() > 0
                 && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofSeconds(15))) {
-            log.info("margin is recovered just a little. snapshot {}", snapshot);
+            log.info("margin is recovered just a little.");
             return true;
         }
-        if (rateAnalyzer.isReachedBidThreshold(rate)) {
+        if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(2))) {
             return true;
         }
         return false;

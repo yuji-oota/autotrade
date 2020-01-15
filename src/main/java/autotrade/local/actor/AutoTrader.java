@@ -286,8 +286,8 @@ public class AutoTrader {
 
         switch (snapshot.getStatus()) {
         case NONE:
-            if (System.currentTimeMillis() - lastFixed < Duration.ofMinutes(1).toMillis()) {
-                // 利益確定から１分以内の場合は注文しない
+            if (System.currentTimeMillis() - lastFixed < Duration.ofSeconds(30).toMillis()) {
+                // 利益確定から一定時間内の場合は注文しない
                 return false;
             }
             // break無し
