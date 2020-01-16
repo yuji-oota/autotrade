@@ -19,7 +19,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import autotrade.local.actor.MessageListener.ReservedMessage;
-import autotrade.local.actor.SameManager.CutOffMode;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.PositionStatus;
@@ -204,15 +203,6 @@ public class AutoTrader {
             SameManager.setSnapshot(snapshot);
             SameManager sameManager = SameManager.getInstance();
 
-            // 切り離しモード設定
-            sameManager.setCutOffMode(CutOffMode.NONE);
-//            if (rateAnalyzer.isUpward(snapshot.getRate())) {
-//                sameManager.setCutOffMode(CutOffMode.BID);
-//            }
-//            if (rateAnalyzer.isDownward(snapshot.getRate())) {
-//                sameManager.setCutOffMode(CutOffMode.ASK);
-//            }
-
             // Ask切り離し判定
             if (sameManager.isCutOffAsk(snapshot, rateAnalyzer)) {
                 // Ask決済
@@ -243,8 +233,6 @@ public class AutoTrader {
 
             // Sameポジション発生後の利益確定判定
             if (SameManager.hasInstance()) {
-                // モードを戻す
-                SameManager.getInstance().setCutOffMode(CutOffMode.NONE);
 
                 // Sameポジション回復中の場合
                 if (SameManager.getInstance().isRecovered(snapshot)) {
@@ -268,6 +256,19 @@ public class AutoTrader {
                 // ベリファイ
                 verifyOrder(0, Snapshot::getAskLot);
                 verifyOrder(0, Snapshot::getBidLot);
+                return;
+            }
+            if (snapshot.hasBothSide()
+                    && snapshot.getStatus() != PositionStatus.SAME
+                    && snapshot.getPositionProfit() >= targetAmountOneTrade * -1) {
+                // 反対売買により、損益がある程度減らせたら確定
+                wrapper.fixAll();
+                log.info("achieved countertrading. snapshot {}", snapshot);
+                lastFixed = System.currentTimeMillis();
+                // ベリファイ
+                verifyOrder(0, Snapshot::getAskLot);
+                verifyOrder(0, Snapshot::getBidLot);
+                return;
             }
             break;
         default:

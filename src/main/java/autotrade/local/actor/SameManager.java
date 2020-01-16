@@ -17,13 +17,11 @@ public class SameManager {
     private Snapshot snapshotWhenSamed;
 
     @Getter
-    @Setter
-    private CutOffMode cutOffMode;
+    private Mode mode;
 
-    enum CutOffMode {
-        NONE,
-        ASK,
-        BID,
+    enum Mode {
+        ACTIVE,
+        INACTIVE
     }
 
     @Setter
@@ -32,7 +30,7 @@ public class SameManager {
 
     private SameManager(Snapshot snapshot) {
         this.snapshotWhenSamed = snapshot;
-        this.cutOffMode = CutOffMode.NONE;
+        this.mode = Mode.ACTIVE;
     }
 
     public static void setSnapshot(Snapshot snapshot) {
@@ -64,10 +62,10 @@ public class SameManager {
     }
 
     public boolean isCutOffAsk(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
-//        if (cutOffMode != CutOffMode.ASK) {
-//            return false;
-//        }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 20) {
+        if (mode != Mode.ACTIVE) {
+            return false;
+        }
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 30) {
             return false;
         }
         Rate rate = snapshot.getRate();
@@ -78,10 +76,10 @@ public class SameManager {
     }
 
     public boolean isCutOffBid(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
-//        if (cutOffMode != CutOffMode.BID) {
-//            return false;
-//        }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 20) {
+        if (mode != Mode.ACTIVE) {
+            return false;
+        }
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 30) {
             return false;
         }
         Rate rate = snapshot.getRate();
@@ -101,6 +99,9 @@ public class SameManager {
         if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(2))) {
             return true;
         }
+        if (shapshotWhenCutOff.getRate().getBid() - rate.getAsk() <= -10) {
+            return true;
+        }
         return false;
     }
 
@@ -114,6 +115,24 @@ public class SameManager {
         if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(2))) {
             return true;
         }
+        if (rate.getBid() - shapshotWhenCutOff.getRate().getAsk() <= -10) {
+            return true;
+        }
         return false;
+    }
+
+    public void modeActive() {
+        if (Mode.ACTIVE == mode) {
+            return;
+        }
+        mode = Mode.ACTIVE;
+        log.info("mode is changed to active.");
+    }
+    public void modeInactive() {
+        if (Mode.INACTIVE == mode) {
+            return;
+        }
+        mode = Mode.INACTIVE;
+        log.info("mode is changed to inactive.");
     }
 }
