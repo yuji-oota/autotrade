@@ -137,9 +137,6 @@ public class AutoTrader {
                 trade();
                 AutoTradeUtils.sleep(Duration.ofMillis(100));
 
-                // メッセンジャー再接続
-//                messenger.reConnect();
-
                 // メッセージダイアログクローズ
                 wrapper.cancelMessage();
             }
@@ -317,6 +314,7 @@ public class AutoTrader {
         Rate rate = snapshot.getRate();
         if (snapshot.getTotalProfit() > targetAmountOneDay) {
             // 一日の目標金額を達成した場合は消極的に取引する
+            log.info("achieved target amount one day. snapshot {}", snapshot);
             lotManager.modeNegative();
         }
 

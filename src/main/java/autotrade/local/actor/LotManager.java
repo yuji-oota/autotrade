@@ -9,7 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 public class LotManager {
 
     @Getter
-    private int initialLot;
+    private int initialPositive;
+    private int initialNegative;
     private int nextMagnification;
     private int sameLimitPositive;
     private int sameLimitNegative;
@@ -21,7 +22,8 @@ public class LotManager {
     }
 
     public LotManager() {
-        initialLot = AutoTradeProperties.getInt("autotrade.lot.initial");
+        initialPositive = AutoTradeProperties.getInt("autotrade.lot.initial.positive");
+        initialNegative = AutoTradeProperties.getInt("autotrade.lot.initial.negative");
         nextMagnification = AutoTradeProperties.getInt("autotrade.lot.nextMagnification");
         sameLimitPositive = AutoTradeProperties.getInt("autotrade.lot.sameLimit.positive");
         sameLimitNegative = AutoTradeProperties.getInt("autotrade.lot.sameLimit.negative");
@@ -30,7 +32,7 @@ public class LotManager {
 
     public int nextAskLot(Snapshot snapshot) {
         if (snapshot.getBidLot() == 0) {
-            return initialLot;
+            return getInitial();
         }
         int sameLimit = getSameLimit();
         int nextLot = snapshot.getBidLot() * nextMagnification - snapshot.getAskLot();
@@ -38,13 +40,12 @@ public class LotManager {
     }
     public int nextBidLot(Snapshot snapshot) {
         if (snapshot.getAskLot() == 0) {
-            return initialLot;
+            return getInitial();
         }
         int sameLimit = getSameLimit();
         int nextLot = snapshot.getAskLot() * nextMagnification - snapshot.getBidLot();
         return snapshot.getAskLot() >= sameLimit ? snapshot.getAskLot() - snapshot.getBidLot() : nextLot;
     }
-
     public void modePositive() {
         if (Mode.POSITIVE == mode) {
             return;
@@ -68,6 +69,16 @@ public class LotManager {
             return sameLimitNegative;
         default:
             return sameLimitPositive;
+        }
+    }
+    private int getInitial() {
+        switch (mode) {
+        case POSITIVE:
+            return initialPositive;
+        case NEGATIVE:
+            return initialNegative;
+        default:
+            return initialPositive;
         }
     }
 
