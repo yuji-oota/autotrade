@@ -14,9 +14,6 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 public class WebDriverWrapper {
 
     private WebDriver driver;

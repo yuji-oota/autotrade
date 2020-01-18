@@ -94,7 +94,8 @@ public class AutoTrader {
             List<LocalDateTime> indicators = wrapper.getIndicators(LocalDate.now());
             // 翌日分
             indicators.addAll(wrapper.getIndicators(LocalDate.now().plusDays(1)));
-            log.info("indicators {}", indicators);
+            log.info("indicators is get.");
+            AutoTradeUtils.printObject(indicators);
             indicatorManager = new IndicatorManager(indicators);
 
             // ログイン
@@ -196,6 +197,7 @@ public class AutoTrader {
                 // Snapshotを保存
                 messenger.set("snapshotWhenSamed", Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(snapshot)));
                 log.info("save Snapshot when samed.");
+                AutoTradeUtils.printObject(snapshot);
             }
             SameManager.setSnapshot(snapshot);
             SameManager sameManager = SameManager.getInstance();
@@ -204,7 +206,8 @@ public class AutoTrader {
             if (sameManager.isCutOffAsk(snapshot, rateAnalyzer)) {
                 // Ask決済
                 wrapper.fixAsk();
-                log.info("same position recovery start. cut off ask. snapshot {}", snapshot);
+                log.info("same position recovery start. cut off ask.");
+                AutoTradeUtils.printObject(snapshot);
 
                 // ベリファイ
                 verifyOrder(0, Snapshot::getAskLot);
@@ -213,7 +216,8 @@ public class AutoTrader {
             if (sameManager.isCutOffBid(snapshot, rateAnalyzer)) {
                 // Bid決済
                 wrapper.fixBid();
-                log.info("same position recovery start. cut off bid. snapshot {}", snapshot);
+                log.info("same position recovery start. cut off bid.");
+                AutoTradeUtils.printObject(snapshot);
 
                 // ベリファイ
                 verifyOrder(0, Snapshot::getBidLot);
@@ -229,7 +233,8 @@ public class AutoTrader {
                 if (SameManager.getInstance().isRecovered(snapshot)) {
                     // Sameポジション回復達成で利益確定
                     wrapper.fixAll();
-                    log.info("achieved target amount. snapshot {}", snapshot);
+                    log.info("achieved target amount.");
+                    AutoTradeUtils.printObject(snapshot);
                     lastFixed = System.currentTimeMillis();
                     // ベリファイ
                     verifyOrder(0, Snapshot::getAskLot);
@@ -242,7 +247,8 @@ public class AutoTrader {
             if (snapshot.getPositionProfit() >= targetAmountOneTrade) {
                 // 目標金額達成で利益確定
                 wrapper.fixAll();
-                log.info("achieved target amount. snapshot {}", snapshot);
+                log.info("achieved target amount.");
+                AutoTradeUtils.printObject(snapshot);
                 lastFixed = System.currentTimeMillis();
                 // ベリファイ
                 verifyOrder(0, Snapshot::getAskLot);
@@ -254,7 +260,8 @@ public class AutoTrader {
                     && snapshot.getPositionProfit() >= targetAmountOneTrade * -1) {
                 // 反対売買により、損益がある程度減らせたら確定
                 wrapper.fixAll();
-                log.info("achieved countertrading. snapshot {}", snapshot);
+                log.info("achieved countertrading.");
+                AutoTradeUtils.printObject(snapshot);
                 lastFixed = System.currentTimeMillis();
                 // ベリファイ
                 verifyOrder(0, Snapshot::getAskLot);
@@ -314,7 +321,8 @@ public class AutoTrader {
         Rate rate = snapshot.getRate();
         if (snapshot.getTotalProfit() > targetAmountOneDay) {
             // 一日の目標金額を達成した場合は消極的に取引する
-            log.info("achieved target amount one day. snapshot {}", snapshot);
+            log.info("achieved target amount one day.");
+            AutoTradeUtils.printObject(snapshot);
             lotManager.modeNegative();
         }
 
@@ -387,12 +395,14 @@ public class AutoTrader {
     private void orderAsk(Snapshot snapshot) {
         int lot = lotManager.nextAskLot(snapshot);
         orderAsk(lot);
-        log.info("order ask. lot {}, snapshot {}", lot, snapshot);
+        log.info("order ask. lot {}", lot);
+        AutoTradeUtils.printObject(snapshot);
     }
     private void orderBid(Snapshot snapshot) {
         int lot = lotManager.nextBidLot(snapshot);
         orderBid(lot);
-        log.info("order bid. lot {}, snapshot {}", lot, snapshot);
+        log.info("order bid. lot {}", lot);
+        AutoTradeUtils.printObject(snapshot);
     }
     private void orderAsk(int lot) {
         int beforeLot = AutoTradeUtils.toInt(wrapper.getAskLot());
@@ -454,4 +464,5 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.LOTNEGATIVE, () -> lotManager.modeNegative())
                 ;
     }
+
 }

@@ -12,7 +12,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import autotrade.local.exception.ApplicationException;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class AutoTradeUtils {
 
     private static ObjectMapper objectMapper;
@@ -60,5 +62,9 @@ public class AutoTradeUtils {
         } catch (IOException | ClassNotFoundException e) {
             throw new ApplicationException(e);
         }
+    }
+
+    public static void printObject(Object object) {
+        log.info("{}", object);
     }
 }
