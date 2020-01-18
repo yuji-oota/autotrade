@@ -7,7 +7,6 @@ import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -24,8 +23,6 @@ public class SameManager {
         INACTIVE
     }
 
-    @Setter
-    @Getter
     private Snapshot shapshotWhenCutOff;
 
     private SameManager(Snapshot snapshot) {
@@ -36,7 +33,7 @@ public class SameManager {
     public static void setSnapshot(Snapshot snapshot) {
         if (Objects.isNull(instance)) {
             instance = new SameManager(snapshot);
-            log.info("same position started. snapshot {}", snapshot);
+            log.info("same position started.");
         }
     }
     public static SameManager getInstance() {
@@ -52,6 +49,7 @@ public class SameManager {
 
     public boolean isRecovered(Snapshot snapshot) {
         if (snapshot.getTotalProfit() >= snapshotWhenSamed.getTodaysProfit() + (snapshotWhenSamed.getPositionProfit() / 2)) {
+            log.info("same position recovery done.");
             return true;
         }
         return false;
@@ -65,11 +63,14 @@ public class SameManager {
         if (mode != Mode.ACTIVE) {
             return false;
         }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 30) {
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 30) {
             return false;
         }
         Rate rate = snapshot.getRate();
-        if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
+        if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))
+                && !rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
+            // 切り離し判定時点の情報を保存
+            snapshotWhenSamed = snapshot;
             return true;
         }
         return false;
@@ -79,11 +80,14 @@ public class SameManager {
         if (mode != Mode.ACTIVE) {
             return false;
         }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 30) {
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 30) {
             return false;
         }
         Rate rate = snapshot.getRate();
-        if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
+        if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))
+                && !rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+            // 切り離し判定時点の情報を保存
+            snapshotWhenSamed = snapshot;
             return true;
         }
         return false;
@@ -92,7 +96,7 @@ public class SameManager {
     public boolean isReSameAsk(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
         Rate rate = snapshot.getRate();
         if (shapshotWhenCutOff.getRate().getBid() - rate.getAsk() > 0
-                && rateAnalyzer.maxWithin(Duration.ofSeconds(15)) <= rate.getAsk()) {
+                && rateAnalyzer.maxWithin(Duration.ofMinutes(1)) <= rate.getAsk()) {
             log.info("margin is recovered just a little.");
             return true;
         }
@@ -108,7 +112,7 @@ public class SameManager {
     public boolean isReSameBid(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
         Rate rate = snapshot.getRate();
         if (rate.getBid() - shapshotWhenCutOff.getRate().getAsk() > 0
-                && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofSeconds(15))) {
+                && rate.getBid() <= rateAnalyzer.minWithin(Duration.ofMinutes(1))) {
             log.info("margin is recovered just a little.");
             return true;
         }
