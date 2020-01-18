@@ -2,27 +2,17 @@ package autotrade.local;
 
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.Base64;
-
-import autotrade.local.material.Rate;
-import autotrade.local.material.Snapshot;
-import autotrade.local.utility.AutoTradeUtils;
+import java.util.Arrays;
 
 public class Test {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-        Snapshot snapshot = Snapshot.builder()
-                .askAverageRate(100)
-                .bidAverageRate(90)
-                .askLot(160)
-                .bidLot(160)
-                .askPipProfit(5)
-                .bidPipProfit(-50)
-                .rate(Rate.builder().ask(110).bid(118).timestamp(LocalDateTime.now()).build())
-                .build();
-        System.out.println(snapshot);
-        Snapshot dec = AutoTradeUtils.deserialize(Base64.getDecoder().decode(null));
+        String[] array = {"aaa"};
+        System.out.println(Arrays.toString(Arrays.copyOfRange(array, 1, array.length)));
+        String[] array2 = {"aaa", "bbb"};
+        System.out.println(Arrays.toString(Arrays.copyOfRange(array2, 1, array2.length)));
+        String[] array3 = {"aaa", "bbb", "ccc"};
+        System.out.println(Arrays.toString(Arrays.copyOfRange(array3, 1, array3.length)));
     }
 
 

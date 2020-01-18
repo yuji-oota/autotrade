@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
@@ -444,24 +445,31 @@ public class AutoTrader {
 
     private MessageListener customizeMessageListener() {
         return new MessageListener()
-                .putCommand(ReservedMessage.SNAPSHOT, () -> messenger.set(ReservedMessage.SNAPSHOT.name(), AutoTradeUtils.toJson(getSnapshot())))
-                .putCommand(ReservedMessage.UPLOADLOG, () -> uploadManager.upload(logFile))
-                .putCommand(ReservedMessage.AUTOTRADELOG, () -> {
-                    int logRows = Integer.parseInt(messenger.get("logRows"));
+                .putCommand(ReservedMessage.SNAPSHOT, (args) -> messenger.set(ReservedMessage.SNAPSHOT.name(), AutoTradeUtils.toJson(getSnapshot())))
+                .putCommand(ReservedMessage.UPLOADLOG, (args) -> uploadManager.upload(logFile))
+                .putCommand(ReservedMessage.AUTOTRADELOG, (args) -> {
+                    int logRows = 30;
+                    if (args.length > 0) {
+                        logRows = Integer.parseInt(args[0]);
+                    }
+                    List<String> lines = new ArrayList<>();
                     try {
-                        List<String> lines = Files.readAllLines(logFile);
-                        messenger.set(ReservedMessage.AUTOTRADELOG.name(),
-                                lines.subList(Math.max(0, lines.size() - logRows), lines.size()).stream().collect(Collectors.joining("\n")));
+                        lines = Files.readAllLines(logFile);
                     } catch (IOException e) {
                         throw new ApplicationException(e);
                     }
+                    if (args.length > 1) {
+                        lines = lines.stream().filter(s -> s.contains(args[1])).collect(Collectors.toList());
+                    }
+                    messenger.set(ReservedMessage.AUTOTRADELOG.name(),
+                            lines.subList(Math.max(0, lines.size() - logRows), lines.size()).stream().collect(Collectors.joining("\n")));
                 })
-                .putCommand(ReservedMessage.FIXASK, () -> wrapper.fixAsk())
-                .putCommand(ReservedMessage.FIXBID, () -> wrapper.fixBid())
-                .putCommand(ReservedMessage.FIXALL, () -> wrapper.fixAll())
-                .putCommand(ReservedMessage.FORCESAME, () -> this.forceSame())
-                .putCommand(ReservedMessage.LOTPOSITIVE, () -> lotManager.modePositive())
-                .putCommand(ReservedMessage.LOTNEGATIVE, () -> lotManager.modeNegative())
+                .putCommand(ReservedMessage.FIXASK, (args) -> wrapper.fixAsk())
+                .putCommand(ReservedMessage.FIXBID, (args) -> wrapper.fixBid())
+                .putCommand(ReservedMessage.FIXALL, (args) -> wrapper.fixAll())
+                .putCommand(ReservedMessage.FORCESAME, (args) -> this.forceSame())
+                .putCommand(ReservedMessage.LOTPOSITIVE, (args) -> lotManager.modePositive())
+                .putCommand(ReservedMessage.LOTNEGATIVE, (args) -> lotManager.modeNegative())
                 ;
     }
 
