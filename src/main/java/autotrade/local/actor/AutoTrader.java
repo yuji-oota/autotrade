@@ -233,12 +233,7 @@ public class AutoTrader {
                 // Sameポジション回復中の場合
                 if (SameManager.getInstance().isRecovered(snapshot)) {
                     // Sameポジション回復達成で利益確定
-                    wrapper.fixAll();
-                    AutoTradeUtils.printObject(snapshot);
-                    lastFixed = System.currentTimeMillis();
-                    // ベリファイ
-                    verifyOrder(0, Snapshot::getAskLot);
-                    verifyOrder(0, Snapshot::getBidLot);
+                    fixAll(snapshot);
                 }
                 return;
             }
@@ -246,28 +241,18 @@ public class AutoTrader {
             // 通常の利益確定判定
             if (snapshot.getPositionProfit() >= targetAmountOneTrade) {
                 // 目標金額達成で利益確定
-                wrapper.fixAll();
                 log.info("achieved target amount.");
-                AutoTradeUtils.printObject(snapshot);
-                lastFixed = System.currentTimeMillis();
-                // ベリファイ
-                verifyOrder(0, Snapshot::getAskLot);
-                verifyOrder(0, Snapshot::getBidLot);
+                fixAll(snapshot);
                 return;
             }
-//            if (snapshot.hasBothSide()
-//                    && snapshot.getStatus() != PositionStatus.SAME
-//                    && snapshot.getPositionProfit() >= targetAmountOneTrade) {
-//                // 反対売買により、損益がある程度減らせたら確定
-//                wrapper.fixAll();
-//                log.info("achieved countertrading.");
-//                AutoTradeUtils.printObject(snapshot);
-//                lastFixed = System.currentTimeMillis();
-//                // ベリファイ
-//                verifyOrder(0, Snapshot::getAskLot);
-//                verifyOrder(0, Snapshot::getBidLot);
-//                return;
-//            }
+            if (snapshot.hasBothSide()
+                    && snapshot.getStatus() != PositionStatus.SAME
+                    && snapshot.getPositionProfit() >= 0) {
+                // 反対売買による目標金額達成で利益確定
+                log.info("achieved countertrading.");
+                fixAll(snapshot);
+                return;
+            }
             break;
         default:
         }
@@ -321,8 +306,6 @@ public class AutoTrader {
         Rate rate = snapshot.getRate();
         if (snapshot.getTotalProfit() > targetAmountOneDay) {
             // 一日の目標金額を達成した場合は消極的に取引する
-            log.info("achieved target amount one day.");
-            AutoTradeUtils.printObject(snapshot);
             lotManager.modeNegative();
         }
 
@@ -415,6 +398,14 @@ public class AutoTrader {
         wrapper.setLot(lot);
         wrapper.orderBid();
         verifyOrder(beforeLot + lot, Snapshot::getBidLot);
+    }
+    private void fixAll(Snapshot snapshot) {
+        wrapper.fixAll();
+        AutoTradeUtils.printObject(snapshot);
+        lastFixed = System.currentTimeMillis();
+        // ベリファイ
+        verifyOrder(0, Snapshot::getAskLot);
+        verifyOrder(0, Snapshot::getBidLot);
     }
     private void verifyOrder(int lot, ToIntFunction<Snapshot> lotAfterOrder) {
         long verifyStarted = System.currentTimeMillis();
