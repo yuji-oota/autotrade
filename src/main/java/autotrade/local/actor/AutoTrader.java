@@ -234,7 +234,6 @@ public class AutoTrader {
                 if (SameManager.getInstance().isRecovered(snapshot)) {
                     // Sameポジション回復達成で利益確定
                     wrapper.fixAll();
-                    log.info("achieved target amount.");
                     AutoTradeUtils.printObject(snapshot);
                     lastFixed = System.currentTimeMillis();
                     // ベリファイ
@@ -256,19 +255,19 @@ public class AutoTrader {
                 verifyOrder(0, Snapshot::getBidLot);
                 return;
             }
-            if (snapshot.hasBothSide()
-                    && snapshot.getStatus() != PositionStatus.SAME
-                    && snapshot.getPositionProfit() >= targetAmountOneTrade) {
-                // 反対売買により、損益がある程度減らせたら確定
-                wrapper.fixAll();
-                log.info("achieved countertrading.");
-                AutoTradeUtils.printObject(snapshot);
-                lastFixed = System.currentTimeMillis();
-                // ベリファイ
-                verifyOrder(0, Snapshot::getAskLot);
-                verifyOrder(0, Snapshot::getBidLot);
-                return;
-            }
+//            if (snapshot.hasBothSide()
+//                    && snapshot.getStatus() != PositionStatus.SAME
+//                    && snapshot.getPositionProfit() >= targetAmountOneTrade) {
+//                // 反対売買により、損益がある程度減らせたら確定
+//                wrapper.fixAll();
+//                log.info("achieved countertrading.");
+//                AutoTradeUtils.printObject(snapshot);
+//                lastFixed = System.currentTimeMillis();
+//                // ベリファイ
+//                verifyOrder(0, Snapshot::getAskLot);
+//                verifyOrder(0, Snapshot::getBidLot);
+//                return;
+//            }
             break;
         default:
         }

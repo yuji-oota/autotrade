@@ -43,30 +43,9 @@ public class RateAnalyzer {
                 .collect(Collectors.toList());
 
         // 売買閾値設定
-        askThreshold = maxWithin(Duration.ofMinutes(10));
-        bidThreshold = minWithin(Duration.ofMinutes(10));
-        int range = askThreshold - bidThreshold;
-        if (range < 30) {
-            return;
-        }
-        int minutes = 5;
-        if (30 <= range) {
-            minutes = 5;
-        }
-        if (45 <= range) {
-            minutes = 4;
-        }
-        if (60 <= range) {
-            minutes = 3;
-        }
-        if (75 <= range) {
-            minutes = 2;
-        }
-        if (90 <= range) {
-            minutes = 1;
-        }
-        askThreshold = maxWithin(Duration.ofMinutes(minutes));
-        bidThreshold = minWithin(Duration.ofMinutes(minutes));
+        Duration duration = getDurationBy(rangeWithin(Duration.ofMinutes(10)));
+        askThreshold = maxWithin(duration);
+        bidThreshold = minWithin(duration);
     }
 
     public int rangeWithin(Duration duration) {
@@ -116,10 +95,28 @@ public class RateAnalyzer {
             lowWaterMark = rate;
         }
     }
-
     private Predicate<Rate> rateBetweenFilter(Temporal from, Temporal to) {
         return r -> !Duration.between(from, r.getTimestamp()).isNegative()
                     && !Duration.between(r.getTimestamp(), to).isNegative();
+    }
+    private Duration getDurationBy(int range) {
+        Duration duration = Duration.ofMinutes(10);
+        if (30 <= range) {
+            duration = Duration.ofMinutes(5);
+        }
+        if (45 <= range) {
+            duration = Duration.ofMinutes(4);
+        }
+        if (60 <= range) {
+            duration = Duration.ofMinutes(3);
+        }
+        if (75 <= range) {
+            duration = Duration.ofMinutes(2);
+        }
+        if (90 <= range) {
+            duration = Duration.ofMinutes(1);
+        }
+        return duration;
     }
 
     public boolean isUpward(Rate rate) {
