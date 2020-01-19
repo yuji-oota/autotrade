@@ -258,7 +258,7 @@ public class AutoTrader {
             }
             if (snapshot.hasBothSide()
                     && snapshot.getStatus() != PositionStatus.SAME
-                    && snapshot.getPositionProfit() >= targetAmountOneTrade * -1) {
+                    && snapshot.getPositionProfit() >= targetAmountOneTrade) {
                 // 反対売買により、損益がある程度減らせたら確定
                 wrapper.fixAll();
                 log.info("achieved countertrading.");

@@ -46,23 +46,23 @@ public class RateAnalyzer {
         askThreshold = maxWithin(Duration.ofMinutes(10));
         bidThreshold = minWithin(Duration.ofMinutes(10));
         int range = askThreshold - bidThreshold;
-        if (range < 40) {
+        if (range < 30) {
             return;
         }
         int minutes = 5;
-        if (40 <= range) {
+        if (30 <= range) {
             minutes = 5;
         }
-        if (55 <= range) {
+        if (45 <= range) {
             minutes = 4;
         }
-        if (70 <= range) {
+        if (60 <= range) {
             minutes = 3;
         }
-        if (85 <= range) {
+        if (75 <= range) {
             minutes = 2;
         }
-        if (100 <= range) {
+        if (90 <= range) {
             minutes = 1;
         }
         askThreshold = maxWithin(Duration.ofMinutes(minutes));

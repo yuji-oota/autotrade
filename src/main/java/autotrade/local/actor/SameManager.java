@@ -48,7 +48,7 @@ public class SameManager {
     }
 
     public boolean isRecovered(Snapshot snapshot) {
-        if (snapshot.getTotalProfit() >= snapshotWhenSamed.getTodaysProfit() + (snapshotWhenSamed.getPositionProfit() / 2)) {
+        if (snapshot.getTotalProfit() >= snapshotWhenSamed.getTodaysProfit()) {
             log.info("same position recovery done.");
             return true;
         }
