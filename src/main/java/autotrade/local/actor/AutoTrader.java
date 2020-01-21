@@ -239,7 +239,11 @@ public class AutoTrader {
             }
 
             // 通常の利益確定判定
-            if (snapshot.getPositionProfit() >= targetAmountOneTrade) {
+            int targetAmount = targetAmountOneTrade;
+            if (lotManager.isNegative()) {
+                targetAmount = targetAmountOneTrade / 10;
+            }
+            if (snapshot.getPositionProfit() >= targetAmount) {
                 // 目標金額達成で利益確定
                 log.info("achieved target amount.");
                 fixAll(snapshot);

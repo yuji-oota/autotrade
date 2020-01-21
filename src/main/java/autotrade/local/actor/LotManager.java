@@ -60,6 +60,15 @@ public class LotManager {
         mode = Mode.NEGATIVE;
         log.info("mode is changed to negative.");
     }
+    public boolean isPositive() {
+        if (Mode.POSITIVE == mode) {
+            return true;
+        }
+        return false;
+    }
+    public boolean isNegative() {
+        return !isPositive();
+    }
 
     private int getSameLimit() {
         switch (mode) {
