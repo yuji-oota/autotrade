@@ -52,6 +52,7 @@ public class AutoTrader {
 
     private int targetAmountOneTrade;
     private int targetAmountOneDay;
+    private int stopLossAmountOneTrade;
     private int startMargin;
 
     private LocalDateTime bootDateTime;
@@ -65,6 +66,7 @@ public class AutoTrader {
 
         targetAmountOneTrade = AutoTradeProperties.getInt("autotrade.targetAmount.oneTrade");
         targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
+        stopLossAmountOneTrade = AutoTradeProperties.getInt("autotrade.stopLossAmount.oneTrade");
 
         bootDateTime = LocalDateTime.now();
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
@@ -240,8 +242,10 @@ public class AutoTrader {
 
             // 通常の利益確定判定
             int targetAmount = targetAmountOneTrade;
+            int stopLossAmount = stopLossAmountOneTrade;
             if (lotManager.isNegative()) {
                 targetAmount = targetAmountOneTrade / 10;
+                stopLossAmount = stopLossAmountOneTrade / 10;
             }
             if (snapshot.getPositionProfit() >= targetAmount) {
                 // 目標金額達成で利益確定
@@ -249,13 +253,18 @@ public class AutoTrader {
                 fixAll(snapshot);
                 return;
             }
-            if (snapshot.hasBothSide()
-                    && snapshot.getStatus() != PositionStatus.SAME
-                    && snapshot.getPositionProfit() >= 0) {
-                // 反対売買による目標金額達成で利益確定
-                log.info("achieved countertrading.");
+//            if (snapshot.hasBothSide()
+//                    && snapshot.getStatus() != PositionStatus.SAME
+//                    && snapshot.getPositionProfit() >= targetAmount * -1) {
+//                // 反対売買による目標金額達成で利益確定
+//                log.info("achieved countertrading.");
+//                fixAll(snapshot);
+//                return;
+//            }
+            if (snapshot.getPositionProfit() <= stopLossAmount) {
+                // 損切確定
+                log.info("reached stop loss limit.");
                 fixAll(snapshot);
-                return;
             }
             break;
         default:
@@ -284,7 +293,7 @@ public class AutoTrader {
                 // 閾値間隔が狭い場合は注文しない
                 return false;
             }
-            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(2)) || indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15))) {
+            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(5)) || indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15))) {
                 // 指標が近い場合は注文しない
                 return false;
             }
