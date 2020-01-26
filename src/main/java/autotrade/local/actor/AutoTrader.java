@@ -131,9 +131,15 @@ public class AutoTrader {
             messenger.set("startMarginMode", StartMarginMode.CARRY_OVER.name());
 
             // Same引継ぎ
-            if (getSnapshot().getStatus() == PositionStatus.SAME) {
+            Snapshot shapshot = getSnapshot();
+            if (shapshot.getStatus() == PositionStatus.SAME) {
                 log.info("load Snapshot when samed to SameManager.");
                 SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(messenger.get("snapshotWhenSamed"))));
+            }
+            // 反対売買閾値引継ぎ
+            if (shapshot.hasPosition()) {
+                log.info("load countertrading threshold when order to RateAnalyzer.");
+                rateAnalyzer.loadCountertradingThreshold(messenger);
             }
 
             // 繰り返し実行
@@ -346,7 +352,7 @@ public class AutoTrader {
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
             }
-            rateAnalyzer.saveCountertradingThreshold();
+            rateAnalyzer.saveCountertradingThreshold(messenger);
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合

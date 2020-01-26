@@ -63,4 +63,11 @@ public class Snapshot implements Serializable {
         }
         return false;
     }
+
+    public boolean hasPosition() {
+        if (askLot > 0 || bidLot > 0) {
+            return true;
+        }
+        return false;
+    }
 }
