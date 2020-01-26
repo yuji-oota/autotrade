@@ -63,7 +63,7 @@ public class SameManager {
         if (mode != Mode.ACTIVE) {
             return false;
         }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 40) {
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 100) {
             return false;
         }
         Rate rate = snapshot.getRate();
@@ -80,7 +80,7 @@ public class SameManager {
         if (mode != Mode.ACTIVE) {
             return false;
         }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 40) {
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 100) {
             return false;
         }
         Rate rate = snapshot.getRate();
@@ -100,12 +100,12 @@ public class SameManager {
             log.info("margin is recovered just a little.");
             return true;
         }
-        if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(2))) {
+        if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
             return true;
         }
-        if (shapshotWhenCutOff.getRate().getBid() - rate.getAsk() <= -10) {
-            return true;
-        }
+//        if (shapshotWhenCutOff.getRate().getBid() - rate.getAsk() <= -10) {
+//            return true;
+//        }
         return false;
     }
 
@@ -116,12 +116,12 @@ public class SameManager {
             log.info("margin is recovered just a little.");
             return true;
         }
-        if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(2))) {
+        if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
             return true;
         }
-        if (rate.getBid() - shapshotWhenCutOff.getRate().getAsk() <= -10) {
-            return true;
-        }
+//        if (rate.getBid() - shapshotWhenCutOff.getRate().getAsk() <= -10) {
+//            return true;
+//        }
         return false;
     }
 

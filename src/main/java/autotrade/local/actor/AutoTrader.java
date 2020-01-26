@@ -187,6 +187,7 @@ public class AutoTrader {
 
         // analizerにレート追加
         rateAnalyzer.add(snapshot.getRate());
+
     }
 
     private void fix(Snapshot snapshot) {
@@ -261,11 +262,11 @@ public class AutoTrader {
 //                fixAll(snapshot);
 //                return;
 //            }
-            if (snapshot.getPositionProfit() <= stopLossAmount) {
-                // 損切確定
-                log.info("reached stop loss limit.");
-                fixAll(snapshot);
-            }
+//            if (snapshot.getPositionProfit() <= stopLossAmount) {
+//                // 損切確定
+//                log.info("reached stop loss limit.");
+//                fixAll(snapshot);
+//            }
             break;
         default:
         }
@@ -334,8 +335,15 @@ public class AutoTrader {
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合
+//            if (!SameManager.hasInstance()
+//                    && rateAnalyzer.isReachedBidThreshold(rate)
+//                    && rate.getBid() < snapshot.getAskAverageRate()) {
+//                // 下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
+//                // 逆ポジション取得
+//                orderBid(snapshot);
+//            }
             if (!SameManager.hasInstance()
-                    && rateAnalyzer.isReachedBidThreshold(rate)
+                    && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))
                     && rate.getBid() < snapshot.getAskAverageRate()) {
                 // 下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
                 // 逆ポジション取得
@@ -350,8 +358,15 @@ public class AutoTrader {
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
+//            if (!SameManager.hasInstance()
+//                    && rateAnalyzer.isReachedAskThreshold(rate)
+//                    && snapshot.getBidAverageRate() < rate.getAsk()) {
+//                // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
+//                // 逆ポジション取得
+//                orderAsk(snapshot);
+//            }
             if (!SameManager.hasInstance()
-                    && rateAnalyzer.isReachedAskThreshold(rate)
+                    && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))
                     && snapshot.getBidAverageRate() < rate.getAsk()) {
                 // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
                 // 逆ポジション取得

@@ -12,8 +12,8 @@ public class LotManager {
     private int initialPositive;
     private int initialNegative;
     private int nextMagnification;
-    private int sameLimitPositive;
-    private int sameLimitNegative;
+    private int limitPositive;
+    private int limitNegative;
     private Mode mode;
 
     private enum Mode {
@@ -25,8 +25,8 @@ public class LotManager {
         initialPositive = AutoTradeProperties.getInt("autotrade.lot.initial.positive");
         initialNegative = AutoTradeProperties.getInt("autotrade.lot.initial.negative");
         nextMagnification = AutoTradeProperties.getInt("autotrade.lot.nextMagnification");
-        sameLimitPositive = AutoTradeProperties.getInt("autotrade.lot.sameLimit.positive");
-        sameLimitNegative = AutoTradeProperties.getInt("autotrade.lot.sameLimit.negative");
+        limitPositive = AutoTradeProperties.getInt("autotrade.lot.limit.positive");
+        limitNegative = AutoTradeProperties.getInt("autotrade.lot.limit.negative");
         modePositive();
     }
 
@@ -34,17 +34,17 @@ public class LotManager {
         if (snapshot.getBidLot() == 0) {
             return getInitial();
         }
-        int sameLimit = getSameLimit();
+        int limit = getlimit();
         int nextLot = snapshot.getBidLot() * nextMagnification - snapshot.getAskLot();
-        return snapshot.getBidLot() >= sameLimit ? snapshot.getBidLot() - snapshot.getAskLot() : nextLot;
+        return snapshot.getBidLot() >= limit ? snapshot.getBidLot() - snapshot.getAskLot() : nextLot;
     }
     public int nextBidLot(Snapshot snapshot) {
         if (snapshot.getAskLot() == 0) {
             return getInitial();
         }
-        int sameLimit = getSameLimit();
+        int limit = getlimit();
         int nextLot = snapshot.getAskLot() * nextMagnification - snapshot.getBidLot();
-        return snapshot.getAskLot() >= sameLimit ? snapshot.getAskLot() - snapshot.getBidLot() : nextLot;
+        return snapshot.getAskLot() >= limit ? snapshot.getAskLot() - snapshot.getBidLot() : nextLot;
     }
     public void modePositive() {
         if (Mode.POSITIVE == mode) {
@@ -69,15 +69,22 @@ public class LotManager {
     public boolean isNegative() {
         return !isPositive();
     }
+    public boolean isLimit(Snapshot snapshot) {
+        if (snapshot.getAskLot() >= getlimit()
+                || snapshot.getBidLot() >= getlimit()) {
+            return true;
+        }
+        return false;
+    }
 
-    private int getSameLimit() {
+    private int getlimit() {
         switch (mode) {
         case POSITIVE:
-            return sameLimitPositive;
+            return limitPositive;
         case NEGATIVE:
-            return sameLimitNegative;
+            return limitNegative;
         default:
-            return sameLimitPositive;
+            return limitPositive;
         }
     }
     private int getInitial() {
