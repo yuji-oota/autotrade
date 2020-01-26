@@ -21,6 +21,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 
 import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.exception.ApplicationException;
+import autotrade.local.material.AudioPath;
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.PositionStatus;
 import autotrade.local.material.Rate;
@@ -129,7 +130,7 @@ public class AutoTrader {
             messenger.set("startMargin", String.valueOf(startMargin));
             messenger.set("startMarginMode", StartMarginMode.CARRY_OVER.name());
 
-            // Same引き継ぎ
+            // Same引継ぎ
             if (getSnapshot().getStatus() == PositionStatus.SAME) {
                 log.info("load Snapshot when samed to SameManager.");
                 SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(messenger.get("snapshotWhenSamed"))));
@@ -187,6 +188,12 @@ public class AutoTrader {
 
         // analizerにレート追加
         rateAnalyzer.add(snapshot.getRate());
+
+        // 指標アラート
+        if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
+                && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(50))) {
+            AutoTradeUtils.playAudio(AudioPath.IndicatorAlert);
+        }
 
     }
 
@@ -257,6 +264,7 @@ public class AutoTrader {
                     // 目標金額達成で利益確定
                     log.info("achieved target amount.");
                     fixAll(snapshot);
+                    AutoTradeUtils.playAudio(AudioPath.FixProfit);
                 }
                 return;
             }

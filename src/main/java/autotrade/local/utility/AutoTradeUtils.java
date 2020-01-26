@@ -7,11 +7,19 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.time.Duration;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import autotrade.local.exception.ApplicationException;
+import autotrade.local.material.AudioPath;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -67,4 +75,21 @@ public class AutoTradeUtils {
     public static void printObject(Object object) {
         log.info("{}", object);
     }
+
+    public static void playAudio(AudioPath audioPath) {
+        try (AudioInputStream ais = AudioSystem.getAudioInputStream(audioPath.getPath().toFile())) {
+            long length = ais.getFrameLength();
+            float frame = ais.getFormat().getSampleRate();
+
+            Clip clip = (Clip)AudioSystem.getLine(new DataLine.Info(Clip.class, ais.getFormat()));
+            clip.open(ais);
+            clip.loop(0);
+            clip.flush();
+
+            Thread.sleep((long)(length / frame * 1000));
+        } catch (IOException | UnsupportedAudioFileException | LineUnavailableException | InterruptedException e) {
+            throw new ApplicationException(e);
+        }
+    }
+
 }
