@@ -22,6 +22,8 @@ public class RateAnalyzer {
     private int bidThreshold;
     private Rate highWaterMark;
     private Rate lowWaterMark;
+    private int countertradingAsk;
+    private int countertradingBid;
 
     public RateAnalyzer() {
         rates = new ArrayList<>();
@@ -43,7 +45,7 @@ public class RateAnalyzer {
                 .collect(Collectors.toList());
 
         // 売買閾値設定
-        Duration duration = getDurationBy(rangeWithin(Duration.ofMinutes(10)));
+        Duration duration = Duration.ofMinutes(10);
         askThreshold = maxWithin(duration);
         bidThreshold = minWithin(duration);
     }
@@ -99,25 +101,25 @@ public class RateAnalyzer {
         return r -> !Duration.between(from, r.getTimestamp()).isNegative()
                     && !Duration.between(r.getTimestamp(), to).isNegative();
     }
-    private Duration getDurationBy(int range) {
-        Duration duration = Duration.ofMinutes(10);
-        if (30 <= range) {
-            duration = Duration.ofMinutes(5);
-        }
-        if (45 <= range) {
-            duration = Duration.ofMinutes(4);
-        }
-        if (60 <= range) {
-            duration = Duration.ofMinutes(3);
-        }
-        if (75 <= range) {
-            duration = Duration.ofMinutes(2);
-        }
-        if (90 <= range) {
-            duration = Duration.ofMinutes(1);
-        }
-        return duration;
-    }
+//    private Duration getDurationBy(int range) {
+//        Duration duration = Duration.ofMinutes(10);
+//        if (30 <= range) {
+//            duration = Duration.ofMinutes(5);
+//        }
+//        if (45 <= range) {
+//            duration = Duration.ofMinutes(4);
+//        }
+//        if (60 <= range) {
+//            duration = Duration.ofMinutes(3);
+//        }
+//        if (75 <= range) {
+//            duration = Duration.ofMinutes(2);
+//        }
+//        if (90 <= range) {
+//            duration = Duration.ofMinutes(1);
+//        }
+//        return duration;
+//    }
 
     public boolean isUpward(Rate rate) {
         return averageWithin(Duration.ofMinutes(20)) < rate.getAsk();
@@ -139,4 +141,14 @@ public class RateAnalyzer {
         return rate.getBid() <= minWithin(duration);
     }
 
+    public void saveCountertradingThreshold() {
+        countertradingAsk = askThreshold;
+        countertradingBid = bidThreshold;
+    }
+    public boolean isReachedCountertradingAsk(Rate rate) {
+        return countertradingAsk <= rate.getAsk();
+    }
+    public boolean isReachedCountertradingBid(Rate rate) {
+        return rate.getBid() <= countertradingBid;
+    }
 }
