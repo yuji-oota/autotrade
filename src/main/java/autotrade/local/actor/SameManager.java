@@ -60,6 +60,8 @@ public class SameManager {
     }
 
     public boolean isCutOffAsk(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
+        // 切り離し判定時点の情報を保存
+        shapshotWhenCutOff = snapshot;
         if (mode != Mode.ACTIVE) {
             return false;
         }
@@ -69,14 +71,14 @@ public class SameManager {
         Rate rate = snapshot.getRate();
         if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))
                 && !rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
-            // 切り離し判定時点の情報を保存
-            shapshotWhenCutOff = snapshot;
             return true;
         }
         return false;
     }
 
     public boolean isCutOffBid(Snapshot snapshot, RateAnalyzer rateAnalyzer) {
+        // 切り離し判定時点の情報を保存
+        shapshotWhenCutOff = snapshot;
         if (mode != Mode.ACTIVE) {
             return false;
         }
@@ -86,8 +88,6 @@ public class SameManager {
         Rate rate = snapshot.getRate();
         if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))
                 && !rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
-            // 切り離し判定時点の情報を保存
-            shapshotWhenCutOff = snapshot;
             return true;
         }
         return false;
