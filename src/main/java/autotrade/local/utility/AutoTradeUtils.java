@@ -5,7 +5,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -76,8 +81,21 @@ public class AutoTradeUtils {
         log.info("{}", object);
     }
 
-    public static void playAudio(AudioPath audioPath) {
-        try (AudioInputStream ais = AudioSystem.getAudioInputStream(audioPath.getPath().toFile())) {
+    public static void playAudioRandom(AudioPath audioPath) {
+        if(!audioPath.getPath().toFile().isDirectory()) {
+            playAudio(audioPath.getPath());
+        }
+        try {
+            List<Path> pathList = Files.list(audioPath.getPath()).collect(Collectors.toList());
+            playAudio(pathList.get(new Random().nextInt(pathList.size())));
+        } catch (IOException e) {
+            throw new ApplicationException(e);
+        }
+
+    }
+
+    public static void playAudio(Path path) {
+        try (AudioInputStream ais = AudioSystem.getAudioInputStream(path.toFile())) {
             long length = ais.getFrameLength();
             float frame = ais.getFormat().getSampleRate();
 

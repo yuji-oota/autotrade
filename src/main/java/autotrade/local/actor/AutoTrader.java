@@ -198,7 +198,7 @@ public class AutoTrader {
         // 指標アラート
         if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
                 && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(55))) {
-            AutoTradeUtils.playAudio(AudioPath.IndicatorAlert);
+            AutoTradeUtils.playAudioRandom(AudioPath.Alert);
         }
 
     }
@@ -270,7 +270,7 @@ public class AutoTrader {
                     // 目標金額達成で利益確定
                     log.info("achieved target amount.");
                     fixAll(snapshot);
-                    AutoTradeUtils.playAudio(AudioPath.FixProfit);
+                    AutoTradeUtils.playAudioRandom(AudioPath.FixSoundEffect);
                 }
                 return;
             }
@@ -448,12 +448,14 @@ public class AutoTrader {
         orderAsk(lot);
         log.info("order ask. lot {}", lot);
         AutoTradeUtils.printObject(snapshot);
+        AutoTradeUtils.playAudioRandom(AudioPath.OrderSoundEffect);
     }
     private void orderBid(Snapshot snapshot) {
         int lot = lotManager.nextBidLot(snapshot);
         orderBid(lot);
         log.info("order bid. lot {}", lot);
         AutoTradeUtils.printObject(snapshot);
+        AutoTradeUtils.playAudioRandom(AudioPath.OrderSoundEffect);
     }
     private void orderAsk(int lot) {
         int beforeLot = AutoTradeUtils.toInt(wrapper.getAskLot());

@@ -10,8 +10,9 @@ import lombok.Getter;
 @Getter
 public enum AudioPath {
 
-    IndicatorAlert(Paths.get("audio/もうすぐ指標です.wav")),
-    FixProfit(Paths.get("audio/コイン01.wav")),
+    Alert(Paths.get("audio/alert")),
+    FixSoundEffect(Paths.get("audio/fixsoundeffect")),
+    OrderSoundEffect(Paths.get("audio/ordersoundeffect")),
     ;
 
     private Path path;
