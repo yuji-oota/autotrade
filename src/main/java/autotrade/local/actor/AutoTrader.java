@@ -53,7 +53,6 @@ public class AutoTrader {
 
     private int targetAmountOneTrade;
     private int targetAmountOneDay;
-    private int stopLossAmountOneTrade;
     private int startMargin;
 
     private LocalDateTime bootDateTime;
@@ -67,7 +66,6 @@ public class AutoTrader {
 
         targetAmountOneTrade = AutoTradeProperties.getInt("autotrade.targetAmount.oneTrade");
         targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
-        stopLossAmountOneTrade = AutoTradeProperties.getInt("autotrade.stopLossAmount.oneTrade");
 
         bootDateTime = LocalDateTime.now();
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
@@ -259,37 +257,34 @@ public class AutoTrader {
             if (lotManager.isNegative()) {
                 targetAmount = targetAmountOneTrade / 10;
             }
-            if (snapshot.getPositionProfit() >= targetAmount) {
-                boolean isFix = false;
-                if (snapshot.getStatus() == PositionStatus.ASK_SIDE) {
-                    isFix = rateAnalyzer.isReachedBidThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
-                } else {
-                    isFix = rateAnalyzer.isReachedAskThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
-                }
-                if (isFix) {
-                    // 目標金額達成で利益確定
-                    log.info("achieved target amount.");
-                    fixAll(snapshot);
-                    AutoTradeUtils.playAudioRandom(AudioPath.FixSoundEffect);
-                }
+            if (isFixBeforeSame(snapshot, targetAmount)) {
+                // 目標金額達成で利益確定
+                log.info("achieved target amount.");
+                fixAll(snapshot);
                 return;
             }
-//            if (snapshot.hasBothSide()
-//                    && snapshot.getStatus() != PositionStatus.SAME
-//                    && snapshot.getPositionProfit() >= targetAmount * -1) {
-//                // 反対売買による目標金額達成で利益確定
-//                log.info("achieved countertrading.");
-//                fixAll(snapshot);
-//                return;
-//            }
-//            if (snapshot.getPositionProfit() <= stopLossAmount) {
-//                // 損切確定
-//                log.info("reached stop loss limit.");
-//                fixAll(snapshot);
-//            }
+            if (snapshot.hasBothSide()
+                    && isFixBeforeSame(snapshot, 0)) {
+                // 反対売買による目標金額達成で利益確定
+                log.info("achieved countertrading.");
+                fixAll(snapshot);
+                return;
+            }
             break;
         default:
         }
+    }
+
+    private boolean isFixBeforeSame(Snapshot snapshot, int targetAmount) {
+        if (snapshot.getPositionProfit() >= targetAmount) {
+            if (snapshot.getStatus() == PositionStatus.ASK_SIDE) {
+                return rateAnalyzer.isReachedBidThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
+            }
+            if (snapshot.getStatus() == PositionStatus.BID_SIDE) {
+                return rateAnalyzer.isReachedAskThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
+            }
+        }
+        return false;
     }
 
     private boolean isOrderable(Snapshot snapshot) {
@@ -472,6 +467,7 @@ public class AutoTrader {
     private void fixAll(Snapshot snapshot) {
         wrapper.fixAll();
         AutoTradeUtils.printObject(snapshot);
+        AutoTradeUtils.playAudioRandom(AudioPath.FixSoundEffect);
         lastFixed = System.currentTimeMillis();
         // ベリファイ
         verifyOrder(0, Snapshot::getAskLot);
