@@ -197,7 +197,7 @@ public class AutoTrader {
 
         // 指標アラート
         if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
-                && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(50))) {
+                && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(55))) {
             AutoTradeUtils.playAudio(AudioPath.IndicatorAlert);
         }
 
@@ -328,6 +328,13 @@ public class AutoTrader {
             }
             if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
                 // スプレッドが開いている場合は注文しない
+                return false;
+            }
+            break;
+        case ASK_SIDE:
+        case BID_SIDE:
+            if (snapshot.getRate().getSpread() > 4) {
+                // 暫定措置
                 return false;
             }
             break;

@@ -65,7 +65,7 @@ public class SameManager {
         if (mode != Mode.ACTIVE) {
             return false;
         }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 100) {
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 1000) {
             return false;
         }
         Rate rate = snapshot.getRate();
@@ -82,7 +82,7 @@ public class SameManager {
         if (mode != Mode.ACTIVE) {
             return false;
         }
-        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 100) {
+        if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 1000) {
             return false;
         }
         Rate rate = snapshot.getRate();
