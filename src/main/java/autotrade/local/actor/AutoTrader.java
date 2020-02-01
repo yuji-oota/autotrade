@@ -358,20 +358,6 @@ public class AutoTrader {
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合
-//            if (!SameManager.hasInstance()
-//                    && rateAnalyzer.isReachedBidThreshold(rate)
-//                    && rate.getBid() < snapshot.getAskAverageRate()) {
-//                // 下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
-//                // 逆ポジション取得
-//                orderBid(snapshot);
-//            }
-//            if (!SameManager.hasInstance()
-//                    && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))
-//                    && rate.getBid() < snapshot.getAskAverageRate()) {
-//                // 下値閾値を超えた場合、且つ平均Askレートよりもレートが低い場合
-//                // 逆ポジション取得
-//                orderBid(snapshot);
-//            }
             if (!SameManager.hasInstance()
                     && rateAnalyzer.isReachedCountertradingBid(rate)) {
                 // 下値閾値を超えた場合
@@ -387,20 +373,6 @@ public class AutoTrader {
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
-//            if (!SameManager.hasInstance()
-//                    && rateAnalyzer.isReachedAskThreshold(rate)
-//                    && snapshot.getBidAverageRate() < rate.getAsk()) {
-//                // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
-//                // 逆ポジション取得
-//                orderAsk(snapshot);
-//            }
-//            if (!SameManager.hasInstance()
-//                    && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))
-//                    && snapshot.getBidAverageRate() < rate.getAsk()) {
-//                // 上値閾値を超えた場合、且つ平均Bidレートよりもレートが高い場合
-//                // 逆ポジション取得
-//                orderAsk(snapshot);
-//            }
             if (!SameManager.hasInstance()
                     && rateAnalyzer.isReachedCountertradingAsk(rate)) {
                 // 上値閾値を超えた場合

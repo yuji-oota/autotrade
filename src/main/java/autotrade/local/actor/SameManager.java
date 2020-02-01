@@ -103,9 +103,6 @@ public class SameManager {
         if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
             return true;
         }
-//        if (shapshotWhenCutOff.getRate().getBid() - rate.getAsk() <= -10) {
-//            return true;
-//        }
         return false;
     }
 
@@ -119,9 +116,6 @@ public class SameManager {
         if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
             return true;
         }
-//        if (rate.getBid() - shapshotWhenCutOff.getRate().getAsk() <= -10) {
-//            return true;
-//        }
         return false;
     }
 
