@@ -506,8 +506,12 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.LOTPOSITIVE, (args) -> lotManager.modePositive())
                 .putCommand(ReservedMessage.LOTNEGATIVE, (args) -> lotManager.modeNegative())
                 .putCommand(ReservedMessage.THROUGHORDER, (args) -> {
-                    isThroughOrder = !isThroughOrder;
-                    log.info("through order setting is changed to {}.", isThroughOrder);
+                    boolean isThroughOrder = !this.isThroughOrder;
+                    if (args.length > 0) {
+                        isThroughOrder = Boolean.valueOf(args[0]);
+                    }
+                    this.isThroughOrder = isThroughOrder;
+                    log.info("through order setting is set {}.", this.isThroughOrder);
                 })
                 ;
     }
