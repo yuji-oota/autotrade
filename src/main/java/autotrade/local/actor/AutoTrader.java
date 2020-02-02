@@ -61,6 +61,8 @@ public class AutoTrader {
 
     private long lastFixed;
 
+    private boolean isThroughOrder;
+
     private AutoTrader() {
         pair = CurrencyPair.USDJPY;
 
@@ -339,6 +341,11 @@ public class AutoTrader {
     }
 
     private void order(Snapshot snapshot) {
+        if (isThroughOrder) {
+            // 注文見送り
+            return;
+        }
+
         Rate rate = snapshot.getRate();
         if (snapshot.getTotalProfit() > targetAmountOneDay) {
             // 一日の目標金額を達成した場合は消極的に取引する
@@ -498,6 +505,10 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.FORCESAME, (args) -> this.forceSame())
                 .putCommand(ReservedMessage.LOTPOSITIVE, (args) -> lotManager.modePositive())
                 .putCommand(ReservedMessage.LOTNEGATIVE, (args) -> lotManager.modeNegative())
+                .putCommand(ReservedMessage.THROUGHORDER, (args) -> {
+                    isThroughOrder = !isThroughOrder;
+                    log.info("through order setting is changed to {}.", isThroughOrder);
+                })
                 ;
     }
 
