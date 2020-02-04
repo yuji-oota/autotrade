@@ -315,7 +315,7 @@ public class AutoTrader {
                 // 指標が近い場合は注文しない
                 return false;
             }
-            if (isInactiveTime()) {
+            if (isInactiveTime() && pair.getMinSpread() < snapshot.getRate().getSpread()) {
                 // 非活性時間は注文しない
                 // 非活性時間の終了までスリープする
                 Duration durationToActive = Duration.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
