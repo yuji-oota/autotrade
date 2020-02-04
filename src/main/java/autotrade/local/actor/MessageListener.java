@@ -24,6 +24,7 @@ public class MessageListener extends RedisPubSubAdapter<String, String> {
         LOTPOSITIVE,
         LOTNEGATIVE,
         THROUGHORDER,
+        THROUGHFIX,
     }
 
     private Map<ReservedMessage, Consumer<String[]>> commandMap;

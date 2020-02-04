@@ -62,6 +62,7 @@ public class AutoTrader {
     private long lastFixed;
 
     private boolean isThroughOrder;
+    private boolean isThroughFix;
 
     private AutoTrader() {
         pair = CurrencyPair.USDJPY;
@@ -185,11 +186,18 @@ public class AutoTrader {
         startMarginSetting(snapshot);
 
         if (isOrderable(snapshot)) {
-            // 最新情報を元に利益確定
-            fix(snapshot);
 
-            // 最新情報を元に注文
-            order(snapshot);
+            // 確定見送り判定
+            if (!isThroughFix) {
+                // 最新情報を元に利益確定
+                fix(snapshot);
+            }
+
+            // 注文見送り判定
+            if (!isThroughOrder) {
+                // 最新情報を元に注文
+                order(snapshot);
+            }
         }
 
         // analizerにレート追加
@@ -341,10 +349,6 @@ public class AutoTrader {
     }
 
     private void order(Snapshot snapshot) {
-        if (isThroughOrder) {
-            // 注文見送り
-            return;
-        }
 
         Rate rate = snapshot.getRate();
         if (snapshot.getTotalProfit() > targetAmountOneDay) {
@@ -512,6 +516,14 @@ public class AutoTrader {
                     }
                     this.isThroughOrder = isThroughOrder;
                     log.info("through order setting is set {}.", this.isThroughOrder);
+                })
+                .putCommand(ReservedMessage.THROUGHFIX, (args) -> {
+                    boolean isThroughFix = !this.isThroughFix;
+                    if (args.length > 0) {
+                        isThroughFix = Boolean.valueOf(args[0]);
+                    }
+                    this.isThroughFix = isThroughFix;
+                    log.info("through fix setting is set {}.", this.isThroughFix);
                 })
                 ;
     }
