@@ -30,21 +30,17 @@ public class LotManager {
         modePositive();
     }
 
-    public int nextAskLot(Snapshot snapshot) {
-        if (snapshot.getBidLot() == 0) {
+    public int nextLot(Snapshot snapshot) {
+        if (snapshot.isPositionNone()) {
             return getInitial();
         }
-        int limit = getlimit();
-        int nextLot = snapshot.getBidLot() * nextMagnification - snapshot.getAskLot();
-        return snapshot.getBidLot() >= limit ? snapshot.getBidLot() - snapshot.getAskLot() : nextLot;
-    }
-    public int nextBidLot(Snapshot snapshot) {
-        if (snapshot.getAskLot() == 0) {
-            return getInitial();
+        int more = snapshot.getAskLot();
+        int less = snapshot.getBidLot();
+        if (snapshot.isPositionBidSide()) {
+            more = snapshot.getBidLot();
+            less = snapshot.getAskLot();
         }
-        int limit = getlimit();
-        int nextLot = snapshot.getAskLot() * nextMagnification - snapshot.getBidLot();
-        return snapshot.getAskLot() >= limit ? snapshot.getAskLot() - snapshot.getBidLot() : nextLot;
+        return more >= getlimit() ? more - less : (more * nextMagnification) - less;
     }
     public void modePositive() {
         if (isPositive()) {

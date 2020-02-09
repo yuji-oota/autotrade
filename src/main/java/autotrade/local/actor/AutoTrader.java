@@ -420,14 +420,14 @@ public class AutoTrader {
     }
 
     private void orderAsk(Snapshot snapshot) {
-        int lot = lotManager.nextAskLot(snapshot);
+        int lot = lotManager.nextLot(snapshot);
         orderAsk(lot);
         log.info("order ask. lot {}", lot);
         AutoTradeUtils.printObject(snapshot);
         AutoTradeUtils.playAudioRandom(AudioPath.OrderSoundEffect);
     }
     private void orderBid(Snapshot snapshot) {
-        int lot = lotManager.nextBidLot(snapshot);
+        int lot = lotManager.nextLot(snapshot);
         orderBid(lot);
         log.info("order bid. lot {}", lot);
         AutoTradeUtils.printObject(snapshot);
