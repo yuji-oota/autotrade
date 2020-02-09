@@ -23,7 +23,6 @@ import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.AudioPath;
 import autotrade.local.material.CurrencyPair;
-import autotrade.local.material.PositionStatus;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.material.StartMarginMode;
@@ -133,7 +132,7 @@ public class AutoTrader {
 
             // Same引継ぎ
             Snapshot shapshot = getSnapshot();
-            if (shapshot.getStatus() == PositionStatus.SAME) {
+            if (shapshot.isPositionSame()) {
                 log.info("load Snapshot when samed to SameManager.");
                 SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(messenger.get("snapshotWhenSamed"))));
             }
@@ -208,7 +207,7 @@ public class AutoTrader {
 
         // 非活性時間処理
         if (isInactiveTime()) {
-            if (!snapshot.hasPosition()
+            if (snapshot.isPositionNone()
                     && pair.getMinSpread() < snapshot.getRate().getSpread()) {
                 // ポジションが無く、スプレッドが最小よりも広がった場合
 
@@ -300,10 +299,10 @@ public class AutoTrader {
 
     private boolean isFixBeforeSame(Snapshot snapshot, int targetAmount) {
         if (snapshot.getPositionProfit() >= targetAmount) {
-            if (snapshot.getStatus() == PositionStatus.ASK_SIDE) {
+            if (snapshot.isPositionAskSide()) {
                 return rateAnalyzer.isReachedBidThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
             }
-            if (snapshot.getStatus() == PositionStatus.BID_SIDE) {
+            if (snapshot.isPositionBidSide()) {
                 return rateAnalyzer.isReachedAskThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
             }
         }

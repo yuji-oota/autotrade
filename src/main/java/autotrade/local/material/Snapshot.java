@@ -70,4 +70,17 @@ public class Snapshot implements Serializable {
         }
         return false;
     }
+
+    public boolean isPositionNone() {
+        return getStatus() == PositionStatus.NONE;
+    }
+    public boolean isPositionAskSide() {
+        return getStatus() == PositionStatus.ASK_SIDE;
+    }
+    public boolean isPositionBidSide() {
+        return getStatus() == PositionStatus.BID_SIDE;
+    }
+    public boolean isPositionSame() {
+        return getStatus() == PositionStatus.SAME;
+    }
 }
