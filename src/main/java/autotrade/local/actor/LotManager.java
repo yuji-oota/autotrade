@@ -47,14 +47,14 @@ public class LotManager {
         return snapshot.getAskLot() >= limit ? snapshot.getAskLot() - snapshot.getBidLot() : nextLot;
     }
     public void modePositive() {
-        if (Mode.POSITIVE == mode) {
+        if (isPositive()) {
             return;
         }
         mode = Mode.POSITIVE;
         log.info("mode is changed to positive.");
     }
     public void modeNegative() {
-        if (Mode.NEGATIVE == mode) {
+        if (isNegative()) {
             return;
         }
         mode = Mode.NEGATIVE;
@@ -78,24 +78,16 @@ public class LotManager {
     }
 
     private int getlimit() {
-        switch (mode) {
-        case POSITIVE:
-            return limitPositive;
-        case NEGATIVE:
-            return limitNegative;
-        default:
+        if (isPositive()) {
             return limitPositive;
         }
+        return limitNegative;
     }
     public int getInitial() {
-        switch (mode) {
-        case POSITIVE:
-            return initialPositive;
-        case NEGATIVE:
-            return initialNegative;
-        default:
+        if (isPositive()) {
             return initialPositive;
         }
+        return initialNegative;
     }
 
 }
