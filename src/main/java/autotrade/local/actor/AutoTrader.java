@@ -182,9 +182,6 @@ public class AutoTrader {
         // 最新情報取得
         Snapshot snapshot = getSnapshot();
 
-        // 次回起動時設定
-        startMarginSetting(snapshot);
-
         if (isOrderable(snapshot)) {
 
             // 確定見送り判定
@@ -207,6 +204,22 @@ public class AutoTrader {
         if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
                 && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(55))) {
             AutoTradeUtils.playAudioRandom(AudioPath.Alert);
+        }
+
+        // 非活性時間処理
+        if (isInactiveTime()) {
+            if (!snapshot.hasPosition()
+                    && pair.getMinSpread() < snapshot.getRate().getSpread()) {
+                // ポジションが無く、スプレッドが最小よりも広がった場合
+
+                // 次回起動時設定
+                messenger.set("startMarginMode", StartMarginMode.NEW.name());
+
+                // 非活性時間の終了までスリープする
+                Duration durationToActive = Duration.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
+                log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
+                AutoTradeUtils.sleep(durationToActive);
+            }
         }
 
     }
@@ -321,14 +334,6 @@ public class AutoTrader {
             }
             if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(5)) || indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15))) {
                 // 指標が近い場合は注文しない
-                return false;
-            }
-            if (isInactiveTime() && pair.getMinSpread() < snapshot.getRate().getSpread()) {
-                // 非活性時間は注文しない
-                // 非活性時間の終了までスリープする
-                Duration durationToActive = Duration.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
-                log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
-                AutoTradeUtils.sleep(durationToActive);
                 return false;
             }
             if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
@@ -468,17 +473,6 @@ public class AutoTrader {
             if (System.currentTimeMillis() - verifyStarted > Duration.ofSeconds(10).toMillis()) {
                 throw new ApplicationException("verify is failed.");
             }
-        }
-    }
-
-    private void startMarginSetting(Snapshot snapshot) {
-        switch (snapshot.getStatus()) {
-        case NONE:
-            if (isInactiveTime()) {
-                messenger.set("startMarginMode", StartMarginMode.NEW.name());
-            }
-            break;
-        default:
         }
     }
 
