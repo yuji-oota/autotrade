@@ -50,7 +50,6 @@ public class AutoTrader {
     private LotManager lotManager;
     private Messenger messenger;
 
-    private int targetAmountOneTrade;
     private int targetAmountOneDay;
     private int startMargin;
 
@@ -66,7 +65,6 @@ public class AutoTrader {
     private AutoTrader() {
         pair = CurrencyPair.USDJPY;
 
-        targetAmountOneTrade = AutoTradeProperties.getInt("autotrade.targetAmount.oneTrade");
         targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
 
         bootDateTime = LocalDateTime.now();
@@ -275,11 +273,7 @@ public class AutoTrader {
             }
 
             // 通常の利益確定判定
-            int targetAmount = targetAmountOneTrade;
-            if (lotManager.isNegative()) {
-                targetAmount = targetAmountOneTrade / 10;
-            }
-            if (isFixBeforeSame(snapshot, targetAmount)) {
+            if (isFixBeforeSame(snapshot, lotManager.getInitial() * 10)) {
                 // 目標金額達成で利益確定
                 log.info("achieved target amount.");
                 fixAll(snapshot);

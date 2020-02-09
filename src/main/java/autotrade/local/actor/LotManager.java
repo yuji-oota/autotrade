@@ -87,7 +87,7 @@ public class LotManager {
             return limitPositive;
         }
     }
-    private int getInitial() {
+    public int getInitial() {
         switch (mode) {
         case POSITIVE:
             return initialPositive;
