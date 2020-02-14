@@ -20,6 +20,8 @@ public class MessageListener extends RedisPubSubAdapter<String, String> {
         FIXBID,
         FIXALL,
         FORCESAME,
+        FORCEASK,
+        FORCEBID,
         SNAPSHOT,
         LOTPOSITIVE,
         LOTNEGATIVE,

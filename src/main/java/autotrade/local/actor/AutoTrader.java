@@ -494,6 +494,8 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.FIXBID, (args) -> wrapper.fixBid())
                 .putCommand(ReservedMessage.FIXALL, (args) -> wrapper.fixAll())
                 .putCommand(ReservedMessage.FORCESAME, (args) -> this.forceSame())
+                .putCommand(ReservedMessage.FORCEASK, (args) -> this.orderAsk(this.getSnapshot()))
+                .putCommand(ReservedMessage.FORCEBID, (args) -> this.orderBid(this.getSnapshot()))
                 .putCommand(ReservedMessage.LOTPOSITIVE, (args) -> lotManager.modePositive())
                 .putCommand(ReservedMessage.LOTNEGATIVE, (args) -> lotManager.modeNegative())
                 .putCommand(ReservedMessage.THROUGHORDER, (args) -> {
