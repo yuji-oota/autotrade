@@ -359,11 +359,12 @@ public class AutoTrader {
             // ポジションがない場合
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 orderAsk(snapshot);
+                rateAnalyzer.saveCountertradingThreshold(messenger);
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
+                rateAnalyzer.saveCountertradingThreshold(messenger);
             }
-            rateAnalyzer.saveCountertradingThreshold(messenger);
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合
@@ -514,6 +515,7 @@ public class AutoTrader {
                     this.isThroughFix = isThroughFix;
                     log.info("through fix setting is set {}.", this.isThroughFix);
                 })
+                .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold(messenger))
                 ;
     }
 
