@@ -141,15 +141,15 @@ public class RateAnalyzer {
         return rate.getBid() <= minWithin(duration);
     }
 
-    public void saveCountertradingThreshold(Messenger messenger) {
+    public void saveCountertradingThreshold() {
         countertradingAsk = askThreshold;
         countertradingBid = bidThreshold;
-        messenger.set("countertradingAsk", String.valueOf(countertradingAsk));
-        messenger.set("countertradingBid", String.valueOf(countertradingBid));
+        Messenger.set("countertradingAsk", String.valueOf(countertradingAsk));
+        Messenger.set("countertradingBid", String.valueOf(countertradingBid));
     }
-    public void loadCountertradingThreshold(Messenger messenger) {
-        countertradingAsk = Integer.parseInt(messenger.get("countertradingAsk"));
-        countertradingBid = Integer.parseInt(messenger.get("countertradingBid"));
+    public void loadCountertradingThreshold() {
+        countertradingAsk = Integer.parseInt(Messenger.get("countertradingAsk"));
+        countertradingBid = Integer.parseInt(Messenger.get("countertradingBid"));
     }
     public boolean isReachedCountertradingAsk(Rate rate) {
         return countertradingAsk <= rate.getAsk();

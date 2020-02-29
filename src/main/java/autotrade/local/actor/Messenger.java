@@ -1,62 +1,38 @@
 package autotrade.local.actor;
 
-import java.time.Duration;
-
 import autotrade.local.utility.AutoTradeProperties;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class Messenger {
 
-    private RedisClient redisClient;
-    private StatefulRedisPubSubConnection<String, String> pubSubConnection;
-    private RedisPubSubListener<String, String> listener;
-    private long lastConnected;
-    private String redisUri;
+    private static final String KEY_REDIS_URI = "aws.elasticache.redis.uri";
+    private static final String KEY_REDIS_CHANNEL = "aws.elasticache.redis.channel";
 
-    public Messenger(RedisPubSubListener<String, String> listener) {
-        this.listener = listener;
-        redisUri = AutoTradeProperties.get("aws.elasticache.redis.uri");
-        redisClient = RedisClient.create(redisUri);
-        connectPubSub();
-    }
-
-    private void connectPubSub() {
-        pubSubConnection = redisClient.connectPubSub();
+    public static StatefulRedisPubSubConnection<String, String> createPubSubConnection(RedisPubSubListener<String, String> listener) {
+        RedisClient redisClient = RedisClient.create(AutoTradeProperties.get(KEY_REDIS_URI));
+        StatefulRedisPubSubConnection<String, String> pubSubConnection = redisClient.connectPubSub();
         pubSubConnection.addListener(listener);
-        String channel = AutoTradeProperties.get("aws.elasticache.redis.channel");
-        pubSubConnection.sync().subscribe(channel);
-        lastConnected = System.currentTimeMillis();
+        pubSubConnection.sync().subscribe(AutoTradeProperties.get(KEY_REDIS_CHANNEL));
+        return pubSubConnection;
     }
 
-    public void set(String key, String value) {
-        RedisClient client = RedisClient.create(redisUri);
-        try (StatefulRedisConnection<String, String> connection = client.connect()) {
+    public static void set(String key, String value) {
+        RedisClient redisClient = RedisClient.create(AutoTradeProperties.get(KEY_REDIS_URI));
+        try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {
             connection.sync().set(key, value);
         } finally {
-            client.shutdown();
+            redisClient.shutdown();
         }
     }
-    public String get(String key) {
-        RedisClient client = RedisClient.create(redisUri);
-        try (StatefulRedisConnection<String, String> connection = client.connect()) {
+    public static String get(String key) {
+        RedisClient redisClient = RedisClient.create(AutoTradeProperties.get(KEY_REDIS_URI));
+        try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {
             return connection.sync().get(key);
         } finally {
-            client.shutdown();
-        }
-    }
-
-    public void reConnectPubSub() {
-        if (System.currentTimeMillis() - lastConnected > Duration.ofMinutes(60).toMillis()) {
-            log.info("reConnect");
-            if (pubSubConnection.isOpen()) {
-                pubSubConnection.close();
-            }
-            connectPubSub();
+            redisClient.shutdown();
         }
     }
 

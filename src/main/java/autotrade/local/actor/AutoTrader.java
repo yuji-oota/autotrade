@@ -29,6 +29,7 @@ import autotrade.local.material.StartMarginMode;
 import autotrade.local.utility.AutoTradeProperties;
 import autotrade.local.utility.AutoTradeUtils;
 import autotrade.local.utility.WebDriverWrapper;
+import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -48,7 +49,9 @@ public class AutoTrader {
     private IndicatorManager indicatorManager;
     private UploadManager uploadManager;
     private LotManager lotManager;
-    private Messenger messenger;
+
+    @SuppressWarnings("unused")
+    private StatefulRedisPubSubConnection<String, String> pubSubConnection;
 
     private int targetAmountOneDay;
     private int startMargin;
@@ -74,7 +77,7 @@ public class AutoTrader {
         rateAnalyzer = new RateAnalyzer();
         uploadManager = new UploadManager();
         lotManager = new LotManager();
-        messenger = new Messenger(customizeMessageListener());
+        pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
     }
 
     public static AutoTrader getInstance() {
@@ -117,27 +120,27 @@ public class AutoTrader {
             AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
             // 開始時の証拠金を取得
-            switch (StartMarginMode.valueOf(messenger.get("startMarginMode"))) {
+            switch (StartMarginMode.valueOf(Messenger.get("startMarginMode"))) {
             case NEW:
                 startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
                 break;
             default:
-                startMargin = Integer.parseInt(messenger.get("startMargin"));
+                startMargin = Integer.parseInt(Messenger.get("startMargin"));
                 break;
             }
-            messenger.set("startMargin", String.valueOf(startMargin));
-            messenger.set("startMarginMode", StartMarginMode.CARRY_OVER.name());
+            Messenger.set("startMargin", String.valueOf(startMargin));
+            Messenger.set("startMarginMode", StartMarginMode.CARRY_OVER.name());
 
             // Same引継ぎ
             Snapshot shapshot = getSnapshot();
             if (shapshot.isPositionSame()) {
                 log.info("load Snapshot when samed to SameManager.");
-                SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(messenger.get("snapshotWhenSamed"))));
+                SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenSamed"))));
             }
             // 反対売買閾値引継ぎ
             if (shapshot.hasPosition()) {
                 log.info("load countertrading threshold when order to RateAnalyzer.");
-                rateAnalyzer.loadCountertradingThreshold(messenger);
+                rateAnalyzer.loadCountertradingThreshold();
             }
 
             // 繰り返し実行
@@ -210,7 +213,7 @@ public class AutoTrader {
                 // ポジションが無く、スプレッドが最小よりも広がった場合
 
                 // 次回起動時設定
-                messenger.set("startMarginMode", StartMarginMode.NEW.name());
+                Messenger.set("startMarginMode", StartMarginMode.NEW.name());
 
                 // 非活性時間の終了までスリープする
                 Duration durationToActive = Duration.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
@@ -230,7 +233,7 @@ public class AutoTrader {
         case SAME:
             if (!SameManager.hasInstance()) {
                 // Snapshotを保存
-                messenger.set("snapshotWhenSamed", Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(snapshot)));
+                Messenger.set("snapshotWhenSamed", Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(snapshot)));
                 log.info("save Snapshot when samed.");
                 AutoTradeUtils.printObject(snapshot);
             }
@@ -359,11 +362,11 @@ public class AutoTrader {
             // ポジションがない場合
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 orderAsk(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(messenger);
+                rateAnalyzer.saveCountertradingThreshold();
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(messenger);
+                rateAnalyzer.saveCountertradingThreshold();
             }
             break;
         case ASK_SIDE:
@@ -472,7 +475,7 @@ public class AutoTrader {
 
     private MessageListener customizeMessageListener() {
         return new MessageListener()
-                .putCommand(ReservedMessage.SNAPSHOT, (args) -> messenger.set(ReservedMessage.SNAPSHOT.name(), AutoTradeUtils.toJson(getSnapshot())))
+                .putCommand(ReservedMessage.SNAPSHOT, (args) -> Messenger.set(ReservedMessage.SNAPSHOT.name(), AutoTradeUtils.toJson(getSnapshot())))
                 .putCommand(ReservedMessage.UPLOADLOG, (args) -> uploadManager.upload(logFile))
                 .putCommand(ReservedMessage.AUTOTRADELOG, (args) -> {
                     int logRows = 30;
@@ -488,7 +491,7 @@ public class AutoTrader {
                     if (args.length > 1) {
                         lines = lines.stream().filter(s -> s.contains(args[1])).collect(Collectors.toList());
                     }
-                    messenger.set(ReservedMessage.AUTOTRADELOG.name(),
+                    Messenger.set(ReservedMessage.AUTOTRADELOG.name(),
                             lines.subList(Math.max(0, lines.size() - logRows), lines.size()).stream().collect(Collectors.joining("\n")));
                 })
                 .putCommand(ReservedMessage.FIXASK, (args) -> wrapper.fixAsk())
@@ -515,7 +518,7 @@ public class AutoTrader {
                     this.isThroughFix = isThroughFix;
                     log.info("through fix setting is set {}.", this.isThroughFix);
                 })
-                .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold(messenger))
+                .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold())
                 ;
     }
 
