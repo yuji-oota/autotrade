@@ -231,12 +231,6 @@ public class AutoTrader {
             SameManager.close();
             break;
         case SAME:
-            if (!SameManager.hasInstance()) {
-                // Snapshotを保存
-                Messenger.set("snapshotWhenSamed", Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(snapshot)));
-                log.info("save Snapshot when samed.");
-                AutoTradeUtils.printObject(snapshot);
-            }
             SameManager.setSnapshot(snapshot);
             SameManager sameManager = SameManager.getInstance();
 

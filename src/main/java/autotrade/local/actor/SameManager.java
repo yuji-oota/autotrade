@@ -1,11 +1,13 @@
 package autotrade.local.actor;
 
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Objects;
 
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
+import autotrade.local.utility.AutoTradeUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +36,11 @@ public class SameManager {
         if (Objects.isNull(instance)) {
             instance = new SameManager(snapshot);
             log.info("same position started.");
+
+            // Snapshotを保存
+            Messenger.set("snapshotWhenSamed", Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(snapshot)));
+            log.info("save Snapshot when samed.");
+            AutoTradeUtils.printObject(snapshot);
         }
     }
     public static SameManager getInstance() {
