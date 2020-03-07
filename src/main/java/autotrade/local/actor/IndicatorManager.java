@@ -2,8 +2,10 @@ package autotrade.local.actor;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -11,10 +13,12 @@ public class IndicatorManager {
 
     private LocalDateTime nextIndicator;
     private LocalDateTime prevIndicator;
+
+    @Getter
     private List<LocalDateTime> indicators;
 
-    public IndicatorManager(List<LocalDateTime> indicators) {
-        this.indicators = indicators;
+    public IndicatorManager() {
+        this.indicators = new ArrayList<>();
         this.nextIndicator = LocalDateTime.now();
         this.prevIndicator = LocalDateTime.now();
     }
@@ -42,5 +46,13 @@ public class IndicatorManager {
             return true;
         }
         return false;
+    }
+
+    public boolean hasIndicator() {
+        return !indicators.isEmpty();
+    }
+
+    public void addIndicators(List<LocalDateTime> indicators) {
+        this.indicators.addAll(indicators);
     }
 }

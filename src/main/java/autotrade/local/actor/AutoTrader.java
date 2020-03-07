@@ -77,6 +77,7 @@ public class AutoTrader {
         rateAnalyzer = new RateAnalyzer();
         uploadManager = new UploadManager();
         lotManager = new LotManager();
+        indicatorManager = new IndicatorManager();
         pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
     }
 
@@ -95,13 +96,14 @@ public class AutoTrader {
             wrapper = new WebDriverWrapper(driver);
 
             // 指標を確認する
-            // 本日分
-            List<LocalDateTime> indicators = wrapper.getIndicators(LocalDate.now());
-            // 翌日分
-            indicators.addAll(wrapper.getIndicators(LocalDate.now().plusDays(1)));
-            log.info("indicators is get.");
-            AutoTradeUtils.printObject(indicators);
-            indicatorManager = new IndicatorManager(indicators);
+            if (!indicatorManager.hasIndicator()) {
+                // 本日分
+                indicatorManager.addIndicators(wrapper.getIndicators(LocalDate.now()));
+                // 翌日分
+                indicatorManager.addIndicators(wrapper.getIndicators(LocalDate.now().plusDays(1)));
+                log.info("indicators is got.");
+                AutoTradeUtils.printObject(indicatorManager.getIndicators());
+            }
 
             // ログイン
             wrapper.login();
