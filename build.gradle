@@ -10,6 +10,12 @@ plugins {
     // Apply the java-library plugin to add support for Java Library
     id 'java-library'
     id 'eclipse'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+}
+
+javafx {
+    version = '13'
+    modules = [ 'javafx.media' ]
 }
 
 repositories {

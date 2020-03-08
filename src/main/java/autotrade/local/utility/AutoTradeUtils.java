@@ -12,19 +12,13 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.AudioPath;
+import javafx.scene.media.AudioClip;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -91,22 +85,13 @@ public class AutoTradeUtils {
         } catch (IOException e) {
             throw new ApplicationException(e);
         }
-
     }
 
     public static void playAudio(Path path) {
-        try (AudioInputStream ais = AudioSystem.getAudioInputStream(path.toFile())) {
-            long length = ais.getFrameLength();
-            float frame = ais.getFormat().getSampleRate();
-
-            Clip clip = (Clip)AudioSystem.getLine(new DataLine.Info(Clip.class, ais.getFormat()));
-            clip.open(ais);
-            clip.loop(0);
-            clip.flush();
-
-            Thread.sleep((long)(length / frame * 1000));
-        } catch (IOException | UnsupportedAudioFileException | LineUnavailableException | InterruptedException e) {
-            throw new ApplicationException(e);
+        AudioClip audioClip = new AudioClip(path.toUri().toString());
+        audioClip.play();
+        while (audioClip.isPlaying()) {
+            sleep(Duration.ofMillis(100));
         }
     }
 
