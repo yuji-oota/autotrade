@@ -16,6 +16,7 @@ plugins {
 javafx {
     version = '13'
     modules = [ 'javafx.media' ]
+    configuration = 'compile'
 }
 
 repositories {
