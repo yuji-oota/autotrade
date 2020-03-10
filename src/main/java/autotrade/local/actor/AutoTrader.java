@@ -335,10 +335,6 @@ public class AutoTrader {
             break;
         case ASK_SIDE:
         case BID_SIDE:
-            if (snapshot.getRate().getSpread() > 4) {
-                // 暫定措置
-                return false;
-            }
             break;
         default:
         }
