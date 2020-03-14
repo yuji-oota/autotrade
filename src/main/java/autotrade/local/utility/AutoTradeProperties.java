@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.yaml.snakeyaml.Yaml;
 
@@ -68,18 +69,19 @@ public class AutoTradeProperties {
     }
 
     public static String get(String key) {
-        return resolvePropertie(new LinkedList<>(Arrays.asList(key.split("\\."))), properties);
+        return resolvePropertie(key, properties);
     }
     public static int getInt(String key) {
         return Integer.parseInt(get(key));
     }
 
     @SuppressWarnings("unchecked")
-    private static String resolvePropertie(List<String> keys, Map<String, Object> map) {
+    private static String resolvePropertie(String key, Map<String, Object> map) {
+        List<String> keys = new LinkedList<>(Arrays.asList(key.split("\\.")));
         Object value = map.get(keys.get(0));
         if (value instanceof Map) {
             keys.remove(0);
-            return resolvePropertie(keys, (Map<String, Object>) value);
+            return resolvePropertie(keys.stream().collect(Collectors.joining(".")), (Map<String, Object>) value);
         }
         return value.toString();
     }
