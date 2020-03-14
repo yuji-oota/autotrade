@@ -19,7 +19,7 @@ public class Rate implements Serializable {
     }
 
     public boolean isDoubtful() {
-        if (getSpread() > 70) {
+        if (getSpread() > 100) {
             return true;
         }
         return false;

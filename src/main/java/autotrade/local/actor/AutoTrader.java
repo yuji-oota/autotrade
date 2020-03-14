@@ -311,6 +311,10 @@ public class AutoTrader {
             // 動いていない場合は注文しない
             return false;
         }
+        if (snapshot.getRate().isDoubtful()) {
+            // スプレッドが開きすぎの場合は注文しない
+            return false;
+        }
 
         switch (snapshot.getStatus()) {
         case NONE:
