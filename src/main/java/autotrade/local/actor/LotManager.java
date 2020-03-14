@@ -2,13 +2,11 @@ package autotrade.local.actor;
 
 import autotrade.local.material.Snapshot;
 import autotrade.local.utility.AutoTradeProperties;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LotManager {
 
-    @Getter
     private int initialPositive;
     private int initialNegative;
     private int nextMagnification;
@@ -84,6 +82,15 @@ public class LotManager {
             return initialPositive;
         }
         return initialNegative;
+    }
+
+    public void incrementInitialPositive() {
+        initialPositive = initialPositive + 1;
+        log.info("initialPositive changed to {}.", initialPositive);
+    }
+    public void decrementInitialPositive() {
+        initialPositive = initialPositive - 1;
+        log.info("initialPositive changed to {}.", initialPositive);
     }
 
 }

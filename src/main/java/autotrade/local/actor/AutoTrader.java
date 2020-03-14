@@ -496,8 +496,10 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.FORCESAME, (args) -> this.forceSame())
                 .putCommand(ReservedMessage.FORCEASK, (args) -> this.orderAsk(this.getSnapshot()))
                 .putCommand(ReservedMessage.FORCEBID, (args) -> this.orderBid(this.getSnapshot()))
-                .putCommand(ReservedMessage.LOTPOSITIVE, (args) -> lotManager.modePositive())
                 .putCommand(ReservedMessage.LOTNEGATIVE, (args) -> lotManager.modeNegative())
+                .putCommand(ReservedMessage.LOTPOSITIVE, (args) -> lotManager.modePositive())
+                .putCommand(ReservedMessage.LOTPOSITIVEINCREMENT, (args) -> lotManager.incrementInitialPositive())
+                .putCommand(ReservedMessage.LOTPOSITIVEDECREMENT, (args) -> lotManager.decrementInitialPositive())
                 .putCommand(ReservedMessage.THROUGHORDER, (args) -> {
                     boolean isThroughOrder = !this.isThroughOrder;
                     if (args.length > 0) {
