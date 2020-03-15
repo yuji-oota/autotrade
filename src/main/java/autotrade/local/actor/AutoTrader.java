@@ -64,6 +64,7 @@ public class AutoTrader {
 
     private boolean isThroughOrder;
     private boolean isThroughFix;
+    private boolean isIgnoreSpread;
 
     private AutoTrader() {
         pair = CurrencyPair.USDJPY;
@@ -332,8 +333,9 @@ public class AutoTrader {
                 // 指標が近い場合は注文しない
                 return false;
             }
-            if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
-                // スプレッドが開いている場合は注文しない
+            if (!isIgnoreSpread && pair.getMinSpread() < snapshot.getRate().getSpread()) {
+                // スプレッドを無視しない
+                // 且つスプレッドが開いている場合は注文しない
                 return false;
             }
             break;
@@ -501,20 +503,22 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.LOTPOSITIVEINCREMENT, (args) -> lotManager.incrementInitialPositive())
                 .putCommand(ReservedMessage.LOTPOSITIVEDECREMENT, (args) -> lotManager.decrementInitialPositive())
                 .putCommand(ReservedMessage.THROUGHORDER, (args) -> {
-                    boolean isThroughOrder = !this.isThroughOrder;
                     if (args.length > 0) {
-                        isThroughOrder = Boolean.valueOf(args[0]);
+                        this.isThroughOrder = Boolean.valueOf(args[0]);
                     }
-                    this.isThroughOrder = isThroughOrder;
                     log.info("through order setting is set {}.", this.isThroughOrder);
                 })
                 .putCommand(ReservedMessage.THROUGHFIX, (args) -> {
-                    boolean isThroughFix = !this.isThroughFix;
                     if (args.length > 0) {
-                        isThroughFix = Boolean.valueOf(args[0]);
+                        this.isThroughFix = Boolean.valueOf(args[0]);
                     }
-                    this.isThroughFix = isThroughFix;
                     log.info("through fix setting is set {}.", this.isThroughFix);
+                })
+                .putCommand(ReservedMessage.IGNORESPREAD, (args) -> {
+                    if (args.length > 0) {
+                        this.isIgnoreSpread = Boolean.valueOf(args[0]);
+                    }
+                    log.info("ignore spread setting is set {}.", this.isIgnoreSpread);
                 })
                 .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold())
                 ;

@@ -29,6 +29,7 @@ public class MessageListener extends RedisPubSubAdapter<String, String> {
         LOTPOSITIVEDECREMENT,
         THROUGHORDER,
         THROUGHFIX,
+        IGNORESPREAD,
         SAVECOUNTERTRADINGTHRESHOLD,
     }
 
