@@ -171,6 +171,7 @@ public class AutoTrader {
                 .bidAverageRate(AutoTradeUtils.toInt(wrapper.getBidAverageRate()))
                 .askPipProfit(AutoTradeUtils.toInt(wrapper.getAskPipProfit()))
                 .bidPipProfit(AutoTradeUtils.toInt(wrapper.getBidPipProfit()))
+                .margin(AutoTradeUtils.toInt(wrapper.getMargin()))
                 .todaysProfit(AutoTradeUtils.toInt(wrapper.getMargin()) - startMargin)
                 .rate(Rate.builder()
                     .ask(AutoTradeUtils.toInt(wrapper.getAskRate()))

@@ -15,6 +15,8 @@ public class Snapshot implements Serializable {
     @SuppressWarnings("unused")
     private int totalProfit;
 
+    private int margin;
+
     private Rate rate;
     private int askLot;
     private int bidLot;
