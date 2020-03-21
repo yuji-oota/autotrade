@@ -9,9 +9,9 @@ public class LotManager {
 
     private int initialPositive;
     private int initialNegative;
-    private int nextMagnification;
-    private int limitPositive;
-    private int limitNegative;
+    private int countertradingMagnification;
+    private int countertradingCount;
+    private int power;
     private Mode mode;
 
     private enum Mode {
@@ -22,9 +22,9 @@ public class LotManager {
     public LotManager() {
         initialPositive = AutoTradeProperties.getInt("autotrade.lot.initial.positive");
         initialNegative = AutoTradeProperties.getInt("autotrade.lot.initial.negative");
-        nextMagnification = AutoTradeProperties.getInt("autotrade.lot.nextMagnification");
-        limitPositive = AutoTradeProperties.getInt("autotrade.lot.limit.positive");
-        limitNegative = AutoTradeProperties.getInt("autotrade.lot.limit.negative");
+        countertradingMagnification = AutoTradeProperties.getInt("autotrade.lot.countertrading.magnification");
+        countertradingCount = AutoTradeProperties.getInt("autotrade.lot.countertrading.count");
+        power = (int) Math.pow(countertradingMagnification, countertradingCount);
         modePositive();
     }
 
@@ -38,7 +38,7 @@ public class LotManager {
             more = snapshot.getBidLot();
             less = snapshot.getAskLot();
         }
-        return more >= getlimit() ? more - less : (more * nextMagnification) - less;
+        return more >= getlimit() ? more - less : (more * countertradingMagnification) - less;
     }
     public void modePositive() {
         if (isPositive()) {
@@ -72,10 +72,7 @@ public class LotManager {
     }
 
     private int getlimit() {
-        if (isPositive()) {
-            return limitPositive;
-        }
-        return limitNegative;
+        return getInitial() * power;
     }
     public int getInitial() {
         if (isPositive()) {
