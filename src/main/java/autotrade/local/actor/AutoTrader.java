@@ -56,7 +56,7 @@ public class AutoTrader {
     private int targetAmountOneDay;
     private int startMargin;
 
-    private LocalDateTime bootDateTime;
+    private LocalDateTime pairSelectedDateTime;
     private LocalTime inactiveStart;
     private LocalTime inactiveEnd;
 
@@ -68,10 +68,9 @@ public class AutoTrader {
 
     private AutoTrader() {
         pair = CurrencyPair.USDJPY;
+        pairSelectedDateTime = LocalDateTime.now();
 
         targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
-
-        bootDateTime = LocalDateTime.now();
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
 
@@ -305,8 +304,8 @@ public class AutoTrader {
     }
 
     private boolean isOrderable(Snapshot snapshot) {
-        if (Duration.between(bootDateTime, LocalDateTime.now()).toMillis() < Duration.ofMinutes(3).toMillis()) {
-            // 起動直後は注文しない
+        if (Duration.between(pairSelectedDateTime, LocalDateTime.now()).toMillis() < Duration.ofMinutes(5).toMillis()) {
+            // 通貨ペア変更直後は注文しない
             return false;
         }
         if (rateAnalyzer.rangeWithin(Duration.ofSeconds(1)) == pair.getMinSpread()) {
@@ -522,6 +521,21 @@ public class AutoTrader {
                     log.info("ignore spread setting is set {}.", this.isIgnoreSpread);
                 })
                 .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold())
+                .putCommand(ReservedMessage.CHANGEPAIR, (args) -> {
+                    if (this.getSnapshot().hasPosition()) {
+                        log.info("currency pait is not changed because of position exists.");
+                        return;
+                    }
+                    if (args.length > 0) {
+                        this.isThroughOrder = true;
+                        this.pair = CurrencyPair.valueOf(args[0]);
+                        wrapper.changePair(this.pair.getDescription());
+                        this.pairSelectedDateTime = LocalDateTime.now();
+                        rateAnalyzer.initialize();
+                        this.isThroughOrder = false;
+                    }
+                    log.info("currency pait setting is set {}.", this.pair.getDescription());
+                })
                 ;
     }
 

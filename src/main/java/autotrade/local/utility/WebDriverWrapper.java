@@ -14,6 +14,8 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import autotrade.local.material.CurrencyPair;
+
 public class WebDriverWrapper {
 
     private WebDriver driver;
@@ -69,16 +71,25 @@ public class WebDriverWrapper {
         driver.findElement(By.id("all-confm-quick")).click();
         driver.findElement(By.id("account-status")).click();
 
-//        driver.findElement(By.xpath("//input[@uifield='orderSettings']")).click();
-//        AutoTradeUtils.sleep(1000);
-//
-//        driver.findElement(By.xpath("//div[contains(text(),\"その他設定\")]")).click();
-//        driver.findElement(By.xpath("//input[@uifield='displayGroupSettlementConfirmLayerFlag']")).click();
-//        driver.findElement(By.xpath("//input[@uifield='displayGroupSettlementResultLayerFlag']")).click();
-//
-//        JavascriptExecutor jexec = (JavascriptExecutor) driver;
-//        jexec.executeScript("document.querySelector('div.orderSettings').style.display='none';");
-//        jexec.executeScript("document.getElementById('disableLayer').style.width=0;");
+        // 通貨ペア設定
+        // ヒロセではここで設定した通貨ペアに変更可能
+        driver.findElement(By.id("brand-menu-button")).click();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+        driver.findElement(By.id("brand-regist-nocheck")).click();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+        List<String> pairs = CurrencyPair.getDescriptions();
+        List<WebElement> elements = driver.findElements(By.xpath("//li[@class='brand-regist-list-item']"));
+        elements.stream().filter(e -> {
+            for (String pair : pairs) {
+                if (!e.findElements(By.xpath(MessageFormat.format("div[contains(text(),\"{0}\")]", pair))).isEmpty()) {
+                    return true;
+                }
+            }
+            return false;
+        })
+        .forEach(e -> e.click());
+        driver.findElement(By.id("brand-regist-ok")).click();
+
     }
     public String getMargin() {
         return driver.findElement(By.xpath("//div[@id='account-status-01-value']")).getText();
@@ -161,6 +172,15 @@ public class WebDriverWrapper {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void changePair(String pair) {
+        driver.findElement(By.xpath("//li[@aria-controls='rate-menu']")).click();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+        driver.findElement(By.xpath(
+                MessageFormat.format("//div[contains(text(),\"{0}\")]", pair))).click();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+        driver.findElement(By.xpath("//li[@aria-controls='chart-menu']")).click();
     }
 
 }

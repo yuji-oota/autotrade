@@ -26,6 +26,10 @@ public class RateAnalyzer {
     private int countertradingBid;
 
     public RateAnalyzer() {
+        initialize();
+    }
+
+    public void initialize() {
         rates = new ArrayList<>();
         askThreshold = Integer.MAX_VALUE;
         bidThreshold = Integer.MIN_VALUE;
@@ -101,25 +105,6 @@ public class RateAnalyzer {
         return r -> !Duration.between(from, r.getTimestamp()).isNegative()
                     && !Duration.between(r.getTimestamp(), to).isNegative();
     }
-//    private Duration getDurationBy(int range) {
-//        Duration duration = Duration.ofMinutes(10);
-//        if (30 <= range) {
-//            duration = Duration.ofMinutes(5);
-//        }
-//        if (45 <= range) {
-//            duration = Duration.ofMinutes(4);
-//        }
-//        if (60 <= range) {
-//            duration = Duration.ofMinutes(3);
-//        }
-//        if (75 <= range) {
-//            duration = Duration.ofMinutes(2);
-//        }
-//        if (90 <= range) {
-//            duration = Duration.ofMinutes(1);
-//        }
-//        return duration;
-//    }
 
     public boolean isUpward(Rate rate) {
         return averageWithin(Duration.ofMinutes(20)) < rate.getAsk();
