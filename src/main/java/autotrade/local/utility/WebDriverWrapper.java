@@ -66,11 +66,12 @@ public class WebDriverWrapper {
 //        driver.navigate().to("https://trade.fx.dmm.com/comportal/SsoOutbound.do?subSystemType=-20");
         driver.manage().window().maximize();
     }
-    public void settings() {
+    public void orderSettings() {
         driver.findElement(By.id("fifo-on-label-quick")).click();
         driver.findElement(By.id("all-confm-quick")).click();
         driver.findElement(By.id("account-status")).click();
-
+    }
+    public void pairSettings() {
         // 通貨ペア設定
         // ヒロセではここで設定した通貨ペアに変更可能
         driver.findElement(By.id("brand-menu-button")).click();
@@ -89,7 +90,10 @@ public class WebDriverWrapper {
         })
         .forEach(e -> e.click());
         driver.findElement(By.id("brand-regist-ok")).click();
+    }
 
+    public String getPair() {
+        return driver.findElement(By.id("//span[@id='order-brand']")).getText();
     }
     public String getMargin() {
         return driver.findElement(By.xpath("//div[@id='account-status-01-value']")).getText();
@@ -181,6 +185,8 @@ public class WebDriverWrapper {
                 MessageFormat.format("//div[contains(text(),\"{0}\")]", pair))).click();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
         driver.findElement(By.xpath("//li[@aria-controls='chart-menu']")).click();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+        orderSettings();
     }
 
 }

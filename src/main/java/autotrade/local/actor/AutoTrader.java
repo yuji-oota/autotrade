@@ -117,9 +117,18 @@ public class AutoTrader {
             wrapper.startUpTradeTool();
             AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
-            // 設定
-            wrapper.settings();
+            // 取引設定
+            wrapper.orderSettings();
             AutoTradeUtils.sleep(Duration.ofSeconds(1));
+
+            // 通貨ペア設定
+            wrapper.pairSettings();
+            AutoTradeUtils.sleep(Duration.ofSeconds(1));
+
+            // 通貨ペア変更
+            if (!pair.getDescription().equals(wrapper.getPair())) {
+                wrapper.changePair(pair.getDescription());
+            }
 
             // 開始時の証拠金を取得
             switch (StartMarginMode.valueOf(Messenger.get("startMarginMode"))) {
