@@ -173,6 +173,7 @@ public class AutoTrader {
 
     private Snapshot getSnapshot() {
         return Snapshot.builder()
+                .pair(wrapper.getPair())
                 .askLot(AutoTradeUtils.toInt(wrapper.getAskLot()))
                 .bidLot(AutoTradeUtils.toInt(wrapper.getBidLot()))
                 .askAverageRate(AutoTradeUtils.toInt(wrapper.getAskAverageRate()))

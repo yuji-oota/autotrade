@@ -9,6 +9,8 @@ import lombok.Data;
 @Builder()
 public class Snapshot implements Serializable {
 
+    private String pair;
+
     // Tostring用
     @SuppressWarnings("unused")
     private int positionProfit;

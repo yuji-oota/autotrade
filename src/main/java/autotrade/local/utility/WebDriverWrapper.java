@@ -93,7 +93,7 @@ public class WebDriverWrapper {
     }
 
     public String getPair() {
-        return driver.findElement(By.id("//span[@id='order-brand']")).getText();
+        return driver.findElement(By.id("order-brand")).getText();
     }
     public String getMargin() {
         return driver.findElement(By.xpath("//div[@id='account-status-01-value']")).getText();
