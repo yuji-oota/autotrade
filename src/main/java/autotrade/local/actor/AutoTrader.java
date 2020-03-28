@@ -11,6 +11,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -509,11 +510,11 @@ public class AutoTrader {
     }
     private void changePair(CurrencyPair pair) {
         if (this.getSnapshot().hasPosition()) {
-            log.info("currency pait is not changed because of position exists.");
+            log.info("currency pair is not changed because of position exists.");
             return;
         }
         if (this.pair == pair) {
-            log.info("currency pait setting is already set {}.", this.pair.getDescription());
+            log.info("currency pair setting is already set {}.", this.pair.getDescription());
             return;
         }
         this.displayRateList();
@@ -523,7 +524,18 @@ public class AutoTrader {
         wrapper.changePair(this.pair.getDescription());
         this.rateAnalyzer = this.pairRateMap.get(this.pair);
         this.isThroughOrder = saved;
-        log.info("currency pait setting is set {}.", this.pair.getDescription());
+        log.info("currency pair setting is set {}.", this.pair.getDescription());
+    }
+    private void changeRecommended() {
+        if (this.displayMode != DisplayMode.RATELIST) {
+            log.info("change recommended is executable when display mode RATELIST.");
+            return;
+        }
+        CurrencyPair recommended = this.pairRateMap.entrySet().stream()
+                .max(Comparator.comparingInt(entry -> entry.getValue().rangeWithin(Duration.ofMinutes(10))))
+                .get()
+                .getKey();
+        this.changePair(recommended);
     }
 
     private MessageListener customizeMessageListener() {
@@ -581,6 +593,7 @@ public class AutoTrader {
                         this.changePair(CurrencyPair.valueOf(args[0]));
                     }
                 })
+                .putCommand(ReservedMessage.CHANGERECOMMENDED, (args) -> this.changeRecommended())
                 .putCommand(ReservedMessage.DISPLAYCHART, (args) -> this.displayChart())
                 .putCommand(ReservedMessage.DISPLAYRATELIST, (args) -> this.displayRateList())
                 ;
