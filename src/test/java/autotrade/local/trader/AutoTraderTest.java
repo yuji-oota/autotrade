@@ -26,7 +26,6 @@ public class AutoTraderTest {
         log.info("{}", result);
     }
 
-
     @SuppressWarnings("unused")
     private Method getPrivateMethod(Object object, String methodName, @SuppressWarnings("rawtypes") Class... clazz) {
         Method method;

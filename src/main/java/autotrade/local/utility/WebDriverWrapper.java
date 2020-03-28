@@ -130,10 +130,20 @@ public class WebDriverWrapper {
                 + driver.findElement(By.xpath("//span[@class='bid2']")).getText()
                 + driver.findElement(By.xpath("//span[@class='bid3']")).getText();
     }
+    public String getBidRateFromList(CurrencyPair pair) {
+        String xpath = MessageFormat.format("//tr[@id=''tab_rate_brand_{0}'']//span[starts-with(@class, ''bid'')]", pair.name());
+        List<WebElement> elements = driver.findElements(By.xpath(xpath));
+        return elements.stream().map(WebElement::getText).collect(Collectors.joining());
+    }
     public String getAskRate() {
         return driver.findElement(By.xpath("//span[@class='ask1']")).getText()
                 + driver.findElement(By.xpath("//span[@class='ask2']")).getText()
                 + driver.findElement(By.xpath("//span[@class='ask3']")).getText();
+    }
+    public String getAskRateFromList(CurrencyPair pair) {
+        String xpath = MessageFormat.format("//tr[@id=''tab_rate_brand_{0}'']//span[starts-with(@class, ''ask'')]", pair.name());
+        List<WebElement> elements = driver.findElements(By.xpath(xpath));
+        return elements.stream().map(WebElement::getText).collect(Collectors.joining());
     }
     public void setLot(int lot) {
         String lastLot = driver.findElement(By.id("lot-param-quick-val")).getAttribute("value");
@@ -177,14 +187,17 @@ public class WebDriverWrapper {
             e.printStackTrace();
         }
     }
-
-    public void changePair(String pair) {
+    public void displayRateList() {
         driver.findElement(By.xpath("//li[@aria-controls='rate-menu']")).click();
+    }
+    public void displayChart() {
+        driver.findElement(By.xpath("//li[@aria-controls='chart-menu']")).click();
+    }
+    public void changePair(String pair) {
+        displayRateList();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
         driver.findElement(By.xpath(
                 MessageFormat.format("//div[contains(text(),\"{0}\")]", pair))).click();
-        AutoTradeUtils.sleep(Duration.ofSeconds(1));
-        driver.findElement(By.xpath("//li[@aria-controls='chart-menu']")).click();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
         orderSettings();
     }

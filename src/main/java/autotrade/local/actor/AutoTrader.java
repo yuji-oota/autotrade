@@ -12,9 +12,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -23,6 +25,7 @@ import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.AudioPath;
 import autotrade.local.material.CurrencyPair;
+import autotrade.local.material.DisplayMode;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.material.StartMarginMode;
@@ -42,9 +45,11 @@ public class AutoTrader {
     }
 
     private CurrencyPair pair;
+    private DisplayMode displayMode;
 
     private WebDriver driver;
     private WebDriverWrapper wrapper;
+    private Map<CurrencyPair, RateAnalyzer> pairRateMap;
     private RateAnalyzer rateAnalyzer;
     private IndicatorManager indicatorManager;
     private UploadManager uploadManager;
@@ -56,7 +61,6 @@ public class AutoTrader {
     private int targetAmountOneDay;
     private int startMargin;
 
-    private LocalDateTime pairSelectedDateTime;
     private LocalTime inactiveStart;
     private LocalTime inactiveEnd;
 
@@ -68,13 +72,14 @@ public class AutoTrader {
 
     private AutoTrader() {
         pair = CurrencyPair.USDJPY;
-        pairSelectedDateTime = LocalDateTime.now();
+        displayMode = DisplayMode.CHART;
 
         targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
 
-        rateAnalyzer = new RateAnalyzer();
+        pairRateMap = Stream.of(CurrencyPair.values()).collect(Collectors.toMap(pair -> pair, pair -> new RateAnalyzer()));
+        rateAnalyzer = pairRateMap.get(pair);
         uploadManager = new UploadManager();
         lotManager = new LotManager();
         indicatorManager = new IndicatorManager();
@@ -158,7 +163,6 @@ public class AutoTrader {
             while(true) {
                 // 取引
                 trade();
-                AutoTradeUtils.sleep(Duration.ofMillis(100));
 
                 // メッセージダイアログクローズ
                 wrapper.cancelMessage();
@@ -210,8 +214,22 @@ public class AutoTrader {
             }
         }
 
-        // analizerにレート追加
+        // rateAnalyzerにレート追加
         rateAnalyzer.add(snapshot.getRate());
+
+        // 選択可能通貨のrateAnalyzerにレート追加
+        if (displayMode == DisplayMode.RATELIST) {
+            Stream.of(CurrencyPair.values()).forEach(p -> {
+                if (p == pair) {
+                    return;
+                }
+                pairRateMap.get(p).add(Rate.builder()
+                        .ask(AutoTradeUtils.toInt(wrapper.getAskRateFromList(p)))
+                        .bid(AutoTradeUtils.toInt(wrapper.getBidRateFromList(p)))
+                        .timestamp(LocalDateTime.now())
+                        .build());
+            });
+        }
 
         // 指標アラート
         if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
@@ -314,8 +332,9 @@ public class AutoTrader {
     }
 
     private boolean isOrderable(Snapshot snapshot) {
-        if (Duration.between(pairSelectedDateTime, LocalDateTime.now()).toMillis() < Duration.ofMinutes(5).toMillis()) {
-            // 通貨ペア変更直後は注文しない
+        if (Duration.between(rateAnalyzer.getEarliestRate().getTimestamp()
+                , LocalDateTime.now()).toMillis() < Duration.ofMinutes(5).toMillis()) {
+            // 過去Rateがある程度存在しない場合は注文しない
             return false;
         }
         if (rateAnalyzer.rangeWithin(Duration.ofSeconds(1)) == pair.getMinSpread()) {
@@ -480,6 +499,14 @@ public class AutoTrader {
             }
         }
     }
+    private void displayRateList() {
+        this.displayMode = DisplayMode.RATELIST;
+        wrapper.displayRateList();
+    }
+    private void displayChart() {
+        this.displayMode = DisplayMode.CHART;
+        wrapper.displayChart();
+    }
 
     private MessageListener customizeMessageListener() {
         return new MessageListener()
@@ -532,6 +559,7 @@ public class AutoTrader {
                 })
                 .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold())
                 .putCommand(ReservedMessage.CHANGEPAIR, (args) -> {
+                    this.displayRateList();
                     if (this.getSnapshot().hasPosition()) {
                         log.info("currency pait is not changed because of position exists.");
                         return;
@@ -540,12 +568,13 @@ public class AutoTrader {
                         this.isThroughOrder = true;
                         this.pair = CurrencyPair.valueOf(args[0]);
                         wrapper.changePair(this.pair.getDescription());
-                        this.pairSelectedDateTime = LocalDateTime.now();
-                        rateAnalyzer.initialize();
+                        this.rateAnalyzer = this.pairRateMap.get(this.pair);
                         this.isThroughOrder = false;
                     }
                     log.info("currency pait setting is set {}.", this.pair.getDescription());
                 })
+                .putCommand(ReservedMessage.DISPLAYCHART, (args) -> this.displayChart())
+                .putCommand(ReservedMessage.DISPLAYRATELIST, (args) -> this.displayRateList())
                 ;
     }
 

@@ -26,10 +26,6 @@ public class RateAnalyzer {
     private int countertradingBid;
 
     public RateAnalyzer() {
-        initialize();
-    }
-
-    public void initialize() {
         rates = new ArrayList<>();
         askThreshold = Integer.MAX_VALUE;
         bidThreshold = Integer.MIN_VALUE;
@@ -141,5 +137,10 @@ public class RateAnalyzer {
     }
     public boolean isReachedCountertradingBid(Rate rate) {
         return rate.getBid() <= countertradingBid;
+    }
+    public Rate getEarliestRate() {
+        return rates.stream()
+                .min(Comparator.comparing(Rate::getTimestamp))
+                .orElse(Rate.builder().timestamp(LocalDateTime.now()).build());
     }
 }
