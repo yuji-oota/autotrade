@@ -507,6 +507,24 @@ public class AutoTrader {
         this.displayMode = DisplayMode.CHART;
         wrapper.displayChart();
     }
+    private void changePair(CurrencyPair pair) {
+        if (this.getSnapshot().hasPosition()) {
+            log.info("currency pait is not changed because of position exists.");
+            return;
+        }
+        if (this.pair == pair) {
+            log.info("currency pait setting is already set {}.", this.pair.getDescription());
+            return;
+        }
+        this.displayRateList();
+        boolean saved = this.isThroughOrder;
+        this.isThroughOrder = true;
+        this.pair = pair;
+        wrapper.changePair(this.pair.getDescription());
+        this.rateAnalyzer = this.pairRateMap.get(this.pair);
+        this.isThroughOrder = saved;
+        log.info("currency pait setting is set {}.", this.pair.getDescription());
+    }
 
     private MessageListener customizeMessageListener() {
         return new MessageListener()
@@ -559,19 +577,9 @@ public class AutoTrader {
                 })
                 .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold())
                 .putCommand(ReservedMessage.CHANGEPAIR, (args) -> {
-                    this.displayRateList();
-                    if (this.getSnapshot().hasPosition()) {
-                        log.info("currency pait is not changed because of position exists.");
-                        return;
-                    }
                     if (args.length > 0) {
-                        this.isThroughOrder = true;
-                        this.pair = CurrencyPair.valueOf(args[0]);
-                        wrapper.changePair(this.pair.getDescription());
-                        this.rateAnalyzer = this.pairRateMap.get(this.pair);
-                        this.isThroughOrder = false;
+                        this.changePair(CurrencyPair.valueOf(args[0]));
                     }
-                    log.info("currency pait setting is set {}.", this.pair.getDescription());
                 })
                 .putCommand(ReservedMessage.DISPLAYCHART, (args) -> this.displayChart())
                 .putCommand(ReservedMessage.DISPLAYRATELIST, (args) -> this.displayRateList())
