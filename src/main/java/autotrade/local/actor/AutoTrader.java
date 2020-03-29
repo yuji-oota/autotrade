@@ -526,12 +526,11 @@ public class AutoTrader {
         wrapper.displayChart();
     }
     private void changePair(CurrencyPair pair) {
-        if (this.getSnapshot().hasPosition()) {
-            log.info("currency pair is not changed because of position exists.");
+        if (this.pair == pair) {
             return;
         }
-        if (this.pair == pair) {
-            log.info("currency pair setting is already set {}.", this.pair.getDescription());
+        if (this.getSnapshot().hasPosition()) {
+            log.info("currency pair is not changed because of position exists.");
             return;
         }
         this.displayRateList();
