@@ -197,6 +197,10 @@ public class AutoTrader {
                 .build();
     }
 
+    private boolean hasPosition() {
+        return AutoTradeUtils.toInt(wrapper.getAskLot()) > 0 || AutoTradeUtils.toInt(wrapper.getBidLot()) > 0;
+    }
+
     private void trade() {
 
         // 最新情報取得
@@ -529,7 +533,7 @@ public class AutoTrader {
         if (this.pair == pair) {
             return;
         }
-        if (this.getSnapshot().hasPosition()) {
+        if (this.hasPosition()) {
             log.info("currency pair is not changed because of position exists.");
             return;
         }
