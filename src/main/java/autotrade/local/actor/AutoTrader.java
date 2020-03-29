@@ -132,9 +132,7 @@ public class AutoTrader {
             AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
             // 通貨ペア変更
-            if (!pair.getDescription().equals(wrapper.getPair())) {
-                wrapper.changePair(pair.getDescription());
-            }
+            changePair(pair);
 
             // 開始時の証拠金を取得
             switch (StartMarginMode.valueOf(Messenger.get("startMarginMode"))) {

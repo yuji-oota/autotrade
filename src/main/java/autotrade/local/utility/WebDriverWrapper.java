@@ -194,8 +194,6 @@ public class WebDriverWrapper {
         driver.findElement(By.xpath("//li[@aria-controls='chart-menu']")).click();
     }
     public void changePair(String pair) {
-        displayRateList();
-        AutoTradeUtils.sleep(Duration.ofSeconds(1));
         driver.findElement(By.xpath(
                 MessageFormat.format("//div[contains(text(),\"{0}\")]", pair))).click();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
