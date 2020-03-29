@@ -163,6 +163,9 @@ public class AutoTrader {
                 // 取引
                 trade();
 
+                // 取引後処理
+                tradePostProcess();
+
                 // メッセージダイアログクローズ
                 wrapper.cancelMessage();
             }
@@ -230,6 +233,13 @@ public class AutoTrader {
             });
         }
 
+    }
+
+    private void tradePostProcess() {
+
+        // 最新情報取得
+        Snapshot snapshot = getSnapshot();
+
         // 指標アラート
         if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
                 && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(55))) {
@@ -251,7 +261,6 @@ public class AutoTrader {
                 AutoTradeUtils.sleep(durationToActive);
             }
         }
-
     }
 
     private void fix(Snapshot snapshot) {
