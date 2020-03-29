@@ -70,6 +70,7 @@ public class AutoTrader {
     private boolean isThroughOrder;
     private boolean isThroughFix;
     private boolean isIgnoreSpread;
+    private boolean isAutoRecommended;
 
     private AutoTrader() {
         pair = CurrencyPair.USDJPY;
@@ -261,6 +262,15 @@ public class AutoTrader {
                 AutoTradeUtils.sleep(durationToActive);
             }
         }
+
+        // 推奨通貨ペア自動選択
+        if (isAutoRecommended && !snapshot.hasPosition()) {
+            if (displayMode != DisplayMode.RATELIST) {
+                displayRateList();
+            }
+            changeRecommended();
+        }
+
     }
 
     private void fix(Snapshot snapshot) {
@@ -593,6 +603,12 @@ public class AutoTrader {
                         this.isIgnoreSpread = Boolean.valueOf(args[0]);
                     }
                     log.info("ignore spread setting is set {}.", this.isIgnoreSpread);
+                })
+                .putCommand(ReservedMessage.AUTORECOMMENDED, (args) -> {
+                    if (args.length > 0) {
+                        this.isAutoRecommended = Boolean.valueOf(args[0]);
+                    }
+                    log.info("auto recommended setting is set {}.", this.isAutoRecommended);
                 })
                 .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold())
                 .putCommand(ReservedMessage.CHANGEPAIR, (args) -> {
