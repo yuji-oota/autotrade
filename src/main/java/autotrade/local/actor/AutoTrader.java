@@ -230,11 +230,16 @@ public class AutoTrader {
                 if (p == pair) {
                     return;
                 }
-                pairRateMap.get(p).add(Rate.builder()
-                        .ask(AutoTradeUtils.toInt(wrapper.getAskRateFromList(p)))
-                        .bid(AutoTradeUtils.toInt(wrapper.getBidRateFromList(p)))
-                        .timestamp(LocalDateTime.now())
-                        .build());
+                RateAnalyzer analyzer = pairRateMap.get(p);
+                Rate latestRate = analyzer.getLatestRate();
+                if (Objects.isNull(latestRate)
+                        || Duration.between(analyzer.getLatestRate().getTimestamp(), LocalDateTime.now()).toMillis() > Duration.ofSeconds(10).toMillis()) {
+                    analyzer.add(Rate.builder()
+                            .ask(AutoTradeUtils.toInt(wrapper.getAskRateFromList(p)))
+                            .bid(AutoTradeUtils.toInt(wrapper.getBidRateFromList(p)))
+                            .timestamp(LocalDateTime.now())
+                            .build());
+                }
             });
         }
 

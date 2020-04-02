@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class RateAnalyzer {
 
+    private Rate latestRate;
     private List<Rate> rates;
     private int askThreshold;
     private int bidThreshold;
@@ -37,6 +38,7 @@ public class RateAnalyzer {
         if (rate.isDoubtful()) {
             log.info("doubtful rate is added {}", rate);
         } else {
+            latestRate = rate;
             rates.add(rate);
             updateWaterMark(rate);
         }
