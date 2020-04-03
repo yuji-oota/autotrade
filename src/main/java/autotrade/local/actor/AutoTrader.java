@@ -133,7 +133,12 @@ public class AutoTrader {
             AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
             // 通貨ペア変更
-            changePair(pair);
+            Stream.of(CurrencyPair.values()).forEach(this::changePair);
+            // ポジションが無ければUSD/JPYを設定
+            changePair(CurrencyPair.USDJPY);
+
+            // チャート表示
+            wrapper.displayChart();
 
             // 開始時の証拠金を取得
             switch (StartMarginMode.valueOf(Messenger.get("startMarginMode"))) {
