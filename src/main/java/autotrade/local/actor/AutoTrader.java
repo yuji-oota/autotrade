@@ -548,12 +548,9 @@ public class AutoTrader {
             return;
         }
         this.displayRateList();
-        boolean saved = this.isThroughOrder;
-        this.isThroughOrder = true;
         this.pair = pair;
         wrapper.changePair(this.pair.getDescription());
         this.rateAnalyzer = this.pairRateMap.get(this.pair);
-        this.isThroughOrder = saved;
         log.info("currency pair setting is set {}.", this.pair.getDescription());
     }
     private void changeRecommended() {
