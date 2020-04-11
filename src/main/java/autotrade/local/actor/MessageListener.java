@@ -36,6 +36,7 @@ public class MessageListener extends RedisPubSubAdapter<String, String> {
         CHANGERECOMMENDED,
         DISPLAYCHART,
         DISPLAYRATELIST,
+        FORCEEXCEPTION,
     }
 
     private Map<ReservedMessage, Consumer<String[]>> commandMap;

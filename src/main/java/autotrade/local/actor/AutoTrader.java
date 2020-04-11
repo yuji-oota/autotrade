@@ -71,6 +71,7 @@ public class AutoTrader {
     private boolean isThroughFix;
     private boolean isIgnoreSpread;
     private boolean isAutoRecommended;
+    private boolean isForceException;
 
     private AutoTrader() {
         pair = CurrencyPair.USDJPY;
@@ -174,6 +175,13 @@ public class AutoTrader {
 
                 // メッセージダイアログクローズ
                 wrapper.cancelMessage();
+
+                // 強制例外スロー
+                if (isForceException) {
+                    isForceException = false;
+                    throw new ApplicationException("force exception occurred.");
+                }
+
             }
         } catch(Exception e) {
             log.error(e.getMessage(), e);
@@ -629,6 +637,7 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.CHANGERECOMMENDED, (args) -> this.changeRecommended())
                 .putCommand(ReservedMessage.DISPLAYCHART, (args) -> this.displayChart())
                 .putCommand(ReservedMessage.DISPLAYRATELIST, (args) -> this.displayRateList())
+                .putCommand(ReservedMessage.FORCEEXCEPTION, (args) -> this.isForceException = true)
                 ;
     }
 
