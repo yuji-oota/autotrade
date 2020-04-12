@@ -134,6 +134,10 @@ public class AutoTrader {
             AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
             // 通貨ペア変更
+            this.displayRateList();
+            Stream.of(CurrencyPair.values()).forEach(p -> {
+                lotManager.addSampleRateMap(p, buildRateFromList(p));
+            });
             Stream.of(CurrencyPair.values()).forEach(this::changePair);
             // ポジションが無ければUSD/JPYを設定
             changePair(CurrencyPair.USDJPY);
@@ -154,7 +158,7 @@ public class AutoTrader {
             Messenger.set("startMarginMode", StartMarginMode.CARRY_OVER.name());
 
             // Same引継ぎ
-            Snapshot shapshot = getSnapshot();
+            Snapshot shapshot = buildSnapshot();
             if (shapshot.isPositionSame()) {
                 log.info("load Snapshot when samed to SameManager.");
                 SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenSamed"))));
@@ -191,7 +195,7 @@ public class AutoTrader {
 
     }
 
-    private Snapshot getSnapshot() {
+    private Snapshot buildSnapshot() {
         return Snapshot.builder()
                 .pair(wrapper.getPair())
                 .askLot(AutoTradeUtils.toInt(wrapper.getAskLot()))
@@ -202,11 +206,22 @@ public class AutoTrader {
                 .bidPipProfit(AutoTradeUtils.toInt(wrapper.getBidPipProfit()))
                 .margin(AutoTradeUtils.toInt(wrapper.getMargin()))
                 .todaysProfit(AutoTradeUtils.toInt(wrapper.getMargin()) - startMargin)
-                .rate(Rate.builder()
-                    .ask(AutoTradeUtils.toInt(wrapper.getAskRate()))
-                    .bid(AutoTradeUtils.toInt(wrapper.getBidRate()))
-                    .timestamp(LocalDateTime.now())
-                    .build())
+                .rate(buildRate())
+                .build();
+    }
+
+    private Rate buildRate() {
+        return Rate.builder()
+                .ask(AutoTradeUtils.toInt(wrapper.getAskRate()))
+                .bid(AutoTradeUtils.toInt(wrapper.getBidRate()))
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+    private Rate buildRateFromList(CurrencyPair pair) {
+        return Rate.builder()
+                .ask(AutoTradeUtils.toInt(wrapper.getAskRateFromList(pair)))
+                .bid(AutoTradeUtils.toInt(wrapper.getBidRateFromList(pair)))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
@@ -217,7 +232,7 @@ public class AutoTrader {
     private void trade() {
 
         // 最新情報取得
-        Snapshot snapshot = getSnapshot();
+        Snapshot snapshot = buildSnapshot();
 
         if (isOrderable(snapshot)) {
 
@@ -247,11 +262,7 @@ public class AutoTrader {
                 Rate latestRate = analyzer.getLatestRate();
                 if (Objects.isNull(latestRate)
                         || Duration.between(analyzer.getLatestRate().getTimestamp(), LocalDateTime.now()).toMillis() > Duration.ofSeconds(10).toMillis()) {
-                    analyzer.add(Rate.builder()
-                            .ask(AutoTradeUtils.toInt(wrapper.getAskRateFromList(p)))
-                            .bid(AutoTradeUtils.toInt(wrapper.getBidRateFromList(p)))
-                            .timestamp(LocalDateTime.now())
-                            .build());
+                    analyzer.add(buildRateFromList(p));
                 }
             });
         }
@@ -261,7 +272,7 @@ public class AutoTrader {
     private void tradePostProcess() {
 
         // 最新情報取得
-        Snapshot snapshot = getSnapshot();
+        Snapshot snapshot = buildSnapshot();
 
         // 指標アラート
         if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
@@ -475,7 +486,7 @@ public class AutoTrader {
     }
 
     private void forceSame() {
-        Snapshot snapshot = getSnapshot();
+        Snapshot snapshot = buildSnapshot();
         int askLot = snapshot.getAskLot();
         int bidLot = snapshot.getBidLot();
         if (bidLot < askLot) {
@@ -529,7 +540,7 @@ public class AutoTrader {
         long verifyStarted = System.currentTimeMillis();
         while (true) {
             AutoTradeUtils.sleep(Duration.ofMillis(500));
-            Snapshot snapshot = getSnapshot();
+            Snapshot snapshot = buildSnapshot();
             rateAnalyzer.add(snapshot.getRate());
             if (lot == lotAfterOrder.applyAsInt(snapshot)) {
                 break;
@@ -559,6 +570,7 @@ public class AutoTrader {
         this.pair = pair;
         wrapper.changePair(this.pair.getDescription());
         this.rateAnalyzer = this.pairRateMap.get(this.pair);
+        this.lotManager.changeInitialLot(pair);
         log.info("currency pair setting is set {}.", this.pair.getDescription());
     }
     private void changeRecommended() {
@@ -575,7 +587,7 @@ public class AutoTrader {
 
     private MessageListener customizeMessageListener() {
         return new MessageListener()
-                .putCommand(ReservedMessage.SNAPSHOT, (args) -> Messenger.set(ReservedMessage.SNAPSHOT.name(), AutoTradeUtils.toJson(getSnapshot())))
+                .putCommand(ReservedMessage.SNAPSHOT, (args) -> Messenger.set(ReservedMessage.SNAPSHOT.name(), AutoTradeUtils.toJson(buildSnapshot())))
                 .putCommand(ReservedMessage.UPLOADLOG, (args) -> uploadManager.upload(logFile))
                 .putCommand(ReservedMessage.AUTOTRADELOG, (args) -> {
                     int logRows = 30;
@@ -598,8 +610,8 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.FIXBID, (args) -> wrapper.fixBid())
                 .putCommand(ReservedMessage.FIXALL, (args) -> wrapper.fixAll())
                 .putCommand(ReservedMessage.FORCESAME, (args) -> this.forceSame())
-                .putCommand(ReservedMessage.FORCEASK, (args) -> this.orderAsk(this.getSnapshot()))
-                .putCommand(ReservedMessage.FORCEBID, (args) -> this.orderBid(this.getSnapshot()))
+                .putCommand(ReservedMessage.FORCEASK, (args) -> this.orderAsk(this.buildSnapshot()))
+                .putCommand(ReservedMessage.FORCEBID, (args) -> this.orderBid(this.buildSnapshot()))
                 .putCommand(ReservedMessage.LOTNEGATIVE, (args) -> lotManager.modeNegative())
                 .putCommand(ReservedMessage.LOTPOSITIVE, (args) -> lotManager.modePositive())
                 .putCommand(ReservedMessage.LOTPOSITIVEINCREMENT, (args) -> lotManager.incrementInitialPositive())

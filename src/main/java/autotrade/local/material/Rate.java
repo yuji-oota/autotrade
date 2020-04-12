@@ -28,4 +28,8 @@ public class Rate implements Serializable {
     public Duration passed() {
         return Duration.between(timestamp, LocalDateTime.now());
     }
+
+    public int getMiddle() {
+        return (ask + bid) / 2;
+    }
 }
