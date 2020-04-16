@@ -579,6 +579,7 @@ public class AutoTrader {
             return;
         }
         CurrencyPair recommended = this.pairRateMap.entrySet().stream()
+                .filter(entry -> entry.getKey().name().contains("USD"))
                 .max(Comparator.comparingInt(entry -> entry.getValue().rangeWithin(Duration.ofMinutes(10))))
                 .get()
                 .getKey();
