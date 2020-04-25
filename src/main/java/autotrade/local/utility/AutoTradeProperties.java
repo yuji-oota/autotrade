@@ -69,20 +69,23 @@ public class AutoTradeProperties {
     }
 
     public static String get(String key) {
-        return resolvePropertie(key, properties);
+        return resolvePropertie(key, properties).toString();
     }
     public static int getInt(String key) {
-        return Integer.parseInt(get(key));
+        return resolvePropertie(key, properties);
+    }
+    public static List<String> getList(String key) {
+        return resolvePropertie(key, properties);
     }
 
     @SuppressWarnings("unchecked")
-    private static String resolvePropertie(String key, Map<String, Object> map) {
+    private static <T> T resolvePropertie(String key, Map<String, Object> map) {
         List<String> keys = new LinkedList<>(Arrays.asList(key.split("\\.")));
         Object value = map.get(keys.get(0));
         if (value instanceof Map) {
             keys.remove(0);
             return resolvePropertie(keys.stream().collect(Collectors.joining(".")), (Map<String, Object>) value);
         }
-        return value.toString();
+        return (T) value;
     }
 }

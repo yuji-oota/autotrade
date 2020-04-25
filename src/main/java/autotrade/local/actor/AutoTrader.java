@@ -578,8 +578,9 @@ public class AutoTrader {
             log.info("change recommended is executable when display mode RATELIST.");
             return;
         }
+        List<String> changeable = AutoTradeProperties.getList("autotrade.order.pairs");
         CurrencyPair recommended = this.pairRateMap.entrySet().stream()
-                .filter(entry -> entry.getKey().name().contains("USD"))
+                .filter(entry -> changeable.contains(entry.getKey().name()))
                 .max(Comparator.comparingInt(entry -> entry.getValue().rangeWithin(Duration.ofMinutes(10))))
                 .get()
                 .getKey();
