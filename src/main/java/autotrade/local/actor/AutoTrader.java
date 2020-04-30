@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,11 +47,12 @@ public class AutoTrader {
     }
 
     private CurrencyPair pair;
+    private Set<CurrencyPair> changeablePairs;
     private DisplayMode displayMode;
 
     private WebDriver driver;
     private WebDriverWrapper wrapper;
-    private Map<CurrencyPair, RateAnalyzer> pairRateMap;
+    private Map<CurrencyPair, RateAnalyzer> pairAnalyzerMap;
     private RateAnalyzer rateAnalyzer;
     private IndicatorManager indicatorManager;
     private UploadManager uploadManager;
@@ -75,14 +77,17 @@ public class AutoTrader {
 
     private AutoTrader() {
         pair = CurrencyPair.USDJPY;
+        changeablePairs = AutoTradeProperties.getList("autotrade.order.pairs").stream()
+                .map(CurrencyPair::valueOf)
+                .collect(Collectors.toSet());
         displayMode = DisplayMode.CHART;
 
         targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
 
-        pairRateMap = Stream.of(CurrencyPair.values()).collect(Collectors.toMap(pair -> pair, pair -> new RateAnalyzer()));
-        rateAnalyzer = pairRateMap.get(pair);
+        pairAnalyzerMap = Stream.of(CurrencyPair.values()).collect(Collectors.toMap(pair -> pair, pair -> new RateAnalyzer()));
+        rateAnalyzer = pairAnalyzerMap.get(pair);
         uploadManager = new UploadManager();
         lotManager = new LotManager();
         indicatorManager = new IndicatorManager();
@@ -254,11 +259,11 @@ public class AutoTrader {
 
         // 選択可能通貨のrateAnalyzerにレート追加
         if (displayMode == DisplayMode.RATELIST) {
-            Stream.of(CurrencyPair.values()).forEach(p -> {
+            Stream.of(CurrencyPair.values()).filter(changeablePairs::contains).forEach(p -> {
                 if (p == pair) {
                     return;
                 }
-                RateAnalyzer analyzer = pairRateMap.get(p);
+                RateAnalyzer analyzer = pairAnalyzerMap.get(p);
                 Rate latestRate = analyzer.getLatestRate();
                 if (Objects.isNull(latestRate)
                         || Duration.between(analyzer.getLatestRate().getTimestamp(), LocalDateTime.now()).toMillis() > Duration.ofSeconds(10).toMillis()) {
@@ -569,7 +574,7 @@ public class AutoTrader {
         this.displayRateList();
         this.pair = pair;
         wrapper.changePair(this.pair.getDescription());
-        this.rateAnalyzer = this.pairRateMap.get(this.pair);
+        this.rateAnalyzer = this.pairAnalyzerMap.get(this.pair);
         this.lotManager.changeInitialLot(pair);
         log.info("currency pair setting is set {}.", this.pair.getDescription());
     }
@@ -578,9 +583,8 @@ public class AutoTrader {
             log.info("change recommended is executable when display mode RATELIST.");
             return;
         }
-        List<String> changeable = AutoTradeProperties.getList("autotrade.order.pairs");
-        CurrencyPair recommended = this.pairRateMap.entrySet().stream()
-                .filter(entry -> changeable.contains(entry.getKey().name()))
+        CurrencyPair recommended = this.pairAnalyzerMap.entrySet().stream()
+                .filter(entry -> changeablePairs.contains(entry.getKey()))
                 .max(Comparator.comparingInt(entry -> entry.getValue().rangeWithin(Duration.ofMinutes(10))))
                 .get()
                 .getKey();
