@@ -601,6 +601,23 @@ public class AutoTrader {
         this.changePair(recommended);
     }
 
+    private void changeThroughOrder(boolean flag) {
+        this.isThroughOrder = flag;
+        log.info("through order setting is set {}.", this.isThroughOrder);
+    }
+    private void changeThroughFix(boolean flag) {
+        this.isThroughFix = flag;
+        log.info("through fix setting is set {}.", this.isThroughFix);
+    }
+    private void changeIgnoreSpread(boolean flag) {
+        this.isIgnoreSpread = flag;
+        log.info("ignore spread setting is set {}.", this.isIgnoreSpread);
+    }
+    private void changeAutoRecommended(boolean flag) {
+        this.isAutoRecommended = flag;
+        log.info("auto recommended setting is set {}.", this.isAutoRecommended);
+    }
+
     private MessageListener customizeMessageListener() {
         return new MessageListener()
                 .putCommand(ReservedMessage.SNAPSHOT, (args) -> Messenger.set(ReservedMessage.SNAPSHOT.name(), AutoTradeUtils.toJson(buildSnapshot())))
@@ -634,27 +651,23 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.LOTPOSITIVEDECREMENT, (args) -> lotManager.decrementInitialPositive())
                 .putCommand(ReservedMessage.THROUGHORDER, (args) -> {
                     if (args.length > 0) {
-                        this.isThroughOrder = Boolean.valueOf(args[0]);
+                        this.changeThroughOrder(Boolean.valueOf(args[0]));
                     }
-                    log.info("through order setting is set {}.", this.isThroughOrder);
                 })
                 .putCommand(ReservedMessage.THROUGHFIX, (args) -> {
                     if (args.length > 0) {
-                        this.isThroughFix = Boolean.valueOf(args[0]);
+                        this.changeThroughFix(Boolean.valueOf(args[0]));
                     }
-                    log.info("through fix setting is set {}.", this.isThroughFix);
                 })
                 .putCommand(ReservedMessage.IGNORESPREAD, (args) -> {
                     if (args.length > 0) {
-                        this.isIgnoreSpread = Boolean.valueOf(args[0]);
+                        this.changeIgnoreSpread(Boolean.valueOf(args[0]));
                     }
-                    log.info("ignore spread setting is set {}.", this.isIgnoreSpread);
                 })
                 .putCommand(ReservedMessage.AUTORECOMMENDED, (args) -> {
                     if (args.length > 0) {
-                        this.isAutoRecommended = Boolean.valueOf(args[0]);
+                        this.changeAutoRecommended(Boolean.valueOf(args[0]));
                     }
-                    log.info("auto recommended setting is set {}.", this.isAutoRecommended);
                 })
                 .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold())
                 .putCommand(ReservedMessage.CHANGEPAIR, (args) -> {
