@@ -253,13 +253,13 @@ public class AutoTrader {
             .forEach(p -> pairRateMap.put(p, buildRateFromList(p)));
         }
 
-        if (isOrderable(snapshot)) {
+        // 確定見送り判定
+        if (!isThroughFix) {
+            // 最新情報を元に利益確定
+            fix(snapshot);
+        }
 
-            // 確定見送り判定
-            if (!isThroughFix) {
-                // 最新情報を元に利益確定
-                fix(snapshot);
-            }
+        if (isOrderable(snapshot)) {
 
             // 注文見送り判定
             if (!isThroughOrder) {
