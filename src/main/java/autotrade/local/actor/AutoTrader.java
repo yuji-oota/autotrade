@@ -282,6 +282,10 @@ public class AutoTrader {
 
         // SameManager初期化
         if (snapshot.isPositionSame()) {
+            if (!SameManager.hasInstance()) {
+                changeThroughOrder(true);
+                changeThroughFix(true);
+            }
             SameManager.setSnapshot(snapshot);
         }
 
