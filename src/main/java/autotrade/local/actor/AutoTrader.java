@@ -280,6 +280,11 @@ public class AutoTrader {
         // 最新情報取得
         Snapshot snapshot = buildSnapshot();
 
+        // SameManager初期化
+        if (snapshot.isPositionSame()) {
+            SameManager.setSnapshot(snapshot);
+        }
+
         // 指標アラート
         if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
                 && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(55))) {
@@ -319,29 +324,29 @@ public class AutoTrader {
             SameManager.close();
             break;
         case SAME:
-            SameManager.setSnapshot(snapshot);
-            SameManager sameManager = SameManager.getInstance();
-
-            // Ask切り離し判定
-            if (sameManager.isCutOffAsk(snapshot, rateAnalyzer)) {
-                // Ask決済
-                wrapper.fixAsk();
-                log.info("same position recovery start. cut off ask.");
-                AutoTradeUtils.printObject(snapshot);
-
-                // ベリファイ
-                verifyOrder(0, Snapshot::getAskLot);
-            }
-            // Bid切り離し判定
-            if (sameManager.isCutOffBid(snapshot, rateAnalyzer)) {
-                // Bid決済
-                wrapper.fixBid();
-                log.info("same position recovery start. cut off bid.");
-                AutoTradeUtils.printObject(snapshot);
-
-                // ベリファイ
-                verifyOrder(0, Snapshot::getBidLot);
-            }
+//            SameManager.setSnapshot(snapshot);
+//            SameManager sameManager = SameManager.getInstance();
+//
+//            // Ask切り離し判定
+//            if (sameManager.isCutOffAsk(snapshot, rateAnalyzer)) {
+//                // Ask決済
+//                wrapper.fixAsk();
+//                log.info("same position recovery start. cut off ask.");
+//                AutoTradeUtils.printObject(snapshot);
+//
+//                // ベリファイ
+//                verifyOrder(0, Snapshot::getAskLot);
+//            }
+//            // Bid切り離し判定
+//            if (sameManager.isCutOffBid(snapshot, rateAnalyzer)) {
+//                // Bid決済
+//                wrapper.fixBid();
+//                log.info("same position recovery start. cut off bid.");
+//                AutoTradeUtils.printObject(snapshot);
+//
+//                // ベリファイ
+//                verifyOrder(0, Snapshot::getBidLot);
+//            }
             break;
         case ASK_SIDE:
         case BID_SIDE:
