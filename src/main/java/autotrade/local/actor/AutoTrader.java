@@ -151,7 +151,7 @@ public class AutoTrader {
             changePair(CurrencyPair.USDJPY);
 
             // チャート表示
-            wrapper.displayChart();
+            displayChart();
 
             // 開始時の証拠金を取得
             switch (StartMarginMode.valueOf(Messenger.get("startMarginMode"))) {
