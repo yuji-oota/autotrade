@@ -403,10 +403,6 @@ public class AutoTrader {
             // 過去Rateがある程度存在しない場合は注文しない
             return false;
         }
-        if (rateAnalyzer.rangeWithin(Duration.ofSeconds(1)) == pair.getMinSpread()) {
-            // 動いていない場合は注文しない
-            return false;
-        }
         if (snapshot.getRate().isDoubtful()) {
             // スプレッドが開きすぎの場合は注文しない
             return false;
