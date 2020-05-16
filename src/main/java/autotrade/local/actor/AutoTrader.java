@@ -344,14 +344,14 @@ public class AutoTrader {
             }
 
             // 通常の利益確定判定
-            if (isFixBeforeSame(snapshot, lotManager.getInitial() * 10)) {
+            if (isFix(snapshot, lotManager.getInitial() * 10)) {
                 // 目標金額達成で利益確定
                 log.info("achieved target amount.");
                 fixAll(snapshot);
                 return;
             }
             if (snapshot.hasBothSide()
-                    && isFixBeforeSame(snapshot, 0)) {
+                    && isFix(snapshot, 0)) {
                 // 反対売買による目標金額達成で利益確定
                 log.info("achieved countertrading.");
                 fixAll(snapshot);
@@ -362,7 +362,7 @@ public class AutoTrader {
         }
     }
 
-    private boolean isFixBeforeSame(Snapshot snapshot, int targetAmount) {
+    private boolean isFix(Snapshot snapshot, int targetAmount) {
         if (snapshot.getPositionProfit() >= targetAmount) {
             if (snapshot.isPositionAskSide()) {
                 return rateAnalyzer.isReachedBidThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
