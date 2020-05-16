@@ -375,8 +375,7 @@ public class AutoTrader {
     }
 
     private boolean isOrderable(Snapshot snapshot) {
-        if (Duration.between(rateAnalyzer.getEarliestRate().getTimestamp()
-                , LocalDateTime.now()).toMillis() < Duration.ofMinutes(5).toMillis()) {
+        if (Duration.between(rateAnalyzer.getEarliestRate().getTimestamp(), LocalDateTime.now()).toMinutes() < 5) {
             // 過去Rateがある程度存在しない場合は注文しない
             return false;
         }
