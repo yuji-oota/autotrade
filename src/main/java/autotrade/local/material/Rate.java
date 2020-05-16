@@ -22,6 +22,9 @@ public class Rate implements Serializable {
         if (getSpread() > 100) {
             return true;
         }
+        if (ask == 0 || bid == 0) {
+            return true;
+        }
         return false;
     }
 
