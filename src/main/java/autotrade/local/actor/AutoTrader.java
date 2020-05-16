@@ -328,29 +328,6 @@ public class AutoTrader {
             SameManager.close();
             break;
         case SAME:
-//            SameManager.setSnapshot(snapshot);
-//            SameManager sameManager = SameManager.getInstance();
-//
-//            // Ask切り離し判定
-//            if (sameManager.isCutOffAsk(snapshot, rateAnalyzer)) {
-//                // Ask決済
-//                wrapper.fixAsk();
-//                log.info("same position recovery start. cut off ask.");
-//                AutoTradeUtils.printObject(snapshot);
-//
-//                // ベリファイ
-//                verifyOrder(0, Snapshot::getAskLot);
-//            }
-//            // Bid切り離し判定
-//            if (sameManager.isCutOffBid(snapshot, rateAnalyzer)) {
-//                // Bid決済
-//                wrapper.fixBid();
-//                log.info("same position recovery start. cut off bid.");
-//                AutoTradeUtils.printObject(snapshot);
-//
-//                // ベリファイ
-//                verifyOrder(0, Snapshot::getBidLot);
-//            }
             break;
         case ASK_SIDE:
         case BID_SIDE:
@@ -410,12 +387,11 @@ public class AutoTrader {
 
         switch (snapshot.getStatus()) {
         case NONE:
+        case SAME:
             if (System.currentTimeMillis() - lastFixed < Duration.ofSeconds(10).toMillis()) {
                 // 利益確定から一定時間内の場合は注文しない
                 return false;
             }
-            // break無し
-        case SAME:
             if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 20) {
                 // 閾値間隔が狭い場合は注文しない
                 return false;
@@ -466,12 +442,6 @@ public class AutoTrader {
                 // 逆ポジション取得
                 orderBid(snapshot);
             }
-            // Same後
-            if (SameManager.hasInstance()
-                    && SameManager.getInstance().isReSameBid(snapshot, rateAnalyzer)) {
-                // Same戻し
-                orderBid(snapshot);
-            }
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
@@ -479,12 +449,6 @@ public class AutoTrader {
                     && rateAnalyzer.isReachedCountertradingAsk(rate)) {
                 // 上値閾値を超えた場合
                 // 逆ポジション取得
-                orderAsk(snapshot);
-            }
-            // Same後
-            if (SameManager.hasInstance()
-                    && SameManager.getInstance().isReSameAsk(snapshot, rateAnalyzer)) {
-                // Same戻し
                 orderAsk(snapshot);
             }
             break;
