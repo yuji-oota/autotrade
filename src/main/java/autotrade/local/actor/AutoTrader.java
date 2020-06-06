@@ -580,6 +580,14 @@ public class AutoTrader {
         this.isAutoRecommended = flag;
         log.info("auto recommended setting is set {}.", this.isAutoRecommended);
     }
+    private void addChangeablePair(CurrencyPair pair) {
+        changeablePairs.add(pair);
+        log.info("{} ia added to changeable pair.", pair.getDescription());
+    }
+    private void removeChangeablePair(CurrencyPair pair) {
+        changeablePairs.remove(pair);
+        log.info("{} ia removed from changeable pair.", pair.getDescription());
+    }
 
     private MessageListener customizeMessageListener() {
         return new MessageListener()
@@ -642,6 +650,16 @@ public class AutoTrader {
                 .putCommand(ReservedMessage.DISPLAYCHART, (args) -> this.displayChart())
                 .putCommand(ReservedMessage.DISPLAYRATELIST, (args) -> this.displayRateList())
                 .putCommand(ReservedMessage.FORCEEXCEPTION, (args) -> this.isForceException = true)
+                .putCommand(ReservedMessage.CHANGEABLEPAIRADD, (args) -> {
+                    if (args.length > 0) {
+                        this.addChangeablePair(CurrencyPair.valueOf(args[0]));
+                    }
+                })
+                .putCommand(ReservedMessage.CHANGEABLEPAIRREMOVE, (args) -> {
+                    if (args.length > 0) {
+                        this.removeChangeablePair(CurrencyPair.valueOf(args[0]));
+                    }
+                })
                 ;
     }
 
