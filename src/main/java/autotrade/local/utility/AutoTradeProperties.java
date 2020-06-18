@@ -1,6 +1,7 @@
 package autotrade.local.utility;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -73,6 +74,9 @@ public class AutoTradeProperties {
     }
     public static int getInt(String key) {
         return resolvePropertie(key, properties);
+    }
+    public static BigDecimal getBigDecimal(String key) {
+        return new BigDecimal(get(key));
     }
     public static List<String> getList(String key) {
         return resolvePropertie(key, properties);

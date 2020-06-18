@@ -1,5 +1,7 @@
 package autotrade.local.actor;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,9 +16,9 @@ public class LotManager {
 
     private int initialPositive;
     private int initialNegative;
-    private int countertradingMagnification;
+    private BigDecimal countertradingMagnification;
     private int countertradingCount;
-    private int power;
+    private BigDecimal power;
     private Mode mode;
     private CurrencyPair basePair;
     private Map<CurrencyPair, Rate> sampleRateMap;
@@ -30,9 +32,9 @@ public class LotManager {
         basePair = CurrencyPair.valueOf(AutoTradeProperties.get("autotrade.lot.initial.base.pair"));
         initialPositive = AutoTradeProperties.getInt("autotrade.lot.initial.base.positive");
         initialNegative = AutoTradeProperties.getInt("autotrade.lot.initial.negative");
-        countertradingMagnification = AutoTradeProperties.getInt("autotrade.lot.countertrading.magnification");
+        countertradingMagnification = AutoTradeProperties.getBigDecimal("autotrade.lot.countertrading.magnification");
         countertradingCount = AutoTradeProperties.getInt("autotrade.lot.countertrading.count");
-        power = (int) Math.pow(countertradingMagnification, countertradingCount);
+        power = BigDecimal.valueOf(Math.pow(countertradingMagnification.doubleValue(), countertradingCount));
         sampleRateMap = new HashMap<>();
         modePositive();
     }
@@ -47,7 +49,9 @@ public class LotManager {
             more = snapshot.getBidLot();
             less = snapshot.getAskLot();
         }
-        return more >= getlimit() ? more - less : (more * countertradingMagnification) - less;
+        return more >= getlimit() ?
+                more - less :
+                    countertradingMagnification.multiply(BigDecimal.valueOf(more)).setScale(0, RoundingMode.UP).intValue() - less;
     }
     public void modePositive() {
         if (isPositive()) {
@@ -81,7 +85,7 @@ public class LotManager {
     }
 
     private int getlimit() {
-        return getInitial() * power;
+        return getInitial() * power.setScale(0, RoundingMode.DOWN).intValue();
     }
     public int getInitial() {
         if (isPositive()) {
