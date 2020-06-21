@@ -81,7 +81,7 @@ public class AutoTrader {
         changeablePairs = AutoTradeProperties.getList("autotrade.order.pairs").stream()
                 .map(CurrencyPair::valueOf)
                 .collect(Collectors.toSet());
-        displayMode = DisplayMode.CHART;
+        displayMode = DisplayMode.RATELIST;
 
         targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
@@ -93,6 +93,8 @@ public class AutoTrader {
         lotManager = new LotManager();
         indicatorManager = new IndicatorManager();
         pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
+
+        isAutoRecommended = AutoTradeProperties.getBoolean("autotrade.settings.autoRecommended");
     }
 
     public static AutoTrader getInstance() {

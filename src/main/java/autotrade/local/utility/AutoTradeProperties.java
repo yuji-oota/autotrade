@@ -81,6 +81,9 @@ public class AutoTradeProperties {
     public static List<String> getList(String key) {
         return resolvePropertie(key, properties);
     }
+    public static boolean getBoolean(String key) {
+        return resolvePropertie(key, properties);
+    }
 
     @SuppressWarnings("unchecked")
     private static <T> T resolvePropertie(String key, Map<String, Object> map) {
