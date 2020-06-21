@@ -140,7 +140,7 @@ public class AutoTrader {
             AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
             // 通貨ペア変更
-            this.displayRateList();
+            wrapper.displayRateList();
             Stream.of(CurrencyPair.values()).forEach(p -> {
                 Rate rate = buildRateFromList(p);
                 lotManager.addSampleRateMap(p, rate);
@@ -149,9 +149,6 @@ public class AutoTrader {
             Stream.of(CurrencyPair.values()).forEach(this::changePair);
             // ポジションが無ければUSD/JPYを設定
             changePair(CurrencyPair.USDJPY);
-
-            // チャート表示
-            displayChart();
 
             // 開始時の証拠金を取得
             switch (StartMarginMode.valueOf(Messenger.get("startMarginMode"))) {
@@ -176,6 +173,9 @@ public class AutoTrader {
                 log.info("load countertrading threshold when order to RateAnalyzer.");
                 rateAnalyzer.loadCountertradingThreshold();
             }
+
+            // 表示変更
+            changeDisplay(displayMode);
 
             // 繰り返し実行
             while(true) {
@@ -313,9 +313,7 @@ public class AutoTrader {
 
         // 推奨通貨ペア自動選択
         if (isAutoRecommended && !snapshot.hasPosition()) {
-            if (displayMode != DisplayMode.RATELIST) {
-                displayRateList();
-            }
+            changeDisplay(DisplayMode.RATELIST);
             changeRecommended();
         }
 
@@ -524,13 +522,16 @@ public class AutoTrader {
             }
         }
     }
-    private void displayRateList() {
-        this.displayMode = DisplayMode.RATELIST;
-        wrapper.displayRateList();
-    }
-    private void displayChart() {
-        this.displayMode = DisplayMode.CHART;
-        wrapper.displayChart();
+    private void changeDisplay(DisplayMode displayMode) {
+        this.displayMode = displayMode;
+        switch (displayMode) {
+        case CHART:
+            wrapper.displayChart();
+            break;
+        case RATELIST:
+            wrapper.displayRateList();
+            break;
+        }
     }
     private void changePair(CurrencyPair pair) {
         if (this.pair == pair) {
@@ -544,9 +545,10 @@ public class AutoTrader {
             log.info("currency pair {} is not changed because of position exists.", pair.name());
             return;
         }
-        this.displayRateList();
         this.pair = pair;
+        wrapper.displayRateList();
         wrapper.changePair(this.pair.getDescription());
+        this.changeDisplay(this.displayMode);
         this.rateAnalyzer = this.pairAnalyzerMap.get(this.pair);
         this.lotManager.changeInitialLot(pair);
         log.info("currency pair is changed to {}.", this.pair.getDescription());
@@ -647,8 +649,8 @@ public class AutoTrader {
                     }
                 })
                 .putCommand(ReservedMessage.CHANGERECOMMENDED, (args) -> this.changeRecommended())
-                .putCommand(ReservedMessage.DISPLAYCHART, (args) -> this.displayChart())
-                .putCommand(ReservedMessage.DISPLAYRATELIST, (args) -> this.displayRateList())
+                .putCommand(ReservedMessage.DISPLAYCHART, (args) -> this.changeDisplay(DisplayMode.CHART))
+                .putCommand(ReservedMessage.DISPLAYRATELIST, (args) -> this.changeDisplay(DisplayMode.RATELIST))
                 .putCommand(ReservedMessage.FORCEEXCEPTION, (args) -> this.isForceException = true)
                 .putCommand(ReservedMessage.CHANGEABLEPAIRADD, (args) -> {
                     if (args.length > 0) {
