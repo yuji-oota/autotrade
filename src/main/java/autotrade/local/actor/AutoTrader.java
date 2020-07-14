@@ -350,8 +350,10 @@ public class AutoTrader {
                 fixAll(snapshot);
                 return;
             }
+//            if (snapshot.hasBothSide()
+//                    && isFix(snapshot, 0)) {
             if (snapshot.hasBothSide()
-                    && isFix(snapshot, 0)) {
+                    && snapshot.getPositionProfit() >= 0) {
                 // 反対売買による目標金額達成で利益確定
                 log.info("achieved countertrading.");
                 fixAll(snapshot);
