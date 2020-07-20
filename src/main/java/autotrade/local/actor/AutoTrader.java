@@ -428,11 +428,15 @@ public class AutoTrader {
             // ポジションがない場合
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 orderAsk(snapshot);
-                rateAnalyzer.saveCountertradingThreshold();
+                rateAnalyzer.saveCountertradingThreshold(
+                        rateAnalyzer.getAskThreshold(),
+                        rateAnalyzer.halfWithin(Duration.ofMinutes(10)));
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
-                rateAnalyzer.saveCountertradingThreshold();
+                rateAnalyzer.saveCountertradingThreshold(
+                        rateAnalyzer.halfWithin(Duration.ofMinutes(10)),
+                        rateAnalyzer.getBidThreshold());
             }
             break;
         case ASK_SIDE:
@@ -646,7 +650,7 @@ public class AutoTrader {
                         this.changeAutoRecommended(Boolean.valueOf(args[0]));
                     }
                 })
-                .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold())
+                .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold(rateAnalyzer.getAskThreshold(), rateAnalyzer.getBidThreshold()))
                 .putCommand(ReservedMessage.CHANGEPAIR, (args) -> {
                     if (args.length > 0) {
                         this.changePair(CurrencyPair.valueOf(args[0]));

@@ -123,10 +123,9 @@ public class RateAnalyzer {
     public boolean isReachedBidThresholdWithin(Rate rate, Duration duration) {
         return rate.getBid() <= minWithin(duration);
     }
-
-    public void saveCountertradingThreshold() {
-        countertradingAsk = askThreshold;
-        countertradingBid = bidThreshold;
+    public void saveCountertradingThreshold(int ask, int bid) {
+        countertradingAsk = ask;
+        countertradingBid = bid;
         Messenger.set("countertradingAsk", String.valueOf(countertradingAsk));
         Messenger.set("countertradingBid", String.valueOf(countertradingBid));
     }
