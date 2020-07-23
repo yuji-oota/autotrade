@@ -21,6 +21,7 @@ public class RateAnalyzer {
     private List<Rate> rates;
     private int askThreshold;
     private int bidThreshold;
+    private int middleThreshold;
     private Rate highWaterMark;
     private Rate lowWaterMark;
     private int countertradingAsk;
@@ -50,6 +51,7 @@ public class RateAnalyzer {
         Duration duration = Duration.ofMinutes(10);
         askThreshold = maxWithin(duration);
         bidThreshold = minWithin(duration);
+        middleThreshold = (askThreshold + bidThreshold) / 2;
     }
 
     public int rangeWithin(Duration duration) {

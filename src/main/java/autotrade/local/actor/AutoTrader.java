@@ -393,7 +393,7 @@ public class AutoTrader {
                 // 利益確定から一定時間内の場合は注文しない
                 return false;
             }
-            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 20) {
+            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 50) {
                 // 閾値間隔が狭い場合は注文しない
                 return false;
             }
@@ -430,12 +430,12 @@ public class AutoTrader {
                 orderAsk(snapshot);
                 rateAnalyzer.saveCountertradingThreshold(
                         rateAnalyzer.getAskThreshold(),
-                        rateAnalyzer.halfWithin(Duration.ofMinutes(10)));
+                        rateAnalyzer.getMiddleThreshold());
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
                 rateAnalyzer.saveCountertradingThreshold(
-                        rateAnalyzer.halfWithin(Duration.ofMinutes(10)),
+                        rateAnalyzer.getMiddleThreshold(),
                         rateAnalyzer.getBidThreshold());
             }
             break;
