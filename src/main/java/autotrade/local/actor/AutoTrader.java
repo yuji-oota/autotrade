@@ -81,7 +81,7 @@ public class AutoTrader {
         changeablePairs = AutoTradeProperties.getList("autotrade.order.pairs").stream()
                 .map(CurrencyPair::valueOf)
                 .collect(Collectors.toSet());
-        displayMode = DisplayMode.RATELIST;
+        displayMode = DisplayMode.CHART;
 
         targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
