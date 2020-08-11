@@ -48,6 +48,7 @@ public class AutoTrader {
     }
 
     private CurrencyPair pair;
+    private CurrencyPair priorityPair;
     private Set<CurrencyPair> changeablePairs;
     private DisplayMode displayMode;
 
@@ -94,7 +95,10 @@ public class AutoTrader {
         indicatorManager = new IndicatorManager();
         pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
 
-        isAutoRecommended = AutoTradeProperties.getBoolean("autotrade.settings.autoRecommended");
+        isAutoRecommended = AutoTradeProperties.getBoolean("autotrade.autoRecommended.flag");
+        if (CurrencyPair.getDescriptions().contains(AutoTradeProperties.get("autotrade.autoRecommended.priorityPair"))) {
+            priorityPair = CurrencyPair.valueOf(AutoTradeProperties.get("autotrade.autoRecommended.priorityPair"));
+        }
     }
 
     public static AutoTrader getInstance() {
@@ -316,7 +320,15 @@ public class AutoTrader {
         // 推奨通貨ペア自動選択
         if (isAutoRecommended && !snapshot.hasPosition()) {
             changeDisplay(DisplayMode.RATELIST);
-            changeRecommended();
+
+            if (Objects.nonNull(priorityPair)
+                    && pairAnalyzerMap.get(priorityPair).rangeWithin(Duration.ofMinutes(10)) >= 50) {
+                // 優先通貨ペアが設定されている場合
+                // 且つ閾値間隔が広い場合
+                changePair(priorityPair);
+            } else {
+                changeRecommended();
+            }
         }
 
     }

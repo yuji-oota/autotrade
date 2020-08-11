@@ -1,5 +1,6 @@
 package autotrade.local.material;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,6 +20,8 @@ public enum CurrencyPair {
     AUDJPY(7),
     ;
 
+    private final static List<String> descriptions = Collections.unmodifiableList(
+            Stream.of(CurrencyPair.values()).map(CurrencyPair::getDescription).collect(Collectors.toList()));
     private int minSpread;
 
     public String getDescription() {
@@ -26,6 +29,6 @@ public enum CurrencyPair {
     }
 
     public static List<String> getDescriptions() {
-        return Stream.of(CurrencyPair.values()).map(CurrencyPair::getDescription).collect(Collectors.toList());
+        return descriptions;
     }
 }
