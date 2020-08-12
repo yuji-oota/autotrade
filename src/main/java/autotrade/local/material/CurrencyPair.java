@@ -34,6 +34,6 @@ public enum CurrencyPair {
         return descriptions;
     }
     public static List<String> getNames() {
-        return descriptions;
+        return names;
     }
 }
