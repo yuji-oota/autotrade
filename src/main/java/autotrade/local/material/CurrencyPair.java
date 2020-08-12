@@ -22,6 +22,8 @@ public enum CurrencyPair {
 
     private final static List<String> descriptions = Collections.unmodifiableList(
             Stream.of(CurrencyPair.values()).map(CurrencyPair::getDescription).collect(Collectors.toList()));
+    private final static List<String> names = Collections.unmodifiableList(
+            Stream.of(CurrencyPair.values()).map(CurrencyPair::name).collect(Collectors.toList()));
     private int minSpread;
 
     public String getDescription() {
@@ -29,6 +31,9 @@ public enum CurrencyPair {
     }
 
     public static List<String> getDescriptions() {
+        return descriptions;
+    }
+    public static List<String> getNames() {
         return descriptions;
     }
 }

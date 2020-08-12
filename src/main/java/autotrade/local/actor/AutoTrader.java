@@ -96,7 +96,7 @@ public class AutoTrader {
         pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
 
         isAutoRecommended = AutoTradeProperties.getBoolean("autotrade.autoRecommended.flag");
-        if (CurrencyPair.getDescriptions().contains(AutoTradeProperties.get("autotrade.autoRecommended.priorityPair"))) {
+        if (CurrencyPair.getNames().contains(AutoTradeProperties.get("autotrade.autoRecommended.priorityPair"))) {
             priorityPair = CurrencyPair.valueOf(AutoTradeProperties.get("autotrade.autoRecommended.priorityPair"));
         }
     }
