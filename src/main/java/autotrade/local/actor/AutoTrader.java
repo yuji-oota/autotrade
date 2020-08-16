@@ -171,6 +171,7 @@ public class AutoTrader {
             // Same引継ぎ
             Snapshot shapshot = buildSnapshot();
             if (shapshot.isPositionSame()) {
+                changeThroughOrder(true);
                 log.info("load Snapshot when samed to SameManager.");
                 SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenSamed"))));
             }
@@ -290,7 +291,6 @@ public class AutoTrader {
         if (snapshot.isPositionSame()) {
             if (!SameManager.hasInstance()) {
                 changeThroughOrder(true);
-                changeThroughFix(true);
             }
             SameManager.setSnapshot(snapshot);
         }
