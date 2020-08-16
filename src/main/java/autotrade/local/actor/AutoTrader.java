@@ -355,18 +355,29 @@ public class AutoTrader {
                 return;
             }
 
-            // 通常の利益確定判定
-            if (isFix(snapshot, lotManager.getInitial() * 10)) {
-                // 目標金額達成で利益確定
-                log.info("achieved target amount.");
-                fixAll(snapshot);
-                return;
+            if (pair == priorityPair) {
+                // 優先通貨ペアの場合
+                if (isFix(snapshot, lotManager.getInitial() * 10)) {
+                    // 目標金額達成で利益確定
+                    log.info("achieved target amount.");
+                    fixAll(snapshot);
+                    return;
+                }
+            } else {
+                // その他通貨ペアの場合
+                if (snapshot.getPositionProfit() >= lotManager.getInitial() * 5) {
+                    // 目標金額達成で利益確定
+                    log.info("achieved target amount.");
+                    fixAll(snapshot);
+                    return;
+                }
             }
 //            if (snapshot.hasBothSide()
 //                    && isFix(snapshot, 0)) {
             if (snapshot.hasBothSide()
                     && snapshot.getPositionProfit() >= 0) {
-                // 反対売買による目標金額達成で利益確定
+                // 反対売買の場合
+                // 目標金額達成で利益確定
                 log.info("achieved countertrading.");
                 fixAll(snapshot);
                 return;
