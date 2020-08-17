@@ -291,6 +291,7 @@ public class AutoTrader {
         if (snapshot.isPositionSame()) {
             if (!SameManager.hasInstance()) {
                 changeThroughOrder(true);
+                changeAutoRecommended(false);
             }
             SameManager.setSnapshot(snapshot);
         }
@@ -353,6 +354,7 @@ public class AutoTrader {
                     fixAll(snapshot);
                     // 注文再開
                     changeThroughOrder(false);
+                    changeAutoRecommended(true);
                 }
                 return;
             }
