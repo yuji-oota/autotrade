@@ -351,6 +351,8 @@ public class AutoTrader {
                 if (SameManager.getInstance().isRecovered(snapshot)) {
                     // Sameポジション回復達成で利益確定
                     fixAll(snapshot);
+                    // 注文再開
+                    changeThroughOrder(false);
                 }
                 return;
             }
