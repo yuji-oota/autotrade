@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import autotrade.local.material.Rate;
 import lombok.Getter;
@@ -26,6 +27,7 @@ public class RateAnalyzer {
     private Rate lowWaterMark;
     private int countertradingAsk;
     private int countertradingBid;
+    private boolean isSenceOfDirection;
 
     public RateAnalyzer() {
         rates = new ArrayList<>();
@@ -145,5 +147,23 @@ public class RateAnalyzer {
         return rates.stream()
                 .min(Comparator.comparing(Rate::getTimestamp))
                 .orElse(Rate.builder().timestamp(LocalDateTime.now()).build());
+    }
+    public void saveIsSenceOfDirection() {
+        // 直近10分の1分間隔にmiddleThresholdが何回通過しているかカウントする
+        long count = IntStream.range(0, 10).filter(i -> {
+            LocalDateTime now = LocalDateTime.now();
+            int max = maxBetween(now.minus(Duration.ofMinutes(i + 1)), now.minus(Duration.ofMinutes(i)));
+            int min = minBetween(now.minus(Duration.ofMinutes(i + 1)), now.minus(Duration.ofMinutes(i)));
+            if (min <= middleThreshold && middleThreshold <= max) {
+                return true;
+            }
+            return false;
+        }).count();
+
+        isSenceOfDirection = true;
+        if (count > 2) {
+            // 何度も通過している場合は方向感無しとみなす
+            isSenceOfDirection = false;
+        }
     }
 }

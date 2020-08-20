@@ -359,8 +359,8 @@ public class AutoTrader {
                 return;
             }
 
-            if (pair == priorityPair) {
-                // 優先通貨ペアの場合
+            if (rateAnalyzer.isSenceOfDirection()) {
+                // 値動きに方向感がある場合
                 if (isFix(snapshot, lotManager.getInitial() * 5)) {
                     // 目標金額達成で利益確定
                     log.info("achieved target amount.");
@@ -368,7 +368,7 @@ public class AutoTrader {
                     return;
                 }
             } else {
-                // その他通貨ペアの場合
+                // 値動きに方向感がない場合
                 if (snapshot.getPositionProfit() >= lotManager.getInitial() * 5) {
                     // 目標金額達成で利益確定
                     log.info("achieved target amount.");
@@ -458,12 +458,14 @@ public class AutoTrader {
                 rateAnalyzer.saveCountertradingThreshold(
                         rateAnalyzer.getAskThreshold(),
                         rateAnalyzer.getMiddleThreshold());
+                rateAnalyzer.saveIsSenceOfDirection();
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
                 rateAnalyzer.saveCountertradingThreshold(
                         rateAnalyzer.getMiddleThreshold(),
                         rateAnalyzer.getBidThreshold());
+                rateAnalyzer.saveIsSenceOfDirection();
             }
             break;
         case ASK_SIDE:
