@@ -361,7 +361,7 @@ public class AutoTrader {
 
             if (pair == priorityPair) {
                 // 優先通貨ペアの場合
-                if (isFix(snapshot, lotManager.getInitial() * 10)) {
+                if (isFix(snapshot, lotManager.getInitial() * 5)) {
                     // 目標金額達成で利益確定
                     log.info("achieved target amount.");
                     fixAll(snapshot);
