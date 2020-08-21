@@ -172,8 +172,7 @@ public class AutoTrader {
             Snapshot shapshot = buildSnapshot();
             if (shapshot.isPositionSame()) {
                 changeThroughOrder(true);
-                log.info("load Snapshot when samed to SameManager.");
-                SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenSamed"))));
+                loadSameSnapshot();
             }
             // 反対売買閾値引継ぎ
             if (shapshot.hasPosition()) {
@@ -627,6 +626,10 @@ public class AutoTrader {
         changeablePairs.remove(pair);
         log.info("{} ia removed from changeable pair.", pair.getDescription());
     }
+    private void loadSameSnapshot() {
+        log.info("load Snapshot when samed to SameManager.");
+        SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenSamed"))));
+    }
 
     private MessageListener customizeMessageListener() {
         return new MessageListener()
@@ -699,6 +702,7 @@ public class AutoTrader {
                         this.removeChangeablePair(CurrencyPair.valueOf(args[0]));
                     }
                 })
+                .putCommand(ReservedMessage.LOADSAMESNAPSHOT, (args) -> this.loadSameSnapshot())
                 ;
     }
 
