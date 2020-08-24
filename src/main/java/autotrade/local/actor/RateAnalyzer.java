@@ -165,5 +165,6 @@ public class RateAnalyzer {
             // 何度も通過している場合は方向感無しとみなす
             isSenceOfDirection = false;
         }
+        log.info("isSenceOfDirection {}, internal count {}", isSenceOfDirection, count);
     }
 }
