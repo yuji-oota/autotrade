@@ -1,5 +1,6 @@
 package autotrade.local.actor;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import autotrade.local.material.Rate;
+import autotrade.local.utility.AutoTradeProperties;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +25,9 @@ public class RateAnalyzer {
     private int askThreshold;
     private int bidThreshold;
     private int middleThreshold;
+    private BigDecimal countertradingRatio;
+    private int ratioThresholdAsk;
+    private int ratioThresholdBid;
     private Rate highWaterMark;
     private Rate lowWaterMark;
     private int countertradingAsk;
@@ -35,6 +40,7 @@ public class RateAnalyzer {
         bidThreshold = Integer.MIN_VALUE;
         highWaterMark = Rate.builder().ask(Integer.MIN_VALUE).build();
         lowWaterMark = Rate.builder().bid(Integer.MAX_VALUE).build();
+        countertradingRatio = AutoTradeProperties.getBigDecimal("autotrade.lot.countertrading.ratio");
     }
 
     public void add(Rate rate) {
@@ -54,6 +60,9 @@ public class RateAnalyzer {
         askThreshold = maxWithin(duration);
         bidThreshold = minWithin(duration);
         middleThreshold = (askThreshold + bidThreshold) / 2;
+        int ratioDiff = countertradingRatio.multiply(BigDecimal.valueOf((askThreshold - bidThreshold))).intValue();
+        ratioThresholdAsk = askThreshold - ratioDiff;
+        ratioThresholdBid = bidThreshold + ratioDiff;
     }
 
     public int rangeWithin(Duration duration) {

@@ -456,13 +456,13 @@ public class AutoTrader {
                 orderAsk(snapshot);
                 rateAnalyzer.saveCountertradingThreshold(
                         rateAnalyzer.getAskThreshold(),
-                        rateAnalyzer.getMiddleThreshold());
+                        rateAnalyzer.getRatioThresholdAsk());
                 rateAnalyzer.saveIsSenceOfDirection();
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
                 rateAnalyzer.saveCountertradingThreshold(
-                        rateAnalyzer.getMiddleThreshold(),
+                        rateAnalyzer.getRatioThresholdBid(),
                         rateAnalyzer.getBidThreshold());
                 rateAnalyzer.saveIsSenceOfDirection();
             }
