@@ -286,6 +286,12 @@ public class AutoTrader {
         // 最新情報取得
         Snapshot snapshot = buildSnapshot();
 
+        // 注文モード変更
+        if (snapshot.getTotalProfit() > targetAmountOneDay) {
+            // 一日の目標金額を達成した場合は消極的に取引する
+            lotManager.modeNegative();
+        }
+
         // SameManager初期化
         if (snapshot.isPositionSame()) {
             if (!SameManager.hasInstance()) {
@@ -444,10 +450,6 @@ public class AutoTrader {
     private void order(Snapshot snapshot) {
 
         Rate rate = snapshot.getRate();
-        if (snapshot.getTotalProfit() > targetAmountOneDay) {
-            // 一日の目標金額を達成した場合は消極的に取引する
-            lotManager.modeNegative();
-        }
 
         switch (snapshot.getStatus()) {
         case NONE:
