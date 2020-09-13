@@ -157,17 +157,20 @@ public class RateAnalyzer {
                 .min(Comparator.comparing(Rate::getTimestamp))
                 .orElse(Rate.builder().timestamp(LocalDateTime.now()).build());
     }
-    public void saveIsSenceOfDirection() {
-        // 直近10分の1分間隔にmiddleThresholdが何回通過しているかカウントする
-        long count = IntStream.range(0, 10).filter(i -> {
+    public long passCountWithin(int threshold, int minutes) {
+        return IntStream.range(0, minutes).filter(i -> {
             LocalDateTime now = LocalDateTime.now();
             int max = maxBetween(now.minus(Duration.ofMinutes(i + 1)), now.minus(Duration.ofMinutes(i)));
             int min = minBetween(now.minus(Duration.ofMinutes(i + 1)), now.minus(Duration.ofMinutes(i)));
-            if (min <= middleThreshold && middleThreshold <= max) {
+            if (min <= threshold && threshold <= max) {
                 return true;
             }
             return false;
         }).count();
+    }
+    public void saveIsSenceOfDirection() {
+        // 直近10分の1分間隔にmiddleThresholdが何回通過しているかカウントする
+        long count = passCountWithin(middleThreshold, 10);
 
         isSenceOfDirection = true;
         if (count > 2) {

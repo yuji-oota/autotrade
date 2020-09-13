@@ -454,12 +454,15 @@ public class AutoTrader {
         switch (snapshot.getStatus()) {
         case NONE:
             // ポジションがない場合
+
+            // 閾値超過を判定
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 orderAsk(snapshot);
                 rateAnalyzer.saveCountertradingThreshold(
                         rateAnalyzer.getAskThreshold(),
                         rateAnalyzer.getRatioThresholdAsk());
                 rateAnalyzer.saveIsSenceOfDirection();
+                return;
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
@@ -467,7 +470,29 @@ public class AutoTrader {
                         rateAnalyzer.getRatioThresholdBid(),
                         rateAnalyzer.getBidThreshold());
                 rateAnalyzer.saveIsSenceOfDirection();
+                return;
             }
+
+            // 急反転、且つ１分足の閾値超過を判定
+            if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))
+                    && rateAnalyzer.passCountWithin(rate.getAsk(), 5) == 2) {
+                orderAsk(snapshot);
+                rateAnalyzer.saveCountertradingThreshold(
+                        rate.getAsk(),
+                        rate.getAsk() - (rateAnalyzer.getAskThreshold() - rateAnalyzer.getRatioThresholdAsk()));
+                rateAnalyzer.saveIsSenceOfDirection();
+                return;
+            }
+            if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))
+                    && rateAnalyzer.passCountWithin(rate.getBid(), 5) == 2) {
+                orderBid(snapshot);
+                rateAnalyzer.saveCountertradingThreshold(
+                        rate.getBid() + (rateAnalyzer.getRatioThresholdBid() - rateAnalyzer.getBidThreshold()),
+                        rate.getBid());
+                rateAnalyzer.saveIsSenceOfDirection();
+                return;
+            }
+
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合
