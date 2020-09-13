@@ -40,6 +40,10 @@ public class MessageListener extends RedisPubSubAdapter<String, String> {
         CHANGEABLEPAIRADD,
         CHANGEABLEPAIRREMOVE,
         LOADSAMESNAPSHOT,
+        RESERVELIMITFIXASK,
+        RESERVELIMITFIXBID,
+        RESERVESTOPFIXASK,
+        RESERVESTOPFIXBID,
     }
 
     private Map<ReservedMessage, Consumer<String[]>> commandMap;

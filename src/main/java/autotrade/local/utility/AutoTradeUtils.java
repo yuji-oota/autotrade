@@ -95,4 +95,8 @@ public class AutoTradeUtils {
         }
     }
 
+    public static boolean isInt(String str) {
+        return str.chars().allMatch(Character::isDigit);
+    }
+
 }

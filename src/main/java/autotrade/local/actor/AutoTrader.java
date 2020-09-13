@@ -60,6 +60,7 @@ public class AutoTrader {
     private IndicatorManager indicatorManager;
     private UploadManager uploadManager;
     private LotManager lotManager;
+    private ReserveManager reserveManager;
 
     @SuppressWarnings("unused")
     private StatefulRedisPubSubConnection<String, String> pubSubConnection;
@@ -95,6 +96,7 @@ public class AutoTrader {
         uploadManager = new UploadManager();
         lotManager = new LotManager();
         indicatorManager = new IndicatorManager();
+        reserveManager = new ReserveManager();
         pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
 
         isAutoRecommended = AutoTradeProperties.getBoolean("autotrade.autoRecommended.flag");
@@ -351,6 +353,26 @@ public class AutoTrader {
             SameManager.close();
             break;
         case SAME:
+            if (reserveManager.isResevedLimitFixAsk()
+                    && reserveManager.isLimitFixAsk(snapshot.getRate())) {
+                fixAsk(snapshot);
+                reserveManager.resetReserve();
+            }
+            if (reserveManager.isResevedLimitFixBid()
+                    && reserveManager.isLimitFixBid(snapshot.getRate())) {
+                fixBid(snapshot);
+                reserveManager.resetReserve();
+            }
+            if (reserveManager.isResevedStopFixAsk()
+                    && reserveManager.isStopFixAsk(snapshot.getRate())) {
+                fixAsk(snapshot);
+                reserveManager.resetReserve();
+            }
+            if (reserveManager.isResevedStopFixBid()
+                    && reserveManager.isStopFixBid(snapshot.getRate())) {
+                fixBid(snapshot);
+                reserveManager.resetReserve();
+            }
             break;
         case ASK_SIDE:
         case BID_SIDE:
@@ -569,12 +591,24 @@ public class AutoTrader {
     }
     private void fixAll(Snapshot snapshot) {
         wrapper.fixAll();
-        AutoTradeUtils.printObject(snapshot);
         AutoTradeUtils.playAudioRandom(AudioPath.FixSoundEffect);
-        lastFixed = System.currentTimeMillis();
-        // ベリファイ
         verifyOrder(0, Snapshot::getAskLot);
         verifyOrder(0, Snapshot::getBidLot);
+        lastFixed = System.currentTimeMillis();
+        log.info("fix all position.");
+        AutoTradeUtils.printObject(snapshot);
+    }
+    private void fixAsk(Snapshot snapshot) {
+        wrapper.fixAsk();
+        verifyOrder(0, Snapshot::getAskLot);
+        log.info("fix ask position.");
+        AutoTradeUtils.printObject(snapshot);
+    }
+    private void fixBid(Snapshot snapshot) {
+        wrapper.fixBid();
+        verifyOrder(0, Snapshot::getBidLot);
+        log.info("fix bid position.");
+        AutoTradeUtils.printObject(snapshot);
     }
     private void verifyOrder(int lot, ToIntFunction<Snapshot> lotAfterOrder) {
         long verifyStarted = System.currentTimeMillis();
@@ -735,6 +769,34 @@ public class AutoTrader {
                     }
                 })
                 .putCommand(ReservedMessage.LOADSAMESNAPSHOT, (args) -> this.loadSameSnapshot())
+                .putCommand(ReservedMessage.RESERVELIMITFIXASK, (args) -> {
+                    if (args.length > 0) {
+                        if (AutoTradeUtils.isInt(args[0])) {
+                            reserveManager.reserveLimitFixAsk(Integer.parseInt(args[0]));
+                        }
+                    }
+                })
+                .putCommand(ReservedMessage.RESERVELIMITFIXBID, (args) -> {
+                    if (args.length > 0) {
+                        if (AutoTradeUtils.isInt(args[0])) {
+                            reserveManager.reserveLimitFixBid(Integer.parseInt(args[0]));
+                        }
+                    }
+                })
+                .putCommand(ReservedMessage.RESERVESTOPFIXASK, (args) -> {
+                    if (args.length > 0) {
+                        if (AutoTradeUtils.isInt(args[0])) {
+                            reserveManager.reserveStopFixAsk(Integer.parseInt(args[0]));
+                        }
+                    }
+                })
+                .putCommand(ReservedMessage.RESERVESTOPFIXBID, (args) -> {
+                    if (args.length > 0) {
+                        if (AutoTradeUtils.isInt(args[0])) {
+                            reserveManager.reserveStopFixBid(Integer.parseInt(args[0]));
+                        }
+                    }
+                })
                 ;
     }
 
