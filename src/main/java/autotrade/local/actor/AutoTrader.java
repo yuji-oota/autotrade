@@ -1,6 +1,7 @@
 package autotrade.local.actor;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -84,7 +85,8 @@ public class AutoTrader {
                 .collect(Collectors.toSet());
         displayMode = DisplayMode.CHART;
 
-        targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
+//        targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
+
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
 
@@ -167,6 +169,9 @@ public class AutoTrader {
             }
             Messenger.set("startMargin", String.valueOf(startMargin));
             Messenger.set("startMarginMode", StartMarginMode.CARRY_OVER.name());
+
+            // 目標金額設定
+            targetAmountOneDay = BigDecimal.valueOf(startMargin).multiply(BigDecimal.valueOf(0.01)).intValue();
 
             // Same引継ぎ
             Snapshot shapshot = buildSnapshot();
