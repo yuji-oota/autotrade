@@ -360,7 +360,7 @@ public class AutoTrader {
 
             if (rateAnalyzer.isSenceOfDirection()) {
                 // 値動きに方向感がある場合
-                if (isFix(snapshot, lotManager.getInitial() * 5)) {
+                if (isFix(snapshot, lotManager.getInitial() * 0)) {
                     // 目標金額達成で利益確定
                     log.info("achieved target amount.");
                     fixAll(snapshot);
