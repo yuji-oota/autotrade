@@ -6,23 +6,26 @@ import lombok.Data;
 @Data
 public class ReserveManager {
 
-    private int reservedValue;
+    private int limitFixAsk;
+    private int limitFixBid;
+    private int stopFixAsk;
+    private int stopFixBid;
     private boolean isResevedLimitFixAsk;
     private boolean isResevedLimitFixBid;
     private boolean isResevedStopFixAsk;
     private boolean isResevedStopFixBid;
 
     public boolean isLimitFixAsk(Rate rate) {
-        return rate.getBid() >= reservedValue;
+        return rate.getBid() >= limitFixAsk;
     }
     public boolean isLimitFixBid(Rate rate) {
-        return rate.getAsk() <= reservedValue;
+        return rate.getAsk() <= limitFixBid;
     }
     public boolean isStopFixAsk(Rate rate) {
-        return rate.getBid() <= reservedValue;
+        return rate.getBid() <= stopFixAsk;
     }
     public boolean isStopFixBid(Rate rate) {
-        return rate.getAsk() >= reservedValue;
+        return rate.getAsk() >= stopFixBid;
     }
 
     public void resetReserve() {
@@ -33,19 +36,19 @@ public class ReserveManager {
     }
 
     public void reserveLimitFixAsk(int reservedValue) {
-        this.reservedValue = reservedValue;
+        this.limitFixAsk = reservedValue;
         isResevedLimitFixAsk = true;
     }
     public void reserveLimitFixBid(int reservedValue) {
-        this.reservedValue = reservedValue;
+        this.limitFixBid = reservedValue;
         isResevedLimitFixBid = true;
     }
     public void reserveStopFixAsk(int reservedValue) {
-        this.reservedValue = reservedValue;
+        this.stopFixAsk = reservedValue;
         isResevedStopFixAsk = true;
     }
     public void reserveStopFixBid(int reservedValue) {
-        this.reservedValue = reservedValue;
+        this.stopFixBid = reservedValue;
         isResevedStopFixBid = true;
     }
 
