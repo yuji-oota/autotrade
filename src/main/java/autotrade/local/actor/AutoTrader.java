@@ -3,7 +3,6 @@ package autotrade.local.actor;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -40,46 +39,40 @@ import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AutoTrader {
+public abstract class AutoTrader {
 
-    private static AutoTrader instance;
-    private static Path logFile;
-    static {
-        logFile = Paths.get("log", "autotrade-local.log");
-    }
+    protected CurrencyPair pair;
+    protected CurrencyPair priorityPair;
+    protected Set<CurrencyPair> changeablePairs;
+    protected DisplayMode displayMode;
 
-    private CurrencyPair pair;
-    private CurrencyPair priorityPair;
-    private Set<CurrencyPair> changeablePairs;
-    private DisplayMode displayMode;
-
-    private WebDriver driver;
-    private WebDriverWrapper wrapper;
-    private Map<CurrencyPair, RateAnalyzer> pairAnalyzerMap;
-    private RateAnalyzer rateAnalyzer;
-    private IndicatorManager indicatorManager;
-    private UploadManager uploadManager;
-    private LotManager lotManager;
-    private ReserveManager reserveManager;
+    protected WebDriver driver;
+    protected WebDriverWrapper wrapper;
+    protected Map<CurrencyPair, RateAnalyzer> pairAnalyzerMap;
+    protected RateAnalyzer rateAnalyzer;
+    protected IndicatorManager indicatorManager;
+    protected UploadManager uploadManager;
+    protected LotManager lotManager;
+    protected ReserveManager reserveManager;
 
     @SuppressWarnings("unused")
-    private StatefulRedisPubSubConnection<String, String> pubSubConnection;
+    protected StatefulRedisPubSubConnection<String, String> pubSubConnection;
 
-    private int targetAmountOneDay;
-    private int startMargin;
+    protected int targetAmountOneDay;
+    protected int startMargin;
 
-    private LocalTime inactiveStart;
-    private LocalTime inactiveEnd;
+    protected LocalTime inactiveStart;
+    protected LocalTime inactiveEnd;
 
-    private long lastFixed;
+    protected long lastFixed;
 
-    private boolean isThroughOrder;
-    private boolean isThroughFix;
-    private boolean isIgnoreSpread;
-    private boolean isAutoRecommended;
-    private boolean isForceException;
+    protected boolean isThroughOrder;
+    protected boolean isThroughFix;
+    protected boolean isIgnoreSpread;
+    protected boolean isAutoRecommended;
+    protected boolean isForceException;
 
-    private AutoTrader() {
+    public AutoTrader() {
         pair = CurrencyPair.USDJPY;
         changeablePairs = AutoTradeProperties.getList("autotrade.order.pairs").stream()
                 .map(CurrencyPair::valueOf)
@@ -103,13 +96,6 @@ public class AutoTrader {
         if (CurrencyPair.getNames().contains(AutoTradeProperties.get("autotrade.autoRecommended.priorityPair"))) {
             priorityPair = CurrencyPair.valueOf(AutoTradeProperties.get("autotrade.autoRecommended.priorityPair"));
         }
-    }
-
-    public static AutoTrader getInstance() {
-        if (Objects.isNull(instance)) {
-            instance = new AutoTrader();
-        }
-        return instance;
     }
 
     public void operation() {
@@ -216,7 +202,10 @@ public class AutoTrader {
 
     }
 
-    private Snapshot buildSnapshot() {
+    abstract protected void order(Snapshot snapshot);
+    abstract protected void fix(Snapshot snapshot);
+
+    protected Snapshot buildSnapshot() {
         return Snapshot.builder()
                 .pair(wrapper.getPair())
                 .askLot(AutoTradeUtils.toInt(wrapper.getAskLot()))
@@ -231,14 +220,14 @@ public class AutoTrader {
                 .build();
     }
 
-    private Rate buildRate() {
+    protected Rate buildRate() {
         return Rate.builder()
                 .ask(AutoTradeUtils.toInt(wrapper.getAskRate()))
                 .bid(AutoTradeUtils.toInt(wrapper.getBidRate()))
                 .timestamp(LocalDateTime.now())
                 .build();
     }
-    private Rate buildRateFromList(CurrencyPair pair) {
+    protected Rate buildRateFromList(CurrencyPair pair) {
         return Rate.builder()
                 .ask(AutoTradeUtils.toInt(wrapper.getAskRateFromList(pair)))
                 .bid(AutoTradeUtils.toInt(wrapper.getBidRateFromList(pair)))
@@ -246,11 +235,11 @@ public class AutoTrader {
                 .build();
     }
 
-    private boolean hasPosition() {
+    protected boolean hasPosition() {
         return AutoTradeUtils.toInt(wrapper.getAskLot()) > 0 || AutoTradeUtils.toInt(wrapper.getBidLot()) > 0;
     }
 
-    private void trade() {
+    protected void trade() {
 
         Map<CurrencyPair, Rate> pairRateMap = new HashMap<>();
 
@@ -288,7 +277,7 @@ public class AutoTrader {
 
     }
 
-    private void tradePostProcess() {
+    protected void tradePostProcess() {
 
         // 最新情報取得
         Snapshot snapshot = buildSnapshot();
@@ -346,90 +335,7 @@ public class AutoTrader {
 
     }
 
-    private void fix(Snapshot snapshot) {
-
-        switch (snapshot.getStatus()) {
-        case NONE:
-            SameManager.close();
-            break;
-        case SAME:
-            if (reserveManager.isResevedLimitFixAsk()
-                    && reserveManager.isLimitFixAsk(snapshot.getRate())) {
-                fixAsk(snapshot);
-                reserveManager.resetReserve();
-            }
-            if (reserveManager.isResevedLimitFixBid()
-                    && reserveManager.isLimitFixBid(snapshot.getRate())) {
-                fixBid(snapshot);
-                reserveManager.resetReserve();
-            }
-            if (reserveManager.isResevedStopFixAsk()
-                    && reserveManager.isStopFixAsk(snapshot.getRate())) {
-                fixAsk(snapshot);
-                reserveManager.resetReserve();
-            }
-            if (reserveManager.isResevedStopFixBid()
-                    && reserveManager.isStopFixBid(snapshot.getRate())) {
-                fixBid(snapshot);
-                reserveManager.resetReserve();
-            }
-            break;
-        case ASK_SIDE:
-        case BID_SIDE:
-
-            // Sameポジション発生後の利益確定判定
-            if (SameManager.hasInstance()) {
-
-                // Sameポジション回復中の場合
-                if (SameManager.getInstance().isRecovered(snapshot)) {
-                    // Sameポジション回復達成で利益確定
-                    fixAll(snapshot);
-                    // 注文再開
-                    changeThroughOrder(false);
-                    changeAutoRecommended(true);
-                }
-                return;
-            }
-
-//            if (rateAnalyzer.isSenceOfDirection()) {
-//                // 値動きに方向感がある場合
-//                if (isFix(snapshot, lotManager.getInitial() * 0)) {
-//                    // 目標金額達成で利益確定
-//                    log.info("achieved target amount.");
-//                    fixAll(snapshot);
-//                    return;
-//                }
-//            } else {
-//                // 値動きに方向感がない場合
-//                if (snapshot.getPositionProfit() >= lotManager.getInitial() * 5) {
-//                    // 目標金額達成で利益確定
-//                    log.info("achieved target amount.");
-//                    fixAll(snapshot);
-//                    return;
-//                }
-//            }
-//            if (snapshot.hasBothSide()
-//                    && snapshot.getPositionProfit() >= 0) {
-//                // 反対売買の場合
-//                // 目標金額達成で利益確定
-//                log.info("achieved countertrading.");
-//                fixAll(snapshot);
-//                return;
-//            }
-
-            // 利益0以上1分足逆行で利益確定
-            if (isFix(snapshot, lotManager.getInitial() * 0)) {
-                // 目標金額達成で利益確定
-                log.info("achieved target amount.");
-                fixAll(snapshot);
-                return;
-            }
-            break;
-        default:
-        }
-    }
-
-    private boolean isFix(Snapshot snapshot, int targetAmount) {
+    protected boolean isFix(Snapshot snapshot, int targetAmount) {
         if (snapshot.getPositionProfit() >= targetAmount) {
             if (snapshot.isPositionAskSide()) {
                 return rateAnalyzer.isReachedBidThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
@@ -441,7 +347,7 @@ public class AutoTrader {
         return false;
     }
 
-    private boolean isOrderable(Snapshot snapshot) {
+    protected boolean isOrderable(Snapshot snapshot) {
         if (Duration.between(rateAnalyzer.getEarliestRate().getTimestamp(), LocalDateTime.now()).toMinutes() < 5) {
             // 過去Rateがある程度存在しない場合は注文しない
             return false;
@@ -480,80 +386,7 @@ public class AutoTrader {
         return true;
     }
 
-    private void order(Snapshot snapshot) {
-
-        Rate rate = snapshot.getRate();
-
-        switch (snapshot.getStatus()) {
-        case NONE:
-            // ポジションがない場合
-
-            // 閾値超過を判定
-            if (rateAnalyzer.isReachedAskThreshold(rate)) {
-                orderAsk(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
-                        rateAnalyzer.getAskThreshold(),
-                        rateAnalyzer.getRatioThresholdAsk());
-                rateAnalyzer.saveIsSenceOfDirection();
-                return;
-            }
-            if (rateAnalyzer.isReachedBidThreshold(rate)) {
-                orderBid(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
-                        rateAnalyzer.getRatioThresholdBid(),
-                        rateAnalyzer.getBidThreshold());
-                rateAnalyzer.saveIsSenceOfDirection();
-                return;
-            }
-
-            // 急反転、且つ１分足の閾値超過を判定
-            if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))
-                    && rateAnalyzer.passCountWithin(rate.getAsk(), 5) == 2) {
-                orderAsk(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
-                        rate.getAsk(),
-                        rate.getAsk() - (rateAnalyzer.getAskThreshold() - rateAnalyzer.getRatioThresholdAsk()));
-                rateAnalyzer.saveIsSenceOfDirection();
-                return;
-            }
-            if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))
-                    && rateAnalyzer.passCountWithin(rate.getBid(), 5) == 2) {
-                orderBid(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
-                        rate.getBid() + (rateAnalyzer.getRatioThresholdBid() - rateAnalyzer.getBidThreshold()),
-                        rate.getBid());
-                rateAnalyzer.saveIsSenceOfDirection();
-                return;
-            }
-
-            break;
-        case ASK_SIDE:
-            // 買いポジションが多い場合
-            if (!SameManager.hasInstance()
-                    && rateAnalyzer.isReachedCountertradingBid(rate)) {
-                // 下値閾値を超えた場合
-                // 逆ポジション取得
-                orderBid(snapshot);
-            }
-            break;
-        case BID_SIDE:
-            // 売りポジションが多い場合
-            if (!SameManager.hasInstance()
-                    && rateAnalyzer.isReachedCountertradingAsk(rate)) {
-                // 上値閾値を超えた場合
-                // 逆ポジション取得
-                orderAsk(snapshot);
-            }
-            break;
-        case SAME:
-            // ポジションが同数の場合
-            break;
-        default:
-        }
-
-    }
-
-    private void forceSame() {
+    protected void forceSame() {
         Snapshot snapshot = buildSnapshot();
         int askLot = snapshot.getAskLot();
         int bidLot = snapshot.getBidLot();
@@ -565,37 +398,37 @@ public class AutoTrader {
         }
     }
 
-    private boolean isInactiveTime() {
+    protected boolean isInactiveTime() {
         return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
     }
 
-    private void orderAsk(Snapshot snapshot) {
+    protected void orderAsk(Snapshot snapshot) {
         int lot = lotManager.nextLot(snapshot);
         orderAsk(lot);
         log.info("order ask. lot {}", lot);
         AutoTradeUtils.printObject(snapshot);
         AutoTradeUtils.playAudioRandom(AudioPath.OrderSoundEffect);
     }
-    private void orderBid(Snapshot snapshot) {
+    protected void orderBid(Snapshot snapshot) {
         int lot = lotManager.nextLot(snapshot);
         orderBid(lot);
         log.info("order bid. lot {}", lot);
         AutoTradeUtils.printObject(snapshot);
         AutoTradeUtils.playAudioRandom(AudioPath.OrderSoundEffect);
     }
-    private void orderAsk(int lot) {
+    protected void orderAsk(int lot) {
         int beforeLot = AutoTradeUtils.toInt(wrapper.getAskLot());
         wrapper.setLot(lot);
         wrapper.orderAsk();
         verifyOrder(beforeLot + lot, Snapshot::getAskLot);
     }
-    private void orderBid(int lot) {
+    protected void orderBid(int lot) {
         int beforeLot = AutoTradeUtils.toInt(wrapper.getBidLot());
         wrapper.setLot(lot);
         wrapper.orderBid();
         verifyOrder(beforeLot + lot, Snapshot::getBidLot);
     }
-    private void fixAll(Snapshot snapshot) {
+    protected void fixAll(Snapshot snapshot) {
         wrapper.fixAll();
         AutoTradeUtils.playAudioRandom(AudioPath.FixSoundEffect);
         verifyOrder(0, Snapshot::getAskLot);
@@ -604,19 +437,19 @@ public class AutoTrader {
         log.info("fix all position.");
         AutoTradeUtils.printObject(snapshot);
     }
-    private void fixAsk(Snapshot snapshot) {
+    protected void fixAsk(Snapshot snapshot) {
         wrapper.fixAsk();
         verifyOrder(0, Snapshot::getAskLot);
         log.info("fix ask position.");
         AutoTradeUtils.printObject(snapshot);
     }
-    private void fixBid(Snapshot snapshot) {
+    protected void fixBid(Snapshot snapshot) {
         wrapper.fixBid();
         verifyOrder(0, Snapshot::getBidLot);
         log.info("fix bid position.");
         AutoTradeUtils.printObject(snapshot);
     }
-    private void verifyOrder(int lot, ToIntFunction<Snapshot> lotAfterOrder) {
+    protected void verifyOrder(int lot, ToIntFunction<Snapshot> lotAfterOrder) {
         long verifyStarted = System.currentTimeMillis();
         while (true) {
             AutoTradeUtils.sleep(Duration.ofMillis(500));
@@ -630,7 +463,7 @@ public class AutoTrader {
             }
         }
     }
-    private void changeDisplay(DisplayMode displayMode) {
+    protected void changeDisplay(DisplayMode displayMode) {
         this.displayMode = displayMode;
         switch (displayMode) {
         case CHART:
@@ -641,7 +474,7 @@ public class AutoTrader {
             break;
         }
     }
-    private void changePair(CurrencyPair pair) {
+    protected void changePair(CurrencyPair pair) {
         if (this.pair == pair) {
             return;
         }
@@ -661,7 +494,7 @@ public class AutoTrader {
         this.lotManager.changeInitialLot(pair);
         log.info("currency pair is changed to {}.", this.pair.getDescription());
     }
-    private void changeRecommended() {
+    protected void changeRecommended() {
         if (this.displayMode != DisplayMode.RATELIST) {
             log.info("change recommended is executable when display mode RATELIST.");
             return;
@@ -674,39 +507,39 @@ public class AutoTrader {
         this.changePair(recommended);
     }
 
-    private void changeThroughOrder(boolean flag) {
+    protected void changeThroughOrder(boolean flag) {
         this.isThroughOrder = flag;
         log.info("through order setting is set {}.", this.isThroughOrder);
     }
-    private void changeThroughFix(boolean flag) {
+    protected void changeThroughFix(boolean flag) {
         this.isThroughFix = flag;
         log.info("through fix setting is set {}.", this.isThroughFix);
     }
-    private void changeIgnoreSpread(boolean flag) {
+    protected void changeIgnoreSpread(boolean flag) {
         this.isIgnoreSpread = flag;
         log.info("ignore spread setting is set {}.", this.isIgnoreSpread);
     }
-    private void changeAutoRecommended(boolean flag) {
+    protected void changeAutoRecommended(boolean flag) {
         this.isAutoRecommended = flag;
         log.info("auto recommended setting is set {}.", this.isAutoRecommended);
     }
-    private void addChangeablePair(CurrencyPair pair) {
+    protected void addChangeablePair(CurrencyPair pair) {
         changeablePairs.add(pair);
         log.info("{} ia added to changeable pair.", pair.getDescription());
     }
-    private void removeChangeablePair(CurrencyPair pair) {
+    protected void removeChangeablePair(CurrencyPair pair) {
         changeablePairs.remove(pair);
         log.info("{} ia removed from changeable pair.", pair.getDescription());
     }
-    private void loadSameSnapshot() {
+    protected void loadSameSnapshot() {
         log.info("load Snapshot when samed to SameManager.");
         SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenSamed"))));
     }
 
-    private MessageListener customizeMessageListener() {
+    protected MessageListener customizeMessageListener() {
         return new MessageListener()
                 .putCommand(ReservedMessage.SNAPSHOT, (args) -> Messenger.set(ReservedMessage.SNAPSHOT.name(), AutoTradeUtils.toJson(buildSnapshot())))
-                .putCommand(ReservedMessage.UPLOADLOG, (args) -> uploadManager.upload(logFile))
+                .putCommand(ReservedMessage.UPLOADLOG, (args) -> uploadManager.upload(Paths.get("log", "autotrade-local.log")))
                 .putCommand(ReservedMessage.AUTOTRADELOG, (args) -> {
                     int logRows = 30;
                     if (args.length > 0) {
@@ -714,7 +547,7 @@ public class AutoTrader {
                     }
                     List<String> lines = new ArrayList<>();
                     try {
-                        lines = Files.readAllLines(logFile);
+                        lines = Files.readAllLines(Paths.get("log", "autotrade-local.log"));
                     } catch (IOException e) {
                         throw new ApplicationException(e);
                     }
