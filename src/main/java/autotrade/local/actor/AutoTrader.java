@@ -391,30 +391,36 @@ public class AutoTrader {
                 return;
             }
 
-            if (rateAnalyzer.isSenceOfDirection()) {
-                // 値動きに方向感がある場合
-                if (isFix(snapshot, lotManager.getInitial() * 0)) {
-                    // 目標金額達成で利益確定
-                    log.info("achieved target amount.");
-                    fixAll(snapshot);
-                    return;
-                }
-            } else {
-                // 値動きに方向感がない場合
-                if (snapshot.getPositionProfit() >= lotManager.getInitial() * 5) {
-                    // 目標金額達成で利益確定
-                    log.info("achieved target amount.");
-                    fixAll(snapshot);
-                    return;
-                }
-            }
+//            if (rateAnalyzer.isSenceOfDirection()) {
+//                // 値動きに方向感がある場合
+//                if (isFix(snapshot, lotManager.getInitial() * 0)) {
+//                    // 目標金額達成で利益確定
+//                    log.info("achieved target amount.");
+//                    fixAll(snapshot);
+//                    return;
+//                }
+//            } else {
+//                // 値動きに方向感がない場合
+//                if (snapshot.getPositionProfit() >= lotManager.getInitial() * 5) {
+//                    // 目標金額達成で利益確定
+//                    log.info("achieved target amount.");
+//                    fixAll(snapshot);
+//                    return;
+//                }
+//            }
 //            if (snapshot.hasBothSide()
-//                    && isFix(snapshot, 0)) {
-            if (snapshot.hasBothSide()
-                    && snapshot.getPositionProfit() >= 0) {
-                // 反対売買の場合
+//                    && snapshot.getPositionProfit() >= 0) {
+//                // 反対売買の場合
+//                // 目標金額達成で利益確定
+//                log.info("achieved countertrading.");
+//                fixAll(snapshot);
+//                return;
+//            }
+
+            // 利益0以上1分足逆行で利益確定
+            if (isFix(snapshot, lotManager.getInitial() * 0)) {
                 // 目標金額達成で利益確定
-                log.info("achieved countertrading.");
+                log.info("achieved target amount.");
                 fixAll(snapshot);
                 return;
             }
