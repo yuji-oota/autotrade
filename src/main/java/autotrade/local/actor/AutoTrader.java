@@ -102,80 +102,8 @@ public abstract class AutoTrader {
     public void operation() {
 
         try {
-            // WebDriver初期化
-            driver = new ChromeDriver();
-            wrapper = new WebDriverWrapper(driver);
-
-            // 指標を確認する
-            if (!indicatorManager.hasIndicator()) {
-                // 本日分
-                indicatorManager.addIndicators(wrapper.getIndicators(LocalDate.now()));
-                // 翌日分
-                indicatorManager.addIndicators(wrapper.getIndicators(LocalDate.now().plusDays(1)));
-                log.info("indicators is got.");
-                AutoTradeUtils.printObject(indicatorManager.getIndicators());
-            }
-
-            // ログイン
-            wrapper.login();
-            AutoTradeUtils.sleep(Duration.ofSeconds(5));
-
-            // メッセージダイアログクローズ
-            wrapper.cancelMessage();
-            AutoTradeUtils.sleep(Duration.ofSeconds(1));
-
-            // ツール起動
-            wrapper.startUpTradeTool();
-            AutoTradeUtils.sleep(Duration.ofSeconds(1));
-
-            // 取引設定
-            wrapper.orderSettings();
-            AutoTradeUtils.sleep(Duration.ofSeconds(1));
-
-            // 通貨ペア設定
-            wrapper.pairSettings();
-            AutoTradeUtils.sleep(Duration.ofSeconds(1));
-
-            // 通貨ペア変更
-            wrapper.displayRateList();
-            Stream.of(CurrencyPair.values()).forEach(p -> {
-                Rate rate = buildRateFromList(p);
-                lotManager.addSampleRateMap(p, rate);
-                pairAnalyzerMap.get(p).add(rate);
-            });
-            Stream.of(CurrencyPair.values()).forEach(this::changePair);
-            // ポジションが無ければUSD/JPYを設定
-            changePair(CurrencyPair.USDJPY);
-
-            // 開始時の証拠金を取得
-            switch (StartMarginMode.valueOf(Messenger.get("startMarginMode"))) {
-            case NEW:
-                startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
-                break;
-            default:
-                startMargin = Integer.parseInt(Messenger.get("startMargin"));
-                break;
-            }
-            Messenger.set("startMargin", String.valueOf(startMargin));
-            Messenger.set("startMarginMode", StartMarginMode.CARRY_OVER.name());
-
-            // 目標金額設定
-            targetAmountOneDay = BigDecimal.valueOf(startMargin).multiply(targetAmountRatio).intValue();
-
-            // Same引継ぎ
-            Snapshot shapshot = buildSnapshot();
-            if (shapshot.isPositionSame()) {
-                changeThroughOrder(true);
-                loadSameSnapshot();
-            }
-            // 反対売買閾値引継ぎ
-            if (shapshot.hasPosition()) {
-                log.info("load countertrading threshold when order to RateAnalyzer.");
-                rateAnalyzer.loadCountertradingThreshold();
-            }
-
-            // 表示変更
-            changeDisplay(displayMode);
+            // 初期処理
+            initialize();
 
             // 繰り返し実行
             while(true) {
@@ -209,6 +137,83 @@ public abstract class AutoTrader {
 
     abstract protected void order(Snapshot snapshot);
     abstract protected void fix(Snapshot snapshot);
+
+    protected void initialize() {
+        // WebDriver初期化
+        driver = new ChromeDriver();
+        wrapper = new WebDriverWrapper(driver);
+
+        // 指標を確認する
+        if (!indicatorManager.hasIndicator()) {
+            // 本日分
+            indicatorManager.addIndicators(wrapper.getIndicators(LocalDate.now()));
+            // 翌日分
+            indicatorManager.addIndicators(wrapper.getIndicators(LocalDate.now().plusDays(1)));
+            log.info("indicators is got.");
+            AutoTradeUtils.printObject(indicatorManager.getIndicators());
+        }
+
+        // ログイン
+        wrapper.login();
+        AutoTradeUtils.sleep(Duration.ofSeconds(5));
+
+        // メッセージダイアログクローズ
+        wrapper.cancelMessage();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+
+        // ツール起動
+        wrapper.startUpTradeTool();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+
+        // 取引設定
+        wrapper.orderSettings();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+
+        // 通貨ペア設定
+        wrapper.pairSettings();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+
+        // 通貨ペア変更
+        wrapper.displayRateList();
+        Stream.of(CurrencyPair.values()).forEach(p -> {
+            Rate rate = buildRateFromList(p);
+            lotManager.addSampleRateMap(p, rate);
+            pairAnalyzerMap.get(p).add(rate);
+        });
+        Stream.of(CurrencyPair.values()).forEach(this::changePair);
+        // ポジションが無ければUSD/JPYを設定
+        changePair(CurrencyPair.USDJPY);
+
+        // 開始時の証拠金を取得
+        switch (StartMarginMode.valueOf(Messenger.get("startMarginMode"))) {
+        case NEW:
+            startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
+            break;
+        default:
+            startMargin = Integer.parseInt(Messenger.get("startMargin"));
+            break;
+        }
+        Messenger.set("startMargin", String.valueOf(startMargin));
+        Messenger.set("startMarginMode", StartMarginMode.CARRY_OVER.name());
+
+        // 目標金額設定
+        targetAmountOneDay = BigDecimal.valueOf(startMargin).multiply(targetAmountRatio).intValue();
+
+        // Same引継ぎ
+        Snapshot shapshot = buildSnapshot();
+        if (shapshot.isPositionSame()) {
+            changeThroughOrder(true);
+            loadSameSnapshot();
+        }
+        // 反対売買閾値引継ぎ
+        if (shapshot.hasPosition()) {
+            log.info("load countertrading threshold when order to RateAnalyzer.");
+            rateAnalyzer.loadCountertradingThreshold();
+        }
+
+        // 表示変更
+        changeDisplay(displayMode);
+    }
 
     protected Snapshot buildSnapshot() {
         return Snapshot.builder()

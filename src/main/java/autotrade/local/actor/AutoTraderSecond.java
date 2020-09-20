@@ -2,13 +2,21 @@ package autotrade.local.actor;
 
 import java.time.Duration;
 
+import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
+import autotrade.local.utility.AutoTradeProperties;
 
 public class AutoTraderSecond extends AutoTrader {
 
     public AutoTraderSecond() {
         super();
+    }
+
+    @Override
+    protected void initialize() {
+        super.initialize();
+        changePair(CurrencyPair.valueOf(AutoTradeProperties.get("autotraderSecond.order.pair")));
     }
 
     @Override
