@@ -178,11 +178,15 @@ public abstract class AutoTrader {
 
             // 繰り返し実行
             while(true) {
+
+                // 最新情報取得
+                Snapshot snapshot = buildSnapshot();
+
                 // 取引
-                trade();
+                trade(snapshot);
 
                 // 取引後処理
-                tradePostProcess();
+                tradePostProcess(snapshot);
 
                 // メッセージダイアログクローズ
                 wrapper.cancelMessage();
@@ -239,12 +243,9 @@ public abstract class AutoTrader {
         return AutoTradeUtils.toInt(wrapper.getAskLot()) > 0 || AutoTradeUtils.toInt(wrapper.getBidLot()) > 0;
     }
 
-    protected void trade() {
+    protected void trade(Snapshot snapshot) {
 
         Map<CurrencyPair, Rate> pairRateMap = new HashMap<>();
-
-        // 最新情報取得
-        Snapshot snapshot = buildSnapshot();
 
         // ペア別レート取得
         pairRateMap.put(pair, snapshot.getRate());
@@ -277,24 +278,12 @@ public abstract class AutoTrader {
 
     }
 
-    protected void tradePostProcess() {
-
-        // 最新情報取得
-        Snapshot snapshot = buildSnapshot();
+    protected void tradePostProcess(Snapshot snapshot) {
 
         // 注文モード変更
         if (snapshot.getTotalProfit() > targetAmountOneDay) {
             // 一日の目標金額を達成した場合は消極的に取引する
             lotManager.modeNegative();
-        }
-
-        // SameManager初期化
-        if (snapshot.isPositionSame()) {
-            if (!SameManager.hasInstance()) {
-                changeThroughOrder(true);
-                changeAutoRecommended(false);
-            }
-            SameManager.setSnapshot(snapshot);
         }
 
         // 指標アラート
@@ -333,18 +322,6 @@ public abstract class AutoTrader {
             }
         }
 
-    }
-
-    protected boolean isFix(Snapshot snapshot, int targetAmount) {
-        if (snapshot.getPositionProfit() >= targetAmount) {
-            if (snapshot.isPositionAskSide()) {
-                return rateAnalyzer.isReachedBidThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
-            }
-            if (snapshot.isPositionBidSide()) {
-                return rateAnalyzer.isReachedAskThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
-            }
-        }
-        return false;
     }
 
     protected boolean isOrderable(Snapshot snapshot) {

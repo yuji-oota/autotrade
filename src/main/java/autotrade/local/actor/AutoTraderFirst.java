@@ -171,5 +171,31 @@ public class AutoTraderFirst extends AutoTrader {
 
     }
 
+    @Override
+    protected void tradePostProcess(Snapshot snapshot) {
+
+        // SameManager初期化
+        if (snapshot.isPositionSame()) {
+            if (!SameManager.hasInstance()) {
+                changeThroughOrder(true);
+                changeAutoRecommended(false);
+            }
+            SameManager.setSnapshot(snapshot);
+        }
+
+        super.tradePostProcess(snapshot);
+    }
+
+    private boolean isFix(Snapshot snapshot, int targetAmount) {
+        if (snapshot.getPositionProfit() >= targetAmount) {
+            if (snapshot.isPositionAskSide()) {
+                return rateAnalyzer.isReachedBidThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
+            }
+            if (snapshot.isPositionBidSide()) {
+                return rateAnalyzer.isReachedAskThresholdWithin(snapshot.getRate(), Duration.ofMinutes(1));
+            }
+        }
+        return false;
+    }
 
 }
