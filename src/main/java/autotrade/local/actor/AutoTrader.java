@@ -60,6 +60,7 @@ public abstract class AutoTrader {
 
     protected int targetAmountOneDay;
     protected int startMargin;
+    protected BigDecimal targetAmountRatio;
 
     protected LocalTime inactiveStart;
     protected LocalTime inactiveEnd;
@@ -79,7 +80,7 @@ public abstract class AutoTrader {
                 .collect(Collectors.toSet());
         displayMode = DisplayMode.CHART;
 
-//        targetAmountOneDay = AutoTradeProperties.getInt("autotrade.targetAmount.oneDay");
+        targetAmountRatio = AutoTradeProperties.getBigDecimal("autotrade.targetAmount.ratio");
 
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
@@ -159,7 +160,7 @@ public abstract class AutoTrader {
             Messenger.set("startMarginMode", StartMarginMode.CARRY_OVER.name());
 
             // 目標金額設定
-            targetAmountOneDay = BigDecimal.valueOf(startMargin).multiply(BigDecimal.valueOf(0.01)).intValue();
+            targetAmountOneDay = BigDecimal.valueOf(startMargin).multiply(targetAmountRatio).intValue();
 
             // Same引継ぎ
             Snapshot shapshot = buildSnapshot();
