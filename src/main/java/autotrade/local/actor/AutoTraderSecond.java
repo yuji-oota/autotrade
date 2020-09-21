@@ -85,10 +85,20 @@ public class AutoTraderSecond extends AutoTrader {
             break;
         case ASK_SIDE:
             // 買いポジションが多い場合
-            // breakなし
+
+            if (snapshot.getAskProfit() >= 0
+                && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
+                fixAsk(snapshot);
+            }
+            break;
         case BID_SIDE:
             // 売りポジションが多い場合
-            // breakなし
+
+            if (snapshot.getBidProfit() >= 0
+                && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
+                fixBid(snapshot);
+            }
+            break;
         case SAME:
             // ポジションが同数の場合
 
