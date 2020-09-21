@@ -111,8 +111,23 @@ public abstract class AutoTrader {
                 // 最新情報取得
                 Snapshot snapshot = buildSnapshot();
 
+                // ペア別レート取得
+                Map<CurrencyPair, Rate> pairRateMap = new HashMap<>();
+                pairRateMap.put(pair, snapshot.getRate());
+                if (displayMode == DisplayMode.RATELIST) {
+                    changeablePairs.stream()
+                    .filter(p -> p != pair)
+                    .filter(p -> Duration.between(pairAnalyzerMap.get(p).getLatestRate().getTimestamp(), LocalDateTime.now()).toSeconds() > 10)
+                    .forEach(p -> pairRateMap.put(p, buildRateFromList(p)));
+                }
+
                 // 取引
                 trade(snapshot);
+
+                // rateAnalyzerにレート追加
+                pairRateMap.entrySet().stream().forEach(entry -> {
+                    pairAnalyzerMap.get(entry.getKey()).add(entry.getValue());
+                });
 
                 // 取引後処理
                 tradePostProcess(snapshot);
@@ -251,17 +266,6 @@ public abstract class AutoTrader {
 
     protected void trade(Snapshot snapshot) {
 
-        Map<CurrencyPair, Rate> pairRateMap = new HashMap<>();
-
-        // ペア別レート取得
-        pairRateMap.put(pair, snapshot.getRate());
-        if (displayMode == DisplayMode.RATELIST) {
-            changeablePairs.stream()
-            .filter(p -> p != pair)
-            .filter(p -> Duration.between(pairAnalyzerMap.get(p).getLatestRate().getTimestamp(), LocalDateTime.now()).toSeconds() > 10)
-            .forEach(p -> pairRateMap.put(p, buildRateFromList(p)));
-        }
-
         // 確定見送り判定
         if (!isThroughFix) {
             // 最新情報を元に利益確定
@@ -276,11 +280,6 @@ public abstract class AutoTrader {
                 order(snapshot);
             }
         }
-
-        // rateAnalyzerにレート追加
-        pairRateMap.entrySet().stream().forEach(entry -> {
-            pairAnalyzerMap.get(entry.getKey()).add(entry.getValue());
-        });
 
     }
 
