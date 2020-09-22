@@ -9,6 +9,8 @@ import autotrade.local.utility.AutoTradeProperties;
 
 public class AutoTraderSecond extends AutoTrader {
 
+    private int originalMargin;
+
     public AutoTraderSecond() {
         super();
     }
@@ -30,10 +32,12 @@ public class AutoTraderSecond extends AutoTrader {
 
             // 閾値超過を判定
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
+                originalMargin = snapshot.getMargin();
                 orderAsk(snapshot);
                 return;
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
+                originalMargin = snapshot.getMargin();
                 orderBid(snapshot);
                 return;
             }
@@ -86,6 +90,11 @@ public class AutoTraderSecond extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
+            if (isRecovered(snapshot)
+                    && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
+                fixAll(snapshot);
+                return;
+            }
             if (snapshot.getAskProfit() >= 0
                 && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
                 fixAsk(snapshot);
@@ -94,6 +103,11 @@ public class AutoTraderSecond extends AutoTrader {
         case BID_SIDE:
             // 売りポジションが多い場合
 
+            if (isRecovered(snapshot)
+                    && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
+                fixAll(snapshot);
+                return;
+            }
             if (snapshot.getBidProfit() >= 0
                 && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
                 fixBid(snapshot);
@@ -114,6 +128,10 @@ public class AutoTraderSecond extends AutoTrader {
             break;
         default:
         }
+    }
+
+    private boolean isRecovered(Snapshot snapshot) {
+        return originalMargin <= snapshot.getMargin() + snapshot.getPositionProfit();
     }
 
 }
