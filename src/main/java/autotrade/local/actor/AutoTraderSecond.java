@@ -30,14 +30,14 @@ public class AutoTraderSecond extends AutoTrader {
         case NONE:
             // ポジションがない場合
 
+            originalMargin = snapshot.getMargin();
+
             // 閾値超過を判定
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
-                originalMargin = snapshot.getMargin();
                 orderAsk(snapshot);
                 return;
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
-                originalMargin = snapshot.getMargin();
                 orderBid(snapshot);
                 return;
             }
