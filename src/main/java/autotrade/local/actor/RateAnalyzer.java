@@ -33,6 +33,7 @@ public class RateAnalyzer {
     private int countertradingAsk;
     private int countertradingBid;
     private boolean isSenceOfDirection;
+    private int thresholdMinutes;
 
     public RateAnalyzer() {
         rates = new ArrayList<>();
@@ -40,7 +41,8 @@ public class RateAnalyzer {
         bidThreshold = Integer.MIN_VALUE;
         highWaterMark = Rate.builder().ask(Integer.MIN_VALUE).build();
         lowWaterMark = Rate.builder().bid(Integer.MAX_VALUE).build();
-        countertradingRatio = AutoTradeProperties.getBigDecimal("autotrade.lot.countertrading.ratio");
+        countertradingRatio = AutoTradeProperties.getBigDecimal("autotrade.rateAnalizer.countertrading.ratio");
+        thresholdMinutes = AutoTradeProperties.getInt("autotrade.rateAnalizer.threshold.minutes");
     }
 
     public void add(Rate rate) {
@@ -56,7 +58,7 @@ public class RateAnalyzer {
                 .collect(Collectors.toList());
 
         // 売買閾値設定
-        Duration duration = Duration.ofMinutes(10);
+        Duration duration = Duration.ofMinutes(thresholdMinutes);
         askThreshold = maxWithin(duration);
         bidThreshold = minWithin(duration);
         middleThreshold = (askThreshold + bidThreshold) / 2;
