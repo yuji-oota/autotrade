@@ -31,9 +31,6 @@ public class AutoTraderSecond extends AutoTrader {
         case NONE:
             // ポジションがない場合
 
-            // RecoveryManager初期化
-            recoveryManager.done();
-
             // 閾値超過を判定
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 orderAsk(snapshot);
@@ -59,7 +56,8 @@ public class AutoTraderSecond extends AutoTrader {
             }
 
             // リカバリ判定
-            if (recoveryManager.isCutOffBid()
+            if (recoveryManager.isOpen()
+                    && recoveryManager.isCutOffBid()
                     && recoveryManager.isSuccessCutOffBid(snapshot)
                     && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
                 forceSame();
@@ -80,7 +78,8 @@ public class AutoTraderSecond extends AutoTrader {
             }
 
             // リカバリ判定
-            if (recoveryManager.isCutOffAsk()
+            if (recoveryManager.isOpen()
+                    && recoveryManager.isCutOffAsk()
                     && recoveryManager.isSuccessCutOffAsk(snapshot)
                     && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
                 forceSame();
@@ -89,9 +88,6 @@ public class AutoTraderSecond extends AutoTrader {
             break;
         case SAME:
             // ポジションが同数の場合
-
-            // RecoveryManager初期化
-            recoveryManager.cutOffDone();
 
             break;
         default:
@@ -132,7 +128,6 @@ public class AutoTraderSecond extends AutoTrader {
                 if (snapshot.getAskProfit() >= 0
                             && snapshot.hasBothSide()
                             && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
-                    recoveryManager.cutOffAsk(snapshot);
                     fixAsk(snapshot);
                 }
             }
@@ -155,7 +150,6 @@ public class AutoTraderSecond extends AutoTrader {
                 if (snapshot.getBidProfit() >= 0
                         && snapshot.hasBothSide()
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
-                    recoveryManager.cutOffBid(snapshot);
                     fixBid(snapshot);
                 }
             }
@@ -165,12 +159,10 @@ public class AutoTraderSecond extends AutoTrader {
             // ポジションが同数の場合
 
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
-                recoveryManager.cutOffAsk(snapshot);
                 fixAsk(snapshot);
                 break;
             }
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
-                recoveryManager.cutOffBid(snapshot);
                 fixBid(snapshot);
                 break;
             }
@@ -178,6 +170,31 @@ public class AutoTraderSecond extends AutoTrader {
             break;
         default:
         }
+    }
+
+
+    @Override
+    protected void fixAsk(Snapshot snapshot) {
+        super.fixAsk(snapshot);
+        recoveryManager.cutOffAsk(snapshot);
+    }
+
+    @Override
+    protected void fixBid(Snapshot snapshot) {
+        super.fixBid(snapshot);
+        recoveryManager.cutOffBid(snapshot);
+    }
+
+    @Override
+    protected void forceSame() {
+        super.forceSame();
+        recoveryManager.cutOffDone();
+    }
+
+    @Override
+    protected void fixAll(Snapshot snapshot) {
+        super.fixAll(snapshot);
+        recoveryManager.done();
     }
 
 }

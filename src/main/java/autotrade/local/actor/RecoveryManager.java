@@ -38,6 +38,7 @@ public class RecoveryManager {
     public void cutOffDone() {
         isCutOffAsk = false;
         isCutOffBid = false;
+        log.info("cut off done.");
     }
     public boolean isClose() {
         return !isOpen;
