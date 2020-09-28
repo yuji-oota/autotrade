@@ -48,8 +48,8 @@ public class AutoTraderSecond extends AutoTrader {
             // 閾値超過を判定
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 if (snapshot.getBidLot() == 0) {
-                    recoveryManager.start(snapshot);
                     orderBid(snapshot);
+                    recoveryManager.open(snapshot);
                 } else {
                     forceSame();
                 }
@@ -70,8 +70,8 @@ public class AutoTraderSecond extends AutoTrader {
             // 閾値超過を判定
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 if (snapshot.getAskLot() == 0) {
-                    recoveryManager.start(snapshot);
                     orderAsk(snapshot);
+                    recoveryManager.open(snapshot);
                 } else {
                     forceSame();
                 }
@@ -93,6 +93,18 @@ public class AutoTraderSecond extends AutoTrader {
         default:
         }
 
+    }
+
+    @Override
+    protected boolean isFixable(Snapshot snapshot) {
+
+        switch(snapshot.getStatus()) {
+        case SAME:
+            return super.isOrderable(snapshot);
+        default:
+        }
+
+        return true;
     }
 
     @Override
@@ -194,7 +206,7 @@ public class AutoTraderSecond extends AutoTrader {
     @Override
     protected void fixAll(Snapshot snapshot) {
         super.fixAll(snapshot);
-        recoveryManager.done();
+        recoveryManager.close();
     }
 
 }

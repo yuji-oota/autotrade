@@ -266,10 +266,13 @@ public abstract class AutoTrader {
 
     protected void trade(Snapshot snapshot) {
 
-        // 確定見送り判定
-        if (!isThroughFix) {
-            // 最新情報を元に利益確定
-            fix(snapshot);
+        if (isFixable(snapshot)) {
+
+            // 確定見送り判定
+            if (!isThroughFix) {
+                // 最新情報を元に利益確定
+                fix(snapshot);
+            }
         }
 
         if (isOrderable(snapshot)) {
@@ -327,6 +330,10 @@ public abstract class AutoTrader {
             }
         }
 
+    }
+
+    protected boolean isFixable(Snapshot snapshot) {
+        return true;
     }
 
     protected boolean isOrderable(Snapshot snapshot) {

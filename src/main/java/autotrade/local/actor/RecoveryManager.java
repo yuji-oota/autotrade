@@ -15,7 +15,7 @@ public class RecoveryManager {
     private Snapshot shapshotWhenCutOffAsk;
     private Snapshot shapshotWhenCutOffBid;
 
-    public void start(Snapshot snapshot) {
+    public void open(Snapshot snapshot) {
         if (!isOpen) {
             snapshotWhenStart = snapshot;
         }
@@ -31,9 +31,10 @@ public class RecoveryManager {
         isCutOffBid = true;
         log.info("cut off bid.");
     }
-    public void done() {
+    public void close() {
         isOpen = false;
         cutOffDone();
+        log.info("recovery done.");
     }
     public void cutOffDone() {
         isCutOffAsk = false;
