@@ -394,28 +394,28 @@ public abstract class AutoTrader {
     protected void orderAsk(Snapshot snapshot) {
         int lot = lotManager.nextLot(snapshot);
         orderAsk(lot);
-        log.info("order ask. lot {}", lot);
         AutoTradeUtils.printObject(snapshot);
-        AutoTradeUtils.playAudioRandom(AudioPath.OrderSoundEffect);
     }
     protected void orderBid(Snapshot snapshot) {
         int lot = lotManager.nextLot(snapshot);
         orderBid(lot);
-        log.info("order bid. lot {}", lot);
         AutoTradeUtils.printObject(snapshot);
-        AutoTradeUtils.playAudioRandom(AudioPath.OrderSoundEffect);
     }
     protected void orderAsk(int lot) {
         int beforeLot = AutoTradeUtils.toInt(wrapper.getAskLot());
         wrapper.setLot(lot);
         wrapper.orderAsk();
         verifyOrder(beforeLot + lot, Snapshot::getAskLot);
+        log.info("order ask. lot {}", lot);
+        AutoTradeUtils.playAudioRandom(AudioPath.OrderSoundEffect);
     }
     protected void orderBid(int lot) {
         int beforeLot = AutoTradeUtils.toInt(wrapper.getBidLot());
         wrapper.setLot(lot);
         wrapper.orderBid();
         verifyOrder(beforeLot + lot, Snapshot::getBidLot);
+        log.info("order bid. lot {}", lot);
+        AutoTradeUtils.playAudioRandom(AudioPath.OrderSoundEffect);
     }
     protected void fixAll(Snapshot snapshot) {
         wrapper.fixAll();
