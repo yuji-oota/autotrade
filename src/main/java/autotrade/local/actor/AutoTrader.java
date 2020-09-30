@@ -214,18 +214,6 @@ public abstract class AutoTrader {
         // 目標金額設定
         targetAmountOneDay = BigDecimal.valueOf(startMargin).multiply(targetAmountRatio).intValue();
 
-        // Same引継ぎ
-        Snapshot shapshot = buildSnapshot();
-        if (shapshot.isPositionSame()) {
-            changeThroughOrder(true);
-            loadSameSnapshot();
-        }
-        // 反対売買閾値引継ぎ
-        if (shapshot.hasPosition()) {
-            log.info("load countertrading threshold when order to RateAnalyzer.");
-            rateAnalyzer.loadCountertradingThreshold();
-        }
-
         // 表示変更
         changeDisplay(displayMode);
     }

@@ -14,6 +14,23 @@ public class AutoTraderFirst extends AutoTrader {
     }
 
     @Override
+    protected void initialize() {
+        super.initialize();
+
+        // Same引継ぎ
+        Snapshot shapshot = buildSnapshot();
+        if (shapshot.isPositionSame()) {
+            changeThroughOrder(true);
+            loadSameSnapshot();
+        }
+        // 反対売買閾値引継ぎ
+        if (shapshot.hasPosition()) {
+            log.info("load countertrading threshold when order to RateAnalyzer.");
+            rateAnalyzer.loadCountertradingThreshold();
+        }
+    }
+
+    @Override
     protected void fix(Snapshot snapshot) {
 
         switch (snapshot.getStatus()) {
