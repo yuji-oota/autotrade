@@ -129,7 +129,6 @@ public class AutoTraderThird extends AutoTrader {
                 rateAnalyzer.saveCountertradingThreshold(
                         rateAnalyzer.getAskThreshold(),
                         rateAnalyzer.getRatioThresholdAsk());
-                orderDirection = OrderDirection.BID;
                 break;
             }
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
@@ -137,7 +136,6 @@ public class AutoTraderThird extends AutoTrader {
                 rateAnalyzer.saveCountertradingThreshold(
                         rateAnalyzer.getRatioThresholdBid(),
                         rateAnalyzer.getBidThreshold());
-                orderDirection = OrderDirection.ASK;
                 break;
             }
             break;
