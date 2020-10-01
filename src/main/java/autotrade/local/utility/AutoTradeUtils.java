@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.AudioPath;
-import javafx.scene.media.AudioClip;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -88,11 +87,13 @@ public class AutoTradeUtils {
     }
 
     public static void playAudio(Path path) {
-        AudioClip audioClip = new AudioClip(path.toUri().toString());
-        audioClip.play();
-        while (audioClip.isPlaying()) {
-            sleep(Duration.ofMillis(100));
-        }
+
+        // TODO 非同期化
+//        AudioClip audioClip = new AudioClip(path.toUri().toString());
+//        audioClip.play();
+//        while (audioClip.isPlaying()) {
+//            sleep(Duration.ofMillis(100));
+//        }
     }
 
     public static boolean isInt(String str) {

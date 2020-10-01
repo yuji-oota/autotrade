@@ -60,6 +60,16 @@ public class AutoTraderThird extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
+            if (recoveryManager.isClose()) {
+                // リカバリ前の場合
+
+                if (rateAnalyzer.getAskThreshold() > rateAnalyzer.getCountertradingAsk()) {
+                    rateAnalyzer.saveCountertradingThreshold(
+                            rateAnalyzer.getAskThreshold(),
+                            rateAnalyzer.getRatioThresholdAsk());
+                }
+            }
+
             if (rateAnalyzer.isReachedCountertradingBid(rate)) {
                 // 下値閾値を超えた場合
                 // 逆ポジション取得
@@ -68,9 +78,24 @@ public class AutoTraderThird extends AutoTrader {
                 recoveryManager.open(snapshot);
             }
 
+            // 指標前強制Same
+            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))) {
+                forceSame();
+            }
+
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
+
+            if (recoveryManager.isClose()) {
+                // リカバリ前の場合
+
+                if (rateAnalyzer.getBidThreshold() < rateAnalyzer.getCountertradingBid()) {
+                    rateAnalyzer.saveCountertradingThreshold(
+                            rateAnalyzer.getRatioThresholdBid(),
+                            rateAnalyzer.getBidThreshold());
+                }
+            }
 
             if (rateAnalyzer.isReachedCountertradingAsk(rate)) {
                 // 上値閾値を超えた場合
@@ -80,10 +105,29 @@ public class AutoTraderThird extends AutoTrader {
                 recoveryManager.open(snapshot);
             }
 
+            // 指標前強制Same
+            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))) {
+                forceSame();
+            }
+
             break;
         case SAME:
             // ポジションが同数の場合
 
+            if (rateAnalyzer.isReachedBidThreshold(rate)) {
+                fixAsk(snapshot);
+                rateAnalyzer.saveCountertradingThreshold(
+                        rateAnalyzer.getAskThreshold(),
+                        rateAnalyzer.getRatioThresholdAsk());
+                break;
+            }
+            if (rateAnalyzer.isReachedAskThreshold(rate)) {
+                fixBid(snapshot);
+                rateAnalyzer.saveCountertradingThreshold(
+                        rateAnalyzer.getRatioThresholdBid(),
+                        rateAnalyzer.getBidThreshold());
+                break;
+            }
             break;
         default:
         }
