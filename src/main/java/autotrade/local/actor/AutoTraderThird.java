@@ -13,9 +13,13 @@ public class AutoTraderThird extends AutoTrader {
 
     private RecoveryManager recoveryManager;
 
+    private enum OrderDirection {ASK, BID}
+    private OrderDirection orderDirection;
+
     public AutoTraderThird() {
         super();
         recoveryManager = new RecoveryManager();
+        orderDirection = OrderDirection.ASK;
     }
 
     @Override
@@ -46,6 +50,7 @@ public class AutoTraderThird extends AutoTrader {
                 rateAnalyzer.saveCountertradingThreshold(
                         rateAnalyzer.getAskThreshold(),
                         rateAnalyzer.getRatioThresholdAsk());
+                orderDirection = OrderDirection.ASK;
                 return;
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
@@ -53,6 +58,7 @@ public class AutoTraderThird extends AutoTrader {
                 rateAnalyzer.saveCountertradingThreshold(
                         rateAnalyzer.getRatioThresholdBid(),
                         rateAnalyzer.getBidThreshold());
+                orderDirection = OrderDirection.BID;
                 return;
             }
 
@@ -60,10 +66,12 @@ public class AutoTraderThird extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
-            if (recoveryManager.isClose()) {
-                // リカバリ前の場合
+            if (orderDirection == OrderDirection.ASK) {
+                // 初期ポジションがAskの場合
 
                 if (rateAnalyzer.getAskThreshold() > rateAnalyzer.getCountertradingAsk()) {
+
+                    // 反対売買の閾値を更新
                     rateAnalyzer.saveCountertradingThreshold(
                             rateAnalyzer.getAskThreshold(),
                             rateAnalyzer.getRatioThresholdAsk());
@@ -87,10 +95,12 @@ public class AutoTraderThird extends AutoTrader {
         case BID_SIDE:
             // 売りポジションが多い場合
 
-            if (recoveryManager.isClose()) {
-                // リカバリ前の場合
+            if (orderDirection == OrderDirection.BID) {
+                // 初期ポジションがBidの場合
 
                 if (rateAnalyzer.getBidThreshold() < rateAnalyzer.getCountertradingBid()) {
+
+                    // 反対売買の閾値を更新
                     rateAnalyzer.saveCountertradingThreshold(
                             rateAnalyzer.getRatioThresholdBid(),
                             rateAnalyzer.getBidThreshold());
@@ -119,6 +129,7 @@ public class AutoTraderThird extends AutoTrader {
                 rateAnalyzer.saveCountertradingThreshold(
                         rateAnalyzer.getAskThreshold(),
                         rateAnalyzer.getRatioThresholdAsk());
+                orderDirection = OrderDirection.BID;
                 break;
             }
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
@@ -126,6 +137,7 @@ public class AutoTraderThird extends AutoTrader {
                 rateAnalyzer.saveCountertradingThreshold(
                         rateAnalyzer.getRatioThresholdBid(),
                         rateAnalyzer.getBidThreshold());
+                orderDirection = OrderDirection.ASK;
                 break;
             }
             break;
