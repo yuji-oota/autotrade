@@ -67,6 +67,9 @@ public class RateAnalyzer {
         ratioThresholdBid = bidThreshold + ratioDiff;
     }
 
+    public int rangeThreshold() {
+        return askThreshold - bidThreshold;
+    }
     public int rangeWithin(Duration duration) {
         return maxWithin(duration) - minWithin(duration);
     }

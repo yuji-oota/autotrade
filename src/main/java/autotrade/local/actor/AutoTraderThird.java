@@ -80,9 +80,14 @@ public class AutoTraderThird extends AutoTrader {
 
             if (rateAnalyzer.isReachedCountertradingBid(rate)) {
                 // 下値閾値を超えた場合
+
                 // 逆ポジション取得
-                orderBid(snapshot);
-                fixAsk(snapshot);
+                if (rateAnalyzer.rangeThreshold() >= 50) {
+                    orderBid(snapshot);
+                    fixAsk(snapshot);
+                } else {
+                    forceSame();
+                }
                 recoveryManager.open(snapshot);
             }
 
@@ -109,9 +114,14 @@ public class AutoTraderThird extends AutoTrader {
 
             if (rateAnalyzer.isReachedCountertradingAsk(rate)) {
                 // 上値閾値を超えた場合
+
                 // 逆ポジション取得
-                orderAsk(snapshot);
-                fixBid(snapshot);
+                if (rateAnalyzer.rangeThreshold() >= 50) {
+                    orderAsk(snapshot);
+                    fixBid(snapshot);
+                } else {
+                    forceSame();
+                }
                 recoveryManager.open(snapshot);
             }
 
