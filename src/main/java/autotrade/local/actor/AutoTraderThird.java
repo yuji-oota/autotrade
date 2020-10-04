@@ -19,7 +19,7 @@ public class AutoTraderThird extends AutoTrader {
     public AutoTraderThird() {
         super();
         recoveryManager = new RecoveryManager();
-        orderDirection = OrderDirection.ASK;
+        orderDirection = OrderDirection.valueOf(Messenger.get("orderDirection"));
     }
 
     @Override
@@ -211,4 +211,13 @@ public class AutoTraderThird extends AutoTrader {
         super.fixAll(snapshot);
         recoveryManager.close();
     }
+
+    @Override
+    protected void tradePostProcess(Snapshot snapshot) {
+        super.tradePostProcess(snapshot);
+        if (snapshot.hasPosition()) {
+            Messenger.set("orderDirection", orderDirection.name());
+        }
+    }
+
 }
