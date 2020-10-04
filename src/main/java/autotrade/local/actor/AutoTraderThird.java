@@ -25,7 +25,7 @@ public class AutoTraderThird extends AutoTrader {
     @Override
     protected void initialize() {
         super.initialize();
-        changePair(CurrencyPair.valueOf(AutoTradeProperties.get("autotraderSecond.order.pair")));
+        changePair(CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderThird.order.pair")));
 
         Snapshot shapshot = buildSnapshot();
         // 反対売買閾値引継ぎ

@@ -19,7 +19,7 @@ public class AutoTraderSecond extends AutoTrader {
     @Override
     protected void initialize() {
         super.initialize();
-        changePair(CurrencyPair.valueOf(AutoTradeProperties.get("autotraderSecond.order.pair")));
+        changePair(CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderSecond.order.pair")));
     }
 
     @Override
