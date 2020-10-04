@@ -337,10 +337,10 @@ public abstract class AutoTrader {
         switch (snapshot.getStatus()) {
         case NONE:
         case SAME:
-            if (System.currentTimeMillis() - lastFixed < Duration.ofSeconds(10).toMillis()) {
-                // 利益確定から一定時間内の場合は注文しない
-                return false;
-            }
+//            if (System.currentTimeMillis() - lastFixed < Duration.ofSeconds(10).toMillis()) {
+//                // 利益確定から一定時間内の場合は注文しない
+//                return false;
+//            }
             if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 50) {
                 // 閾値間隔が狭い場合は注文しない
                 return false;
