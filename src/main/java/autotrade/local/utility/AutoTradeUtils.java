@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.AudioPath;
+import javafx.scene.media.AudioClip;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -88,12 +90,14 @@ public class AutoTradeUtils {
 
     public static void playAudio(Path path) {
 
-        // TODO 非同期化
-//        AudioClip audioClip = new AudioClip(path.toUri().toString());
-//        audioClip.play();
-//        while (audioClip.isPlaying()) {
-//            sleep(Duration.ofMillis(100));
-//        }
+        CompletableFuture.runAsync(() -> {
+            AudioClip audioClip = new AudioClip(path.toUri().toString());
+            audioClip.play();
+            while (audioClip.isPlaying()) {
+                sleep(Duration.ofMillis(100));
+            }
+        });
+
     }
 
     public static boolean isInt(String str) {
