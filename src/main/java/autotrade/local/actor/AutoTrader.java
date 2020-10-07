@@ -318,6 +318,11 @@ public abstract class AutoTrader {
             }
         }
 
+        // お知らせ対策
+        if (rateAnalyzer.hasDoubtfulRates()) {
+            throw new ApplicationException("RateAnalyzer has doubtful rates.");
+        }
+
     }
 
     protected boolean isFixable(Snapshot snapshot) {

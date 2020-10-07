@@ -82,18 +82,13 @@ public class AutoTraderThird extends AutoTrader {
                 // 下値閾値を超えた場合
 
                 // 逆ポジション取得
-                if (rateAnalyzer.rangeThreshold() >= 50) {
+                if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
+                    forceSame();
+                } else {
                     orderBid(snapshot);
                     fixAsk(snapshot);
-                } else {
-                    forceSame();
                 }
                 recoveryManager.open(snapshot);
-            }
-
-            // 指標前強制Same
-            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))) {
-                forceSame();
             }
 
             break;
@@ -116,18 +111,13 @@ public class AutoTraderThird extends AutoTrader {
                 // 上値閾値を超えた場合
 
                 // 逆ポジション取得
-                if (rateAnalyzer.rangeThreshold() >= 50) {
+                if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
+                    forceSame();
+                } else {
                     orderAsk(snapshot);
                     fixBid(snapshot);
-                } else {
-                    forceSame();
                 }
                 recoveryManager.open(snapshot);
-            }
-
-            // 指標前強制Same
-            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))) {
-                forceSame();
             }
 
             break;
