@@ -86,7 +86,9 @@ public class AutoTraderThird extends AutoTrader {
                     forceSame();
                 } else {
                     orderBid(snapshot);
-                    fixAsk(snapshot);
+                    if (!lotManager.isLimit(snapshot)) {
+                        fixAsk(snapshot);
+                    }
                 }
                 recoveryManager.open(snapshot);
             }
@@ -115,7 +117,9 @@ public class AutoTraderThird extends AutoTrader {
                     forceSame();
                 } else {
                     orderAsk(snapshot);
-                    fixBid(snapshot);
+                    if (!lotManager.isLimit(snapshot)) {
+                        fixBid(snapshot);
+                    }
                 }
                 recoveryManager.open(snapshot);
             }
@@ -124,20 +128,26 @@ public class AutoTraderThird extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            if (rateAnalyzer.isReachedBidThreshold(rate)) {
-                fixAsk(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
-                        rateAnalyzer.getAskThreshold(),
-                        rateAnalyzer.getRatioThresholdAsk());
+            switch (orderDirection) {
+            case ASK:
+                if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
+                    fixAsk(snapshot);
+                    rateAnalyzer.saveCountertradingThreshold(
+                            rateAnalyzer.getAskThreshold(),
+                            rateAnalyzer.getRatioThresholdAsk());
+                }
                 break;
-            }
-            if (rateAnalyzer.isReachedAskThreshold(rate)) {
-                fixBid(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
-                        rateAnalyzer.getRatioThresholdBid(),
-                        rateAnalyzer.getBidThreshold());
+            case BID:
+                if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
+                    fixBid(snapshot);
+                    rateAnalyzer.saveCountertradingThreshold(
+                            rateAnalyzer.getRatioThresholdBid(),
+                            rateAnalyzer.getBidThreshold());
+                }
                 break;
+            default:
             }
+
             break;
         default:
         }
