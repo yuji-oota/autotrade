@@ -198,4 +198,10 @@ public class RateAnalyzer {
         }
         return false;
     }
+    public void updateCountertradingAsk(int ask) {
+        countertradingAsk = ask;
+    }
+    public void updateCountertradingBid(int bid) {
+        countertradingBid = bid;
+    }
 }

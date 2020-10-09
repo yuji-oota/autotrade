@@ -69,6 +69,7 @@ public class AutoTraderThird extends AutoTrader {
             if (orderDirection == OrderDirection.ASK) {
                 // 初期ポジションがAskの場合
 
+                rateAnalyzer.updateCountertradingBid(rateAnalyzer.getRatioThresholdAsk());
                 if (rateAnalyzer.getAskThreshold() > rateAnalyzer.getCountertradingAsk()) {
 
                     // 反対売買の閾値を更新
@@ -100,6 +101,7 @@ public class AutoTraderThird extends AutoTrader {
             if (orderDirection == OrderDirection.BID) {
                 // 初期ポジションがBidの場合
 
+                rateAnalyzer.updateCountertradingAsk(rateAnalyzer.getRatioThresholdBid());
                 if (rateAnalyzer.getBidThreshold() < rateAnalyzer.getCountertradingBid()) {
 
                     // 反対売買の閾値を更新
