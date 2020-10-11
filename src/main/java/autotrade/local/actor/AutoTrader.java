@@ -288,8 +288,9 @@ public abstract class AutoTrader {
 
         // 指標アラート
         if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
-                && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(55))) {
+                && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(59))) {
             AutoTradeUtils.playAudioRandom(AudioPath.Alert);
+            AutoTradeUtils.sleep(Duration.ofSeconds(1));
         }
 
         // 非活性時間処理
