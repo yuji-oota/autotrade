@@ -216,6 +216,7 @@ public abstract class AutoTrader {
 
         // 表示変更
         changeDisplay(displayMode);
+
     }
 
     protected Snapshot buildSnapshot() {
@@ -517,6 +518,17 @@ public abstract class AutoTrader {
         log.info("load Snapshot when samed to SameManager.");
         SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenSamed"))));
     }
+    protected void cloudSave() {
+        log.info("save countertrading threshold.");
+        Messenger.set("countertradingAsk", String.valueOf(rateAnalyzer.getCountertradingAsk()));
+        Messenger.set("countertradingBid", String.valueOf(rateAnalyzer.getCountertradingBid()));
+    }
+    protected void cloudLoad() {
+        log.info("load countertrading threshold to RateAnalyzer.");
+        rateAnalyzer.updateCountertrading(
+                Integer.parseInt(Messenger.get("countertradingAsk")),
+                Integer.parseInt(Messenger.get("countertradingBid")));
+    }
 
     protected MessageListener customizeMessageListener() {
         return new MessageListener()
@@ -569,7 +581,7 @@ public abstract class AutoTrader {
                         this.changeAutoRecommended(Boolean.valueOf(args[0]));
                     }
                 })
-                .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.saveCountertradingThreshold(rateAnalyzer.getAskThreshold(), rateAnalyzer.getBidThreshold()))
+                .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD, (args) -> rateAnalyzer.updateCountertrading(rateAnalyzer.getAskThreshold(), rateAnalyzer.getBidThreshold()))
                 .putCommand(ReservedMessage.CHANGEPAIR, (args) -> {
                     if (args.length > 0) {
                         this.changePair(CurrencyPair.valueOf(args[0]));
@@ -618,6 +630,7 @@ public abstract class AutoTrader {
                         }
                     }
                 })
+                .putCommand(ReservedMessage.CLOUDSAVE, (args) -> this.cloudSave())
                 ;
     }
 

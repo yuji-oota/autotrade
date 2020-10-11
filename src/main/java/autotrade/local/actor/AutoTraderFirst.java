@@ -23,10 +23,9 @@ public class AutoTraderFirst extends AutoTrader {
             changeThroughOrder(true);
             loadSameSnapshot();
         }
-        // 反対売買閾値引継ぎ
+
         if (shapshot.hasPosition()) {
-            log.info("load countertrading threshold when order to RateAnalyzer.");
-            rateAnalyzer.loadCountertradingThreshold();
+            cloudLoad();
         }
     }
 
@@ -126,7 +125,7 @@ public class AutoTraderFirst extends AutoTrader {
             // 閾値超過を判定
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 orderAsk(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
+                rateAnalyzer.updateCountertrading(
                         rateAnalyzer.getAskThreshold(),
                         rateAnalyzer.getRatioThresholdAsk());
                 rateAnalyzer.saveIsSenceOfDirection();
@@ -134,7 +133,7 @@ public class AutoTraderFirst extends AutoTrader {
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
+                rateAnalyzer.updateCountertrading(
                         rateAnalyzer.getRatioThresholdBid(),
                         rateAnalyzer.getBidThreshold());
                 rateAnalyzer.saveIsSenceOfDirection();
@@ -145,7 +144,7 @@ public class AutoTraderFirst extends AutoTrader {
             if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))
                     && rateAnalyzer.passCountWithin(rate.getAsk(), 5) == 2) {
                 orderAsk(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
+                rateAnalyzer.updateCountertrading(
                         rate.getAsk(),
                         rate.getAsk() - (rateAnalyzer.getAskThreshold() - rateAnalyzer.getRatioThresholdAsk()));
                 rateAnalyzer.saveIsSenceOfDirection();
@@ -154,7 +153,7 @@ public class AutoTraderFirst extends AutoTrader {
             if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))
                     && rateAnalyzer.passCountWithin(rate.getBid(), 5) == 2) {
                 orderBid(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
+                rateAnalyzer.updateCountertrading(
                         rate.getBid() + (rateAnalyzer.getRatioThresholdBid() - rateAnalyzer.getBidThreshold()),
                         rate.getBid());
                 rateAnalyzer.saveIsSenceOfDirection();

@@ -142,16 +142,6 @@ public class RateAnalyzer {
     public boolean isReachedBidThresholdWithin(Rate rate, Duration duration) {
         return rate.getBid() <= minWithin(duration);
     }
-    public void saveCountertradingThreshold(int ask, int bid) {
-        countertradingAsk = ask;
-        countertradingBid = bid;
-        Messenger.set("countertradingAsk", String.valueOf(countertradingAsk));
-        Messenger.set("countertradingBid", String.valueOf(countertradingBid));
-    }
-    public void loadCountertradingThreshold() {
-        countertradingAsk = Integer.parseInt(Messenger.get("countertradingAsk"));
-        countertradingBid = Integer.parseInt(Messenger.get("countertradingBid"));
-    }
     public boolean isReachedCountertradingAsk(Rate rate) {
         return countertradingAsk <= rate.getAsk();
     }
@@ -203,5 +193,9 @@ public class RateAnalyzer {
     }
     public void updateCountertradingBid(int bid) {
         countertradingBid = bid;
+    }
+    public void updateCountertrading(int ask, int bid) {
+        updateCountertradingAsk(ask);
+        updateCountertradingBid(bid);
     }
 }

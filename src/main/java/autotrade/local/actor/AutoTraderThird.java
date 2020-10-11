@@ -1,11 +1,13 @@
 package autotrade.local.actor;
 
 import java.time.Duration;
+import java.util.Base64;
 
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.utility.AutoTradeProperties;
+import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -28,11 +30,30 @@ public class AutoTraderThird extends AutoTrader {
         changePair(CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderThird.order.pair")));
 
         Snapshot shapshot = buildSnapshot();
-        // 反対売買閾値引継ぎ
+
         if (shapshot.hasPosition()) {
-            log.info("load countertrading threshold when order to RateAnalyzer.");
-            rateAnalyzer.loadCountertradingThreshold();
+            cloudLoad();
         }
+    }
+
+    @Override
+    protected void cloudSave() {
+        super.cloudSave();
+
+        log.info("save snapshot when recovery start.");
+        Messenger.set(
+                "snapshotWhenRecoveryStart",
+                Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(recoveryManager.getSnapshotWhenStart())));
+    }
+
+    @Override
+    protected void cloudLoad() {
+        super.cloudLoad();
+
+        log.info("load snapshot when recovery start to RecoveryManager.");
+        recoveryManager.open(
+                AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenRecoveryStart"))));
+
     }
 
     @Override
@@ -47,7 +68,7 @@ public class AutoTraderThird extends AutoTrader {
             // 閾値超過を判定
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 orderAsk(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
+                rateAnalyzer.updateCountertrading(
                         rateAnalyzer.getAskThreshold(),
                         rateAnalyzer.getRatioThresholdAsk());
                 orderDirection = OrderDirection.ASK;
@@ -55,7 +76,7 @@ public class AutoTraderThird extends AutoTrader {
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
-                rateAnalyzer.saveCountertradingThreshold(
+                rateAnalyzer.updateCountertrading(
                         rateAnalyzer.getRatioThresholdBid(),
                         rateAnalyzer.getBidThreshold());
                 orderDirection = OrderDirection.BID;
@@ -73,7 +94,7 @@ public class AutoTraderThird extends AutoTrader {
                 if (rateAnalyzer.getAskThreshold() > rateAnalyzer.getCountertradingAsk()) {
 
                     // 反対売買の閾値を更新
-                    rateAnalyzer.saveCountertradingThreshold(
+                    rateAnalyzer.updateCountertrading(
                             rateAnalyzer.getAskThreshold(),
                             rateAnalyzer.getRatioThresholdAsk());
                 }
@@ -105,7 +126,7 @@ public class AutoTraderThird extends AutoTrader {
                 if (rateAnalyzer.getBidThreshold() < rateAnalyzer.getCountertradingBid()) {
 
                     // 反対売買の閾値を更新
-                    rateAnalyzer.saveCountertradingThreshold(
+                    rateAnalyzer.updateCountertrading(
                             rateAnalyzer.getRatioThresholdBid(),
                             rateAnalyzer.getBidThreshold());
                 }
@@ -134,7 +155,7 @@ public class AutoTraderThird extends AutoTrader {
             case ASK:
                 if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
                     fixAsk(snapshot);
-                    rateAnalyzer.saveCountertradingThreshold(
+                    rateAnalyzer.updateCountertrading(
                             rateAnalyzer.getAskThreshold(),
                             rateAnalyzer.getRatioThresholdAsk());
                 }
@@ -142,7 +163,7 @@ public class AutoTraderThird extends AutoTrader {
             case BID:
                 if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
                     fixBid(snapshot);
-                    rateAnalyzer.saveCountertradingThreshold(
+                    rateAnalyzer.updateCountertrading(
                             rateAnalyzer.getRatioThresholdBid(),
                             rateAnalyzer.getBidThreshold());
                 }
