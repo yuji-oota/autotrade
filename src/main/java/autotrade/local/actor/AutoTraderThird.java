@@ -2,6 +2,7 @@ package autotrade.local.actor;
 
 import java.time.Duration;
 import java.util.Base64;
+import java.util.Scanner;
 
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
@@ -22,18 +23,20 @@ public class AutoTraderThird extends AutoTrader {
         super();
         recoveryManager = new RecoveryManager();
         orderDirection = OrderDirection.valueOf(Messenger.get("orderDirection"));
+
+        System.out.print("do you need cloud load? (y or any) :");
+        try (Scanner scanner = new Scanner(System.in)) {
+            String input = scanner.next();
+            if ("y".equals(input.toLowerCase())) {
+                cloudLoad();
+            }
+        };
     }
 
     @Override
     protected void initialize() {
         super.initialize();
         changePair(CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderThird.order.pair")));
-
-        Snapshot shapshot = buildSnapshot();
-
-        if (shapshot.hasPosition()) {
-            cloudLoad();
-        }
     }
 
     @Override

@@ -31,7 +31,6 @@ import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.DisplayMode;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
-import autotrade.local.material.StartMarginMode;
 import autotrade.local.utility.AutoTradeProperties;
 import autotrade.local.utility.AutoTradeUtils;
 import autotrade.local.utility.WebDriverWrapper;
@@ -200,16 +199,7 @@ public abstract class AutoTrader {
         changePair(CurrencyPair.USDJPY);
 
         // 開始時の証拠金を取得
-        switch (StartMarginMode.valueOf(Messenger.get("startMarginMode"))) {
-        case NEW:
-            startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
-            break;
-        default:
-            startMargin = Integer.parseInt(Messenger.get("startMargin"));
-            break;
-        }
-        Messenger.set("startMargin", String.valueOf(startMargin));
-        Messenger.set("startMarginMode", StartMarginMode.CARRY_OVER.name());
+        startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
 
         // 目標金額設定
         targetAmountOneDay = BigDecimal.valueOf(startMargin).multiply(targetAmountRatio).intValue();
@@ -294,9 +284,6 @@ public abstract class AutoTrader {
             if (snapshot.isPositionNone()
                     && pair.getMinSpread() < snapshot.getRate().getSpread()) {
                 // ポジションが無く、スプレッドが最小よりも広がった場合
-
-                // 次回起動時設定
-                Messenger.set("startMarginMode", StartMarginMode.NEW.name());
 
                 // 非活性時間の終了までスリープする
                 Duration durationToActive = Duration.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
@@ -519,13 +506,19 @@ public abstract class AutoTrader {
         SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenSamed"))));
     }
     protected void cloudSave() {
+        log.info("save currency pair.");
+        Messenger.set("currencyPair", pair.name());
+
         log.info("save countertrading threshold.");
         Messenger.set("countertradingAsk", String.valueOf(rateAnalyzer.getCountertradingAsk()));
         Messenger.set("countertradingBid", String.valueOf(rateAnalyzer.getCountertradingBid()));
     }
     protected void cloudLoad() {
+        log.info("load currency pair.");
+        CurrencyPair currencyPair = CurrencyPair.valueOf(Messenger.get("currencyPair"));
+
         log.info("load countertrading threshold to RateAnalyzer.");
-        rateAnalyzer.updateCountertrading(
+        pairAnalyzerMap.get(currencyPair).updateCountertrading(
                 Integer.parseInt(Messenger.get("countertradingAsk")),
                 Integer.parseInt(Messenger.get("countertradingBid")));
     }
