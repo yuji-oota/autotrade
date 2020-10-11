@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -225,9 +227,20 @@ public abstract class AutoTrader {
     }
 
     protected Rate buildRate() {
+        CompletableFuture<String> futureAsk = CompletableFuture.supplyAsync(() -> wrapper.getAskRate());
+        CompletableFuture<String> futureBid = CompletableFuture.supplyAsync(() -> wrapper.getBidRate());
+        int ask = 0;
+        int bid = 0;
+        try {
+            ask = AutoTradeUtils.toInt(futureAsk.get());
+            bid = AutoTradeUtils.toInt(futureBid.get());
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
         return Rate.builder()
-                .ask(AutoTradeUtils.toInt(wrapper.getAskRate()))
-                .bid(AutoTradeUtils.toInt(wrapper.getBidRate()))
+                .ask(ask)
+                .bid(bid)
                 .timestamp(LocalDateTime.now())
                 .build();
     }
