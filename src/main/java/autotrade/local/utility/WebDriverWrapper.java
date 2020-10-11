@@ -10,12 +10,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import autotrade.local.material.CurrencyPair;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class WebDriverWrapper {
 
     private WebDriver driver;
@@ -43,16 +46,23 @@ public class WebDriverWrapper {
 
         String currentWindow = driver.getWindowHandle();
         driver.findElement(By.xpath("//a[@href='https://lionfx.hirose-fx.co.jp/WTChartWeb/index.html']")).click();
-        AutoTradeUtils.sleep(Duration.ofSeconds(5));
 
         driver.switchTo().window(driver.getWindowHandles().stream()
                 .filter(window -> !window.equals(currentWindow))
                 .findFirst()
                 .orElse(currentWindow)
                 );
-        driver.findElement(By.id("login-id")).sendKeys(AutoTradeProperties.get("fx.login.username"));
-        driver.findElement(By.id("login-pw")).sendKeys(AutoTradeProperties.get("fx.login.password"));
-        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+
+        while(true) {
+            AutoTradeUtils.sleep(Duration.ofSeconds(5));
+            try {
+                driver.findElement(By.id("login-id")).sendKeys(AutoTradeProperties.get("fx.login.username"));
+                driver.findElement(By.id("login-pw")).sendKeys(AutoTradeProperties.get("fx.login.password"));
+                break;
+            } catch (ElementNotInteractableException e) {
+                log.warn(e.getMessage());
+            }
+        }
         driver.findElement(By.id("doLogin")).click();
     }
     public void cancelMessage() {
