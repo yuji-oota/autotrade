@@ -22,7 +22,6 @@ public class AutoTraderThird extends AutoTrader {
     public AutoTraderThird() {
         super();
         recoveryManager = new RecoveryManager();
-        orderDirection = OrderDirection.valueOf(Messenger.get("orderDirection"));
 
         System.out.print("do you need cloud load? (y or any) :");
         try (Scanner scanner = new Scanner(System.in)) {
@@ -43,6 +42,9 @@ public class AutoTraderThird extends AutoTrader {
     protected void cloudSave() {
         super.cloudSave();
 
+        log.info("save order direction.");
+        Messenger.set("orderDirection", orderDirection.name());
+
         log.info("save snapshot when recovery start.");
         Messenger.set(
                 "snapshotWhenRecoveryStart",
@@ -52,6 +54,9 @@ public class AutoTraderThird extends AutoTrader {
     @Override
     protected void cloudLoad() {
         super.cloudLoad();
+
+        log.info("load order direction.");
+        orderDirection = OrderDirection.valueOf(Messenger.get("orderDirection"));
 
         log.info("load snapshot when recovery start to RecoveryManager.");
         recoveryManager.open(
@@ -236,14 +241,6 @@ public class AutoTraderThird extends AutoTrader {
     protected void fixAll(Snapshot snapshot) {
         super.fixAll(snapshot);
         recoveryManager.close();
-    }
-
-    @Override
-    protected void tradePostProcess(Snapshot snapshot) {
-        super.tradePostProcess(snapshot);
-        if (snapshot.hasPosition()) {
-            Messenger.set("orderDirection", orderDirection.name());
-        }
     }
 
 }
