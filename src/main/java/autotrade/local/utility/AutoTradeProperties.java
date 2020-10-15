@@ -84,15 +84,19 @@ public class AutoTradeProperties {
     public static boolean getBoolean(String key) {
         return resolvePropertie(key, properties);
     }
+    public static Map<String, Object> getMap(String key) {
+        return resolvePropertie(key, properties);
+    }
 
     @SuppressWarnings("unchecked")
     private static <T> T resolvePropertie(String key, Map<String, Object> map) {
         List<String> keys = new LinkedList<>(Arrays.asList(key.split("\\.")));
         Object value = map.get(keys.get(0));
-        if (value instanceof Map) {
+        if (keys.size() > 1) {
             keys.remove(0);
             return resolvePropertie(keys.stream().collect(Collectors.joining(".")), (Map<String, Object>) value);
         }
         return (T) value;
     }
+
 }

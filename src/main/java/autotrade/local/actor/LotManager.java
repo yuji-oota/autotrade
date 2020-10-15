@@ -20,8 +20,8 @@ public class LotManager {
     private int countertradingCount;
     private BigDecimal power;
     private Mode mode;
-    private CurrencyPair basePair;
     private Map<CurrencyPair, Rate> sampleRateMap;
+    private Map<String, Object> marginRequirementMap;
 
     private enum Mode {
         POSITIVE,
@@ -29,13 +29,12 @@ public class LotManager {
     }
 
     public LotManager() {
-        basePair = CurrencyPair.valueOf(AutoTradeProperties.get("autotrade.lot.initial.base.pair"));
-        initialPositive = AutoTradeProperties.getInt("autotrade.lot.initial.base.positive");
-        initialNegative = AutoTradeProperties.getInt("autotrade.lot.initial.negative");
+        initialNegative = AutoTradeProperties.getInt("autotrade.lot.negative");
         countertradingMagnification = AutoTradeProperties.getBigDecimal("autotrade.lot.countertrading.magnification");
         countertradingCount = AutoTradeProperties.getInt("autotrade.lot.countertrading.count");
         power = BigDecimal.valueOf(Math.pow(countertradingMagnification.doubleValue(), countertradingCount));
         sampleRateMap = new HashMap<>();
+        marginRequirementMap = AutoTradeProperties.getMap("autotrade.lot.marginRequirement");
         modePositive();
     }
 
@@ -107,21 +106,22 @@ public class LotManager {
         sampleRateMap.put(pair, rate);
     }
 
-    public void changeInitialLot(CurrencyPair pair) {
-        var cp = basePair;
-        if ("JPY".equals(pair.name().substring(3))) {
-            cp = pair;
-        }
-        if ("USD".equals(pair.name().substring(3))) {
-            cp = CurrencyPair.valueOf(pair.name().replace("USD", "JPY"));
-        }
-        initialPositive = calcInitialLot(cp);
-        log.info("initialPositive changed to {}.", initialPositive);
-    }
+    public void changeInitialLot(CurrencyPair pair, int margin) {
+        int marginRequirement = Integer.parseInt(marginRequirementMap.get(pair.name()).toString());
+        int roughEstimateLimit = (int) (margin / marginRequirement * 0.7);
 
-    private int calcInitialLot(CurrencyPair pair) {
-        var basePositive = AutoTradeProperties.getInt("autotrade.lot.initial.base.positive");
-        return basePositive * sampleRateMap.get(basePair).getMiddle() / sampleRateMap.get(pair).getMiddle();
+        int initialLot = 0;
+        int limitLot = 0;
+        while (limitLot < roughEstimateLimit) {
+            initialLot++;
+
+            limitLot = initialLot;
+            for (int i = 0; i < countertradingCount; i++) {
+                limitLot = countertradingMagnification.multiply(BigDecimal.valueOf(limitLot)).setScale(0, RoundingMode.UP).intValue();
+            }
+        }
+        initialPositive = initialLot;
+        log.info("initialPositive changed to {}.", initialPositive);
     }
 
 }
