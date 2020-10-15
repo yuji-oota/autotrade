@@ -95,8 +95,8 @@ public class AutoTraderThird extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
-            if (orderDirection == OrderDirection.ASK) {
-                // 初期ポジションがAskの場合
+            switch (orderDirection) {
+            case ASK:
 
                 rateAnalyzer.updateCountertradingBid(rateAnalyzer.getRatioThresholdAsk());
                 if (rateAnalyzer.getAskThreshold() > rateAnalyzer.getCountertradingAsk()) {
@@ -106,6 +106,17 @@ public class AutoTraderThird extends AutoTrader {
                             rateAnalyzer.getAskThreshold(),
                             rateAnalyzer.getRatioThresholdAsk());
                 }
+                break;
+            case BID:
+
+                if (snapshot.getAskProfit() >= 0
+                && lotManager.isLimit(snapshot)
+                && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
+                    forceSame();
+                }
+
+                break;
+            default:
             }
 
             if (rateAnalyzer.isReachedCountertradingBid(rate)) {
@@ -127,8 +138,16 @@ public class AutoTraderThird extends AutoTrader {
         case BID_SIDE:
             // 売りポジションが多い場合
 
-            if (orderDirection == OrderDirection.BID) {
-                // 初期ポジションがBidの場合
+            switch (orderDirection) {
+            case ASK:
+
+                if (snapshot.getBidProfit() >= 0
+                && lotManager.isLimit(snapshot)
+                && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
+                    forceSame();
+                }
+                break;
+            case BID:
 
                 rateAnalyzer.updateCountertradingAsk(rateAnalyzer.getRatioThresholdBid());
                 if (rateAnalyzer.getBidThreshold() < rateAnalyzer.getCountertradingBid()) {
@@ -138,6 +157,8 @@ public class AutoTraderThird extends AutoTrader {
                             rateAnalyzer.getRatioThresholdBid(),
                             rateAnalyzer.getBidThreshold());
                 }
+                break;
+            default:
             }
 
             if (rateAnalyzer.isReachedCountertradingAsk(rate)) {
@@ -212,26 +233,23 @@ public class AutoTraderThird extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            switch (orderDirection) {
-            case ASK:
-                if (snapshot.getAskProfit() >= 0
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
-                    fixAsk(snapshot);
-                    rateAnalyzer.updateCountertrading(
-                            rateAnalyzer.getAskThreshold(),
-                            rateAnalyzer.getRatioThresholdAsk());
-                }
+            if (snapshot.getAskProfit() >= 0
+                    && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
+                fixAsk(snapshot);
+                rateAnalyzer.updateCountertrading(
+                        rateAnalyzer.getAskThreshold(),
+                        rateAnalyzer.getRatioThresholdAsk());
+                orderDirection = OrderDirection.ASK;
                 break;
-            case BID:
-                if (snapshot.getBidProfit() >= 0
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
-                    fixBid(snapshot);
-                    rateAnalyzer.updateCountertrading(
-                            rateAnalyzer.getRatioThresholdBid(),
-                            rateAnalyzer.getBidThreshold());
-                }
+            }
+            if (snapshot.getBidProfit() >= 0
+                    && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
+                fixBid(snapshot);
+                rateAnalyzer.updateCountertrading(
+                        rateAnalyzer.getRatioThresholdBid(),
+                        rateAnalyzer.getBidThreshold());
+                orderDirection = OrderDirection.BID;
                 break;
-            default:
             }
 
             break;
