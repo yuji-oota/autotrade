@@ -159,26 +159,6 @@ public class AutoTraderThird extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            switch (orderDirection) {
-            case ASK:
-                if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
-                    fixAsk(snapshot);
-                    rateAnalyzer.updateCountertrading(
-                            rateAnalyzer.getAskThreshold(),
-                            rateAnalyzer.getRatioThresholdAsk());
-                }
-                break;
-            case BID:
-                if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
-                    fixBid(snapshot);
-                    rateAnalyzer.updateCountertrading(
-                            rateAnalyzer.getRatioThresholdBid(),
-                            rateAnalyzer.getBidThreshold());
-                }
-                break;
-            default:
-            }
-
             break;
         default:
         }
@@ -231,6 +211,28 @@ public class AutoTraderThird extends AutoTrader {
             break;
         case SAME:
             // ポジションが同数の場合
+
+            switch (orderDirection) {
+            case ASK:
+                if (snapshot.getAskProfit() >= 0
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
+                    fixAsk(snapshot);
+                    rateAnalyzer.updateCountertrading(
+                            rateAnalyzer.getAskThreshold(),
+                            rateAnalyzer.getRatioThresholdAsk());
+                }
+                break;
+            case BID:
+                if (snapshot.getBidProfit() >= 0
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
+                    fixBid(snapshot);
+                    rateAnalyzer.updateCountertrading(
+                            rateAnalyzer.getRatioThresholdBid(),
+                            rateAnalyzer.getBidThreshold());
+                }
+                break;
+            default:
+            }
 
             break;
         default:
