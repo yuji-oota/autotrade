@@ -189,6 +189,12 @@ public abstract class AutoTrader {
         wrapper.pairSettings();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
+        // 開始時の証拠金を取得
+        startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
+
+        // 目標金額設定
+        targetAmountOneDay = BigDecimal.valueOf(startMargin).multiply(targetAmountRatio).intValue();
+
         // 通貨ペア変更
         wrapper.displayRateList();
         Stream.of(CurrencyPair.values()).forEach(p -> {
@@ -199,12 +205,6 @@ public abstract class AutoTrader {
         Stream.of(CurrencyPair.values()).forEach(this::changePair);
         // ポジションが無ければUSD/JPYを設定
         changePair(CurrencyPair.USDJPY);
-
-        // 開始時の証拠金を取得
-        startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
-
-        // 目標金額設定
-        targetAmountOneDay = BigDecimal.valueOf(startMargin).multiply(targetAmountRatio).intValue();
 
         // 表示変更
         changeDisplay(displayMode);
