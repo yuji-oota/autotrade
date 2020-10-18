@@ -516,25 +516,25 @@ public abstract class AutoTrader {
         log.info("{} ia removed from changeable pair.", pair.getDescription());
     }
     protected void loadSameSnapshot() {
-        log.info("load Snapshot when samed to SameManager.");
         SameManager.setSnapshot(AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenSamed"))));
+        log.info("loaded Snapshot when samed to SameManager.");
     }
     protected void cloudSave() {
-        log.info("save currency pair.");
         Messenger.set("currencyPair", pair.name());
+        log.info("saved currency pair {}.", pair.name());
 
-        log.info("save countertrading threshold.");
         Messenger.set("countertradingAsk", String.valueOf(rateAnalyzer.getCountertradingAsk()));
         Messenger.set("countertradingBid", String.valueOf(rateAnalyzer.getCountertradingBid()));
+        log.info("saved countertrading threshold ask {} bid {}.", rateAnalyzer.getCountertradingAsk(), rateAnalyzer.getCountertradingBid());
     }
     protected void cloudLoad() {
-        log.info("load currency pair.");
         CurrencyPair currencyPair = CurrencyPair.valueOf(Messenger.get("currencyPair"));
+        log.info("loaded currency pair {}.", currencyPair);
 
-        log.info("load countertrading threshold to RateAnalyzer.");
         pairAnalyzerMap.get(currencyPair).updateCountertrading(
                 Integer.parseInt(Messenger.get("countertradingAsk")),
                 Integer.parseInt(Messenger.get("countertradingBid")));
+        log.info("loaded countertrading threshold ask {} bid {} to RateAnalyzer.", pairAnalyzerMap.get(currencyPair).getCountertradingAsk(), pairAnalyzerMap.get(currencyPair).getCountertradingBid());
     }
 
     protected MessageListener customizeMessageListener() {
@@ -638,6 +638,7 @@ public abstract class AutoTrader {
                     }
                 })
                 .putCommand(ReservedMessage.CLOUDSAVE, (args) -> this.cloudSave())
+                .putCommand(ReservedMessage.CLOUDLOAD, (args) -> this.cloudLoad())
                 ;
     }
 

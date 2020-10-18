@@ -41,26 +41,26 @@ public class AutoTraderThird extends AutoTrader {
     @Override
     protected void cloudSave() {
         super.cloudSave();
-
-        log.info("save order direction.");
+;
         Messenger.set("orderDirection", orderDirection.name());
+        log.info("saved order direction {}.", orderDirection.name());
 
-        log.info("save snapshot when recovery start.");
         Messenger.set(
                 "snapshotWhenRecoveryStart",
                 Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(recoveryManager.getSnapshotWhenStart())));
+        log.info("saved snapshot when recovery start {}.", recoveryManager.getSnapshotWhenStart());
     }
 
     @Override
     protected void cloudLoad() {
         super.cloudLoad();
 
-        log.info("load order direction.");
         orderDirection = OrderDirection.valueOf(Messenger.get("orderDirection"));
+        log.info("loaded order direction {}.", orderDirection);
 
-        log.info("load snapshot when recovery start to RecoveryManager.");
         recoveryManager.open(
                 AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenRecoveryStart"))));
+        log.info("loaded snapshot when recovery start to RecoveryManager {}.", recoveryManager.getSnapshotWhenStart());
 
     }
 
