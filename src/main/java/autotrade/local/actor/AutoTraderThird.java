@@ -109,12 +109,11 @@ public class AutoTraderThird extends AutoTrader {
                 break;
             case BID:
 
-                if (snapshot.getAskProfit() >= 0
-                && lotManager.isLimit(snapshot)
+                if (lotManager.isLimit(snapshot)
                 && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(5))) {
                     forceSame();
+                    return;
                 }
-
                 break;
             default:
             }
@@ -141,10 +140,10 @@ public class AutoTraderThird extends AutoTrader {
             switch (orderDirection) {
             case ASK:
 
-                if (snapshot.getBidProfit() >= 0
-                && lotManager.isLimit(snapshot)
+                if (lotManager.isLimit(snapshot)
                 && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(5))) {
                     forceSame();
+                    return;
                 }
                 break;
             case BID:
