@@ -98,7 +98,7 @@ public class AutoTraderThird extends AutoTrader {
             switch (orderDirection) {
             case ASK:
 
-                rateAnalyzer.updateCountertradingBid(rateAnalyzer.getRatioThresholdAsk());
+                rateAnalyzer.setCountertradingBid(rateAnalyzer.getRatioThresholdAsk());
                 if (rateAnalyzer.getAskThreshold() > rateAnalyzer.getCountertradingAsk()) {
 
                     // 反対売買の閾値を更新
@@ -148,7 +148,7 @@ public class AutoTraderThird extends AutoTrader {
                 break;
             case BID:
 
-                rateAnalyzer.updateCountertradingAsk(rateAnalyzer.getRatioThresholdBid());
+                rateAnalyzer.setCountertradingAsk(rateAnalyzer.getRatioThresholdBid());
                 if (rateAnalyzer.getBidThreshold() < rateAnalyzer.getCountertradingBid()) {
 
                     // 反対売買の閾値を更新

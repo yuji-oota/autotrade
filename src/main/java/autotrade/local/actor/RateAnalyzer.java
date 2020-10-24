@@ -188,14 +188,14 @@ public class RateAnalyzer {
         }
         return false;
     }
-    public void updateCountertradingAsk(int ask) {
+    public void setCountertradingAsk(int ask) {
         countertradingAsk = ask;
     }
-    public void updateCountertradingBid(int bid) {
+    public void setCountertradingBid(int bid) {
         countertradingBid = bid;
     }
     public void updateCountertrading(int ask, int bid) {
-        updateCountertradingAsk(ask);
-        updateCountertradingBid(bid);
+        setCountertradingAsk(ask);
+        setCountertradingBid(bid);
     }
 }
