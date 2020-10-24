@@ -9,6 +9,7 @@ import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.utility.AutoTradeProperties;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,6 +23,9 @@ public class LotManager {
     private Mode mode;
     private Map<CurrencyPair, Rate> sampleRateMap;
     private Map<String, Object> marginRequirementMap;
+
+    @Getter
+    private int limit;
 
     private enum Mode {
         POSITIVE,
@@ -48,7 +52,7 @@ public class LotManager {
             more = snapshot.getBidLot();
             less = snapshot.getAskLot();
         }
-        return more >= getlimit() ?
+        return more >= getRoughLimit() ?
                 more - less :
                     countertradingMagnification.multiply(BigDecimal.valueOf(more)).setScale(0, RoundingMode.UP).intValue() - less;
     }
@@ -76,14 +80,14 @@ public class LotManager {
         return !isPositive();
     }
     public boolean isLimit(Snapshot snapshot) {
-        if (snapshot.getAskLot() >= getlimit()
-                || snapshot.getBidLot() >= getlimit()) {
+        if (snapshot.getAskLot() >= getRoughLimit()
+                || snapshot.getBidLot() >= getRoughLimit()) {
             return true;
         }
         return false;
     }
 
-    private int getlimit() {
+    private int getRoughLimit() {
         return getInitial() * power.setScale(0, RoundingMode.DOWN).intValue();
     }
     public int getInitial() {
@@ -121,6 +125,7 @@ public class LotManager {
             }
         }
         initialPositive = initialLot;
+        limit = limitLot;
         log.info("initialPositive changed to {}.", initialPositive);
     }
 

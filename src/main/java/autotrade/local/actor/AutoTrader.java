@@ -536,6 +536,12 @@ public abstract class AutoTrader {
                 Integer.parseInt(Messenger.get("countertradingBid")));
         log.info("loaded countertrading threshold ask {} bid {} to RateAnalyzer.", pairAnalyzerMap.get(currencyPair).getCountertradingAsk(), pairAnalyzerMap.get(currencyPair).getCountertradingBid());
     }
+    protected void resetSame() {
+        Snapshot snapshot = buildSnapshot();
+        fixAll(snapshot);
+        orderAsk(lotManager.getLimit());
+        orderBid(lotManager.getLimit());
+    }
 
     protected MessageListener customizeMessageListener() {
         return new MessageListener()
@@ -639,6 +645,7 @@ public abstract class AutoTrader {
                 })
                 .putCommand(ReservedMessage.CLOUDSAVE, (args) -> this.cloudSave())
                 .putCommand(ReservedMessage.CLOUDLOAD, (args) -> this.cloudLoad())
+                .putCommand(ReservedMessage.RESETSAME, (args) -> this.resetSame())
                 ;
     }
 

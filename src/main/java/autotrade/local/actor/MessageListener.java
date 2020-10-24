@@ -46,6 +46,7 @@ public class MessageListener extends RedisPubSubAdapter<String, String> {
         RESERVESTOPFIXBID,
         CLOUDSAVE,
         CLOUDLOAD,
+        RESETSAME,
     }
 
     private Map<ReservedMessage, Consumer<String[]>> commandMap;
