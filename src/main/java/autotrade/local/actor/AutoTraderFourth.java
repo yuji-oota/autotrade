@@ -3,6 +3,7 @@ package autotrade.local.actor;
 import java.util.Base64;
 import java.util.Scanner;
 
+import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
@@ -208,6 +209,13 @@ public class AutoTraderFourth extends AutoTrader {
     protected void fixAll(Snapshot snapshot) {
         super.fixAll(snapshot);
         recoveryManager.close();
+    }
+
+    @Override
+    protected MessageListener customizeMessageListener() {
+        MessageListener messageListener = super.customizeMessageListener();
+        messageListener.putCommand(ReservedMessage.CLOSERECOVERYMANAGER, (args) -> recoveryManager.close());
+        return messageListener;
     }
 
 }
