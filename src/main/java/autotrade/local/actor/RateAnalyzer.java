@@ -198,4 +198,7 @@ public class RateAnalyzer {
         setCountertradingAsk(ask);
         setCountertradingBid(bid);
     }
+    public void setThresholdMinutes(int minutes) {
+        thresholdMinutes = minutes;
+    }
 }

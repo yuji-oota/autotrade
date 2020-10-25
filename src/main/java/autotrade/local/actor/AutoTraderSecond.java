@@ -51,7 +51,7 @@ public class AutoTraderSecond extends AutoTrader {
                     orderBid(snapshot);
                     recoveryManager.open(snapshot);
                 } else {
-                    forceSame();
+                    forceSame(snapshot);
                 }
             }
 
@@ -60,7 +60,7 @@ public class AutoTraderSecond extends AutoTrader {
                     && recoveryManager.isCutOffBid()
                     && recoveryManager.isSuccessCutOffBid(snapshot)
                     && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
-                forceSame();
+                forceSame(snapshot);
             }
 
             break;
@@ -73,7 +73,7 @@ public class AutoTraderSecond extends AutoTrader {
                     orderAsk(snapshot);
                     recoveryManager.open(snapshot);
                 } else {
-                    forceSame();
+                    forceSame(snapshot);
                 }
             }
 
@@ -82,7 +82,7 @@ public class AutoTraderSecond extends AutoTrader {
                     && recoveryManager.isCutOffAsk()
                     && recoveryManager.isSuccessCutOffAsk(snapshot)
                     && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
-                forceSame();
+                forceSame(snapshot);
             }
 
             break;
@@ -198,8 +198,8 @@ public class AutoTraderSecond extends AutoTrader {
     }
 
     @Override
-    protected void forceSame() {
-        super.forceSame();
+    protected void forceSame(Snapshot snapshot) {
+        super.forceSame(snapshot);
         recoveryManager.cutOffDone();
     }
 

@@ -294,16 +294,12 @@ public abstract class AutoTrader {
         }
 
         // 非活性時間処理
-        if (isInactiveTime()) {
-            if (snapshot.isPositionNone()
-                    && pair.getMinSpread() < snapshot.getRate().getSpread()) {
-                // ポジションが無く、スプレッドが最小よりも広がった場合
+        if (isSleep(snapshot)) {
 
-                // 非活性時間の終了までスリープする
-                Duration durationToActive = Duration.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
-                log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
-                AutoTradeUtils.sleep(durationToActive);
-            }
+            // 非活性時間の終了までスリープする
+            Duration durationToActive = Duration.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
+            log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
+            AutoTradeUtils.sleep(durationToActive);
         }
 
         // 推奨通貨ペア自動選択
@@ -325,6 +321,12 @@ public abstract class AutoTrader {
             throw new ApplicationException("RateAnalyzer has doubtful rates.");
         }
 
+    }
+
+    protected boolean isSleep(Snapshot snapshot) {
+        return isInactiveTime()
+                && snapshot.isPositionNone()
+                && pair.getMinSpread() < snapshot.getRate().getSpread();
     }
 
     protected boolean isFixable(Snapshot snapshot) {
@@ -370,8 +372,7 @@ public abstract class AutoTrader {
         return true;
     }
 
-    protected void forceSame() {
-        Snapshot snapshot = buildSnapshot();
+    protected void forceSame(Snapshot snapshot) {
         int askLot = snapshot.getAskLot();
         int bidLot = snapshot.getBidLot();
         if (bidLot < askLot) {
@@ -567,7 +568,7 @@ public abstract class AutoTrader {
                 .putCommand(ReservedMessage.FIXASK, (args) -> wrapper.fixAsk())
                 .putCommand(ReservedMessage.FIXBID, (args) -> wrapper.fixBid())
                 .putCommand(ReservedMessage.FIXALL, (args) -> wrapper.fixAll())
-                .putCommand(ReservedMessage.FORCESAME, (args) -> this.forceSame())
+                .putCommand(ReservedMessage.FORCESAME, (args) -> this.forceSame(this.buildSnapshot()))
                 .putCommand(ReservedMessage.FORCEASK, (args) -> this.orderAsk(this.buildSnapshot()))
                 .putCommand(ReservedMessage.FORCEBID, (args) -> this.orderBid(this.buildSnapshot()))
                 .putCommand(ReservedMessage.LOTNEGATIVE, (args) -> lotManager.modeNegative())
