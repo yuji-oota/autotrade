@@ -19,7 +19,9 @@ public class AutoTraderFourth extends AutoTrader {
     public AutoTraderFourth() {
         super();
         recoveryManager = new RecoveryManager();
-        rateAnalyzer.setThresholdMinutes(AutoTradeProperties.getInt("autoTraderFourth.rateAnalizer.threshold.minutes"));
+        pairAnalyzerMap.get(
+                CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderFourth.order.pair"))).setThresholdMinutes(
+                        AutoTradeProperties.getInt("autoTraderFourth.rateAnalizer.threshold.minutes"));
 
         System.out.print("do you need cloud load? (y or any) :");
         try (Scanner scanner = new Scanner(System.in)) {
