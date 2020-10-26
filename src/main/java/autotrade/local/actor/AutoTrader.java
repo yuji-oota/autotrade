@@ -235,7 +235,7 @@ public abstract class AutoTrader {
         log.info("doubtful rate is built. {}", rate);
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
         Rate reBuild = buildRate();
-        log.info("re build rate is. {}", reBuild);
+        log.info("re build rate is {}", reBuild);
         return reBuild;
     }
 
