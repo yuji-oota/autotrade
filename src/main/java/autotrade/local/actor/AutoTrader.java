@@ -222,8 +222,21 @@ public abstract class AutoTrader {
                 .bidPipProfit(AutoTradeUtils.toInt(wrapper.getBidPipProfit()))
                 .margin(AutoTradeUtils.toInt(wrapper.getMargin()))
                 .todaysProfit(AutoTradeUtils.toInt(wrapper.getMargin()) - startMargin)
-                .rate(buildRate())
+                .rate(buildRateWrapper())
                 .build();
+    }
+
+    protected Rate buildRateWrapper() {
+        Rate rate = buildRate();
+        if (rate.getSpread() <= pair.getMinSpread()
+                || indicatorManager.isPrevIndicatorWithin(Duration.ofMinutes(5))) {
+            return rate;
+        }
+        log.info("doubtful rate is built. {}", rate);
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+        Rate reBuild = buildRate();
+        log.info("re build rate is. {}", reBuild);
+        return reBuild;
     }
 
     protected Rate buildRate() {
