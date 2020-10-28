@@ -1,5 +1,6 @@
 package autotrade.local.actor;
 
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Scanner;
 
@@ -20,8 +21,9 @@ public class AutoTraderFourth extends AutoTrader {
         super();
         recoveryManager = new RecoveryManager();
         pairAnalyzerMap.get(
-                CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderFourth.order.pair"))).setThresholdMinutes(
-                        AutoTradeProperties.getInt("autoTraderFourth.rateAnalizer.threshold.minutes"));
+                CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderFourth.order.pair"))).setThresholdDuration(
+                        Duration.ofSeconds(
+                                AutoTradeProperties.getInt("autoTraderFourth.rateAnalizer.threshold.seconds")));
 
         System.out.print("do you need cloud load? (y or any) :");
         try (Scanner scanner = new Scanner(System.in)) {
@@ -200,6 +202,17 @@ public class AutoTraderFourth extends AutoTrader {
                     && rateAnalyzer.isReachedAskThreshold(rate)) {
                 fixBid(snapshot);
                 break;
+            }
+
+            if (snapshot.getRate().getSpread() <= pair.getMinSpread()) {
+                if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
+                    fixAsk(snapshot);
+                    break;
+                }
+                if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+                    fixBid(snapshot);
+                    break;
+                }
             }
 
             break;
