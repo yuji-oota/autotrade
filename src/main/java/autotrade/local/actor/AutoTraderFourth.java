@@ -63,14 +63,6 @@ public class AutoTraderFourth extends AutoTrader {
     @Override
     protected void order(Snapshot snapshot) {
 
-        // リカバリ判定
-        if (snapshot.hasPosition()
-                && recoveryManager.isOpen()
-                && recoveryManager.isRecovered(snapshot)) {
-            fixAll(snapshot);
-            return;
-        }
-
         Rate rate = snapshot.getRate();
 
         switch (snapshot.getStatus()) {
@@ -174,6 +166,13 @@ public class AutoTraderFourth extends AutoTrader {
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
                     fixAsk(snapshot);
                 }
+            } else {
+                // リカバリ後の場合
+
+                if (recoveryManager.isRecovered(snapshot)
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
+                    fixAll(snapshot);
+                }
             }
 
             break;
@@ -187,11 +186,21 @@ public class AutoTraderFourth extends AutoTrader {
                     && rateAnalyzer.isReachedAskThreshold(rate)) {
                     fixBid(snapshot);
                 }
+            } else {
+                // リカバリ後の場合
+
+                if (recoveryManager.isRecovered(snapshot)
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
+                    fixAll(snapshot);
+                }
             }
 
             break;
         case SAME:
             // ポジションが同数の場合
+            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25) {
+                break;
+            }
 
             if (snapshot.getAskProfit() >= 0
                     && rateAnalyzer.isReachedBidThreshold(rate)) {
