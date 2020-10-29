@@ -148,6 +148,26 @@ public class AutoTraderFourth extends AutoTrader {
     }
 
     @Override
+    protected boolean isFixable(Snapshot snapshot) {
+        switch (snapshot.getStatus()) {
+        case NONE:
+        case ASK_SIDE:
+        case BID_SIDE:
+            break;
+        case SAME:
+            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25) {
+                return false;
+            }
+            if (snapshot.getRate().getSpread() <= pair.getMinSpread()) {
+                return false;
+            }
+            break;
+        default:
+        }
+        return true;
+    }
+
+    @Override
     protected void fix(Snapshot snapshot) {
 
         Rate rate = snapshot.getRate();
@@ -198,9 +218,6 @@ public class AutoTraderFourth extends AutoTrader {
             break;
         case SAME:
             // ポジションが同数の場合
-            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25) {
-                break;
-            }
 
             if (snapshot.getAskProfit() >= 0
                     && rateAnalyzer.isReachedBidThreshold(rate)) {
@@ -213,7 +230,8 @@ public class AutoTraderFourth extends AutoTrader {
                 break;
             }
 
-            if (snapshot.getRate().getSpread() <= pair.getMinSpread()) {
+            if (snapshot.getAskProfit() < 0
+                    && snapshot.getBidProfit() < 0) {
                 if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
                     fixAsk(snapshot);
                     break;
