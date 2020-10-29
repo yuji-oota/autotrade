@@ -363,7 +363,7 @@ public abstract class AutoTrader {
 //                // 利益確定から一定時間内の場合は注文しない
 //                return false;
 //            }
-            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 50) {
+            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25) {
                 // 閾値間隔が狭い場合は注文しない
                 return false;
             }
