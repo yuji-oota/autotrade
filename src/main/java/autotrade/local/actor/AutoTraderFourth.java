@@ -158,7 +158,7 @@ public class AutoTraderFourth extends AutoTrader {
             if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25) {
                 return false;
             }
-            if (snapshot.getRate().getSpread() <= pair.getMinSpread()) {
+            if (snapshot.getRate().getSpread() > pair.getMinSpread()) {
                 return false;
             }
             break;
