@@ -232,10 +232,8 @@ public abstract class AutoTrader {
                 || indicatorManager.isPrevIndicatorWithin(Duration.ofMinutes(5))) {
             return rate;
         }
-        log.info("doubtful rate is built. {}", rate);
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
         Rate reBuild = buildRate();
-        log.info("re build rate is {}", reBuild);
         return reBuild;
     }
 
