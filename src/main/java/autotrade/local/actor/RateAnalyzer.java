@@ -50,9 +50,7 @@ public class RateAnalyzer {
 
     public void add(Rate rate) {
         latestRate = rate;
-        if (rate.isDoubtful()) {
-            log.info("doubtful rate is added {}", rate);
-        } else {
+        if (!rate.isDoubtful()) {
             rates.add(rate);
             updateWaterMark(rate);
         }
