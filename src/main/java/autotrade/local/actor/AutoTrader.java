@@ -332,6 +332,12 @@ public abstract class AutoTrader {
             throw new ApplicationException("RateAnalyzer has doubtful rates.");
         }
 
+        // 非活性時間開始時点でクラウドセーブ
+        if (inactiveStart.isBefore(inactiveStart.plusSeconds(1))) {
+            cloudSave();
+            AutoTradeUtils.sleep(Duration.ofSeconds(1));
+        }
+
     }
 
     protected boolean isSleep(Snapshot snapshot) {
