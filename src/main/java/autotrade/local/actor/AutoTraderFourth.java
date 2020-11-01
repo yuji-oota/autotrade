@@ -3,6 +3,8 @@ package autotrade.local.actor;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Scanner;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.material.CurrencyPair;
@@ -65,6 +67,10 @@ public class AutoTraderFourth extends AutoTrader {
 
         Rate rate = snapshot.getRate();
 
+        Predicate<Rate> isReachedThreshold;
+        Consumer<Snapshot> counterTrading;
+        Consumer<Snapshot> fix;
+
         switch (snapshot.getStatus()) {
         case NONE:
             // ポジションがない場合
@@ -83,58 +89,54 @@ public class AutoTraderFourth extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
-            if (rateAnalyzer.isReachedBidThreshold(rate)) {
+            isReachedThreshold = r -> rateAnalyzer.isReachedBidThreshold(r);
+            counterTrading = s -> forceSame(s);
+            fix = s -> fixAsk(s);
+            if (snapshot.getAskProfit() < 0) {
+                isReachedThreshold = r -> rateAnalyzer.isReachedBidThresholdWithin(r, Duration.ofMinutes(1));
+                counterTrading = s -> orderBid(s);
+            }
+            if (lotManager.isLimit(snapshot)) {
+                fix = s -> fixAll(s);
+            }
+            if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
+                // スプレッドが開いている場合
+                counterTrading = s -> forceSame(s);
+                fix = s -> {};
+            }
+
+            if (isReachedThreshold.test(rate)) {
                 // 下値閾値を超えた場合
-
-                // 逆ポジション取得
-                if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
-                    // スプレッドが開いている場合
-
-                    forceSame(snapshot);
-                } else {
-                    // スプレッドが開いていない場合
-
-                    if (snapshot.getAskProfit() >= 0) {
-                        forceSame(snapshot);
-                    } else {
-                        orderBid(snapshot);
-                        recoveryManager.open(snapshot);
-                    }
-
-                    if (!lotManager.isLimit(snapshot)
-                            && recoveryManager.isOpen()) {
-                        fixAsk(snapshot);
-                    }
-                }
+                recoveryManager.open(snapshot);
+                counterTrading.accept(snapshot);
+                fix.accept(snapshot);
             }
 
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
 
-            if (rateAnalyzer.isReachedAskThreshold(rate)) {
+            isReachedThreshold = r -> rateAnalyzer.isReachedAskThreshold(r);
+            counterTrading = s -> forceSame(s);
+            fix = s -> fixBid(s);
+            if (snapshot.getBidProfit() < 0) {
+                isReachedThreshold = r -> rateAnalyzer.isReachedAskThresholdWithin(r, Duration.ofMinutes(1));
+                counterTrading = s -> orderAsk(s);
+            }
+            if (lotManager.isLimit(snapshot)) {
+                fix = s -> fixAll(s);
+            }
+            if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
+                // スプレッドが開いている場合
+                counterTrading = s -> forceSame(s);
+                fix = s -> {};
+            }
+
+            if (isReachedThreshold.test(rate)) {
                 // 下値閾値を超えた場合
-
-                // 逆ポジション取得
-                if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
-                    // スプレッドが開いている場合
-
-                    forceSame(snapshot);
-                } else {
-                    // スプレッドが開いていない場合
-
-                    if (snapshot.getBidProfit() >= 0) {
-                        forceSame(snapshot);
-                    } else {
-                        orderAsk(snapshot);
-                        recoveryManager.open(snapshot);
-                    }
-
-                    if (!lotManager.isLimit(snapshot)
-                            && recoveryManager.isOpen()) {
-                        fixBid(snapshot);
-                    }
-                }
+                recoveryManager.open(snapshot);
+                counterTrading.accept(snapshot);
+                fix.accept(snapshot);
             }
 
             break;
@@ -158,7 +160,7 @@ public class AutoTraderFourth extends AutoTrader {
             if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25) {
                 return false;
             }
-            if (snapshot.getRate().getSpread() > pair.getMinSpread()) {
+            if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
                 return false;
             }
             break;
@@ -219,27 +221,13 @@ public class AutoTraderFourth extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            if (snapshot.getAskProfit() >= 0
-                    && rateAnalyzer.isReachedBidThreshold(rate)) {
+            if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 fixAsk(snapshot);
                 break;
             }
-            if (snapshot.getBidProfit() >= 0
-                    && rateAnalyzer.isReachedAskThreshold(rate)) {
+            if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 fixBid(snapshot);
                 break;
-            }
-
-            if (snapshot.getAskProfit() < 0
-                    && snapshot.getBidProfit() < 0) {
-                if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
-                    fixAsk(snapshot);
-                    break;
-                }
-                if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
-                    fixBid(snapshot);
-                    break;
-                }
             }
 
             break;
