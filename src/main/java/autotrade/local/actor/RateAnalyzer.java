@@ -36,6 +36,7 @@ public class RateAnalyzer {
     private boolean isSenceOfDirection;
     private int thresholdMinutes;
     private Duration thresholdDuration;
+    private boolean isMoved;
 
     public RateAnalyzer() {
         rates = new ArrayList<>();
@@ -46,9 +47,15 @@ public class RateAnalyzer {
         countertradingRatio = AutoTradeProperties.getBigDecimal("autotrade.rateAnalizer.countertrading.ratio");
         thresholdMinutes = AutoTradeProperties.getInt("autotrade.rateAnalizer.threshold.minutes");
         thresholdDuration = Duration.ofMinutes(thresholdMinutes);
+        latestRate = Rate.builder().ask(Integer.MIN_VALUE).bid(Integer.MAX_VALUE).build();
     }
 
     public void add(Rate rate) {
+        isMoved = false;
+        if (latestRate.getAsk() != rate.getAsk()
+                || latestRate.getBid() != rate.getBid()) {
+            isMoved = true;
+        }
         latestRate = rate;
         if (!rate.isDoubtful()) {
             rates.add(rate);

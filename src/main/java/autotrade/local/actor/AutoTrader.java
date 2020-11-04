@@ -333,10 +333,10 @@ public abstract class AutoTrader {
         }
 
         // 非活性時間開始時点でクラウドセーブ
-        if (inactiveStart.isBefore(inactiveStart.plusSeconds(1))) {
-            cloudSave();
-            AutoTradeUtils.sleep(Duration.ofSeconds(1));
-        }
+//        if (inactiveStart.isBefore(inactiveStart.plusSeconds(1))) {
+//            cloudSave();
+//            AutoTradeUtils.sleep(Duration.ofSeconds(1));
+//        }
 
     }
 
@@ -351,12 +351,16 @@ public abstract class AutoTrader {
     }
 
     protected boolean isOrderable(Snapshot snapshot) {
-        if (Duration.between(rateAnalyzer.getEarliestRate().getTimestamp(), LocalDateTime.now()).toMinutes() < 5) {
+        if (Duration.between(rateAnalyzer.getEarliestRate().getTimestamp(), LocalDateTime.now()).toMinutes() < 1) {
             // 過去Rateがある程度存在しない場合は注文しない
             return false;
         }
         if (snapshot.getRate().isDoubtful()) {
             // スプレッドが開きすぎの場合は注文しない
+            return false;
+        }
+        if (!rateAnalyzer.isMoved()) {
+            // レートが動いていない場合は注文しない
             return false;
         }
 
