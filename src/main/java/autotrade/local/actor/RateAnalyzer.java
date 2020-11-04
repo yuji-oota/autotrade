@@ -7,7 +7,6 @@ import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Random;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -37,6 +36,7 @@ public class RateAnalyzer {
     private int thresholdMinutes;
     private Duration thresholdDuration;
     private boolean isMoved;
+    private int doubtfulCounter;
 
     public RateAnalyzer() {
         rates = new ArrayList<>();
@@ -52,9 +52,11 @@ public class RateAnalyzer {
 
     public void add(Rate rate) {
         isMoved = false;
+        doubtfulCounter++;
         if (latestRate.getAsk() != rate.getAsk()
                 || latestRate.getBid() != rate.getBid()) {
             isMoved = true;
+            doubtfulCounter = 0;
         }
         latestRate = rate;
         if (!rate.isDoubtful()) {
@@ -182,15 +184,8 @@ public class RateAnalyzer {
         log.info("isSenceOfDirection {}, internal count {}", isSenceOfDirection, count);
     }
     public boolean hasDoubtfulRates() {
-        if (rates.size() > 100) {
-            long count = IntStream.range(0, 10).filter(i -> {
-                int index = new Random().nextInt(rates.size());
-                Rate r = rates.get(index);
-                return r.getAsk() == latestRate.getAsk() && r.getBid() == latestRate.getBid();
-            }).count();
-            if (count == 10) {
-                return true;
-            }
+        if (doubtfulCounter > 100) {
+            return true;
         }
         return false;
     }
