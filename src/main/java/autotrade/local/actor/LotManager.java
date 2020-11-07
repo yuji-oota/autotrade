@@ -2,11 +2,9 @@ package autotrade.local.actor;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.HashMap;
 import java.util.Map;
 
 import autotrade.local.material.CurrencyPair;
-import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.utility.AutoTradeProperties;
 import lombok.Getter;
@@ -21,7 +19,6 @@ public class LotManager {
     private int countertradingCount;
     private BigDecimal power;
     private Mode mode;
-    private Map<CurrencyPair, Rate> sampleRateMap;
     private Map<String, Object> marginRequirementMap;
 
     @Getter
@@ -37,7 +34,6 @@ public class LotManager {
         countertradingMagnification = AutoTradeProperties.getBigDecimal("autotrade.lot.countertrading.magnification");
         countertradingCount = AutoTradeProperties.getInt("autotrade.lot.countertrading.count");
         power = BigDecimal.valueOf(Math.pow(countertradingMagnification.doubleValue(), countertradingCount));
-        sampleRateMap = new HashMap<>();
         marginRequirementMap = AutoTradeProperties.getMap("autotrade.lot.marginRequirement");
         modePositive();
     }
@@ -104,10 +100,6 @@ public class LotManager {
     public void decrementInitialPositive() {
         initialPositive = initialPositive - 1;
         log.info("initialPositive changed to {}.", initialPositive);
-    }
-
-    public void addSampleRateMap(CurrencyPair pair, Rate rate) {
-        sampleRateMap.put(pair, rate);
     }
 
     public void changeInitialLot(CurrencyPair pair, int margin) {

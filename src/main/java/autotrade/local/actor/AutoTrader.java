@@ -197,11 +197,6 @@ public abstract class AutoTrader {
 
         // 通貨ペア変更
         wrapper.displayRateList();
-        Stream.of(CurrencyPair.values()).forEach(p -> {
-            Rate rate = buildRateFromList(p);
-            lotManager.addSampleRateMap(p, rate);
-            pairAnalyzerMap.get(p).add(rate);
-        });
         Stream.of(CurrencyPair.values()).forEach(this::changePair);
         // ポジションが無ければUSD/JPYを設定
         changePair(CurrencyPair.USDJPY);
