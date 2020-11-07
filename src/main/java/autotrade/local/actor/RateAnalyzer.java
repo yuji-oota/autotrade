@@ -202,4 +202,8 @@ public class RateAnalyzer {
     public void setThresholdDuration(Duration duration) {
         thresholdDuration = duration;
     }
+    public void resetCountertrading() {
+        countertradingAsk = Integer.MAX_VALUE;
+        countertradingBid = Integer.MIN_VALUE;
+    }
 }

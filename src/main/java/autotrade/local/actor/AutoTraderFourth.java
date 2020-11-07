@@ -100,11 +100,13 @@ public class AutoTraderFourth extends AutoTrader {
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 orderAsk(snapshot);
                 recoveryManager.open(snapshot);
+                rateAnalyzer.setCountertradingBid(rateAnalyzer.getRatioThresholdAsk());
                 return;
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
                 recoveryManager.open(snapshot);
+                rateAnalyzer.setCountertradingAsk(rateAnalyzer.getRatioThresholdBid());
                 return;
             }
 
@@ -116,7 +118,6 @@ public class AutoTraderFourth extends AutoTrader {
             counterTrading = s -> forceSame(s);
             fix = s -> fixAsk(s);
             if (snapshot.getAskProfit() < 0) {
-//                isReachedThreshold = r -> rateAnalyzer.isReachedBidThresholdWithin(r, Duration.ofMinutes(1));
                 counterTrading = s -> orderBid(s);
                 if (lotManager.isLimit(snapshot)) {
                     counterTrading = s -> {};
@@ -130,12 +131,19 @@ public class AutoTraderFourth extends AutoTrader {
                 fix = s -> {};
             }
 
+            // 騙しの５分対策
+            if (rateAnalyzer.isReachedBidThreshold(rate)) {
+                forceSame(snapshot);
+                break;
+            }
+
             if (isReachedThreshold.test(rate)) {
                 // 下値閾値を超えた場合
 
-//                recoveryManager.open(snapshot);
                 counterTrading.accept(snapshot);
                 fix.accept(snapshot);
+                rateAnalyzer.setCountertradingAsk(rateAnalyzer.getRatioThresholdBid());
+                break;
             }
 
             break;
@@ -146,7 +154,6 @@ public class AutoTraderFourth extends AutoTrader {
             counterTrading = s -> forceSame(s);
             fix = s -> fixBid(s);
             if (snapshot.getBidProfit() < 0) {
-//                isReachedThreshold = r -> rateAnalyzer.isReachedAskThresholdWithin(r, Duration.ofMinutes(1));
                 counterTrading = s -> orderAsk(s);
                 if (lotManager.isLimit(snapshot)) {
                     counterTrading = s -> {};
@@ -160,12 +167,19 @@ public class AutoTraderFourth extends AutoTrader {
                 fix = s -> {};
             }
 
+            // 騙しの５分対策
+            if (rateAnalyzer.isReachedAskThreshold(rate)) {
+                forceSame(snapshot);
+                break;
+            }
+
             if (isReachedThreshold.test(rate)) {
                 // 下値閾値を超えた場合
 
-//                recoveryManager.open(snapshot);
                 counterTrading.accept(snapshot);
                 fix.accept(snapshot);
+                rateAnalyzer.setCountertradingBid(rateAnalyzer.getRatioThresholdAsk());
+                break;
             }
 
             break;
@@ -252,10 +266,12 @@ public class AutoTraderFourth extends AutoTrader {
 
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 fixAsk(snapshot);
+                rateAnalyzer.resetCountertrading();
                 break;
             }
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 fixBid(snapshot);
+                rateAnalyzer.resetCountertrading();
                 break;
             }
 
