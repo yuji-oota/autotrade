@@ -198,8 +198,7 @@ public abstract class AutoTrader {
         // 通貨ペア変更
         wrapper.displayRateList();
         Stream.of(CurrencyPair.values()).forEach(this::changePair);
-        // ポジションが無ければUSD/JPYを設定
-        changePair(CurrencyPair.USDJPY);
+        changePair(CurrencyPair.valueOf(AutoTradeProperties.get("autotrade.order.pair")));
 
         // 表示変更
         changeDisplay(displayMode);

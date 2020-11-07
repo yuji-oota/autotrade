@@ -37,12 +37,6 @@ public class AutoTraderFourth extends AutoTrader {
     }
 
     @Override
-    protected void initialize() {
-        super.initialize();
-        changePair(CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderFourth.order.pair")));
-    }
-
-    @Override
     protected void cloudSave() {
         super.cloudSave();
 
