@@ -241,7 +241,7 @@ public class AutoTraderFourth extends AutoTrader {
                 // リカバリ後の場合
 
                 if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofSeconds(150))) {
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofSeconds(60))) {
                     fixAll(snapshot);
                 }
             }
@@ -261,7 +261,7 @@ public class AutoTraderFourth extends AutoTrader {
                 // リカバリ後の場合
 
                 if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofSeconds(150))) {
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofSeconds(60))) {
                     fixAll(snapshot);
                 }
             }

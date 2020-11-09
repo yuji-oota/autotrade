@@ -52,7 +52,8 @@ public class RecoveryManager {
 
     public boolean isRecovered(Snapshot snapshot) {
         boolean isRecovered = snapshotWhenStart.getMargin() <= snapshot.getMargin() + snapshot.getPositionProfit();
-        if (!isReachedRecover) {
+        if (!isReachedRecover && isRecovered) {
+            log.info("reached recovery.");
             isReachedRecover = isRecovered;
         }
         return isRecovered;
