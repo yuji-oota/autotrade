@@ -186,8 +186,8 @@ public abstract class AutoTrader {
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
         // 通貨ペア設定
-        wrapper.pairSettings();
-        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+//        wrapper.pairSettings();
+//        AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
         // 開始時の証拠金を取得
         startMargin = AutoTradeUtils.toInt(wrapper.getMargin());

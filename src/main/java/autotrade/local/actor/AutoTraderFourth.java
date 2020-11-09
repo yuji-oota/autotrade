@@ -126,7 +126,7 @@ public class AutoTraderFourth extends AutoTrader {
             }
 
             // 騙しの５分対策
-            if (rateAnalyzer.isReachedBidThreshold(rate)) {
+            if (rateAnalyzer.isReachedCountertradingBid(rate)) {
                 forceSame(snapshot);
                 break;
             }
@@ -162,7 +162,7 @@ public class AutoTraderFourth extends AutoTrader {
             }
 
             // 騙しの５分対策
-            if (rateAnalyzer.isReachedAskThreshold(rate)) {
+            if (rateAnalyzer.isReachedCountertradingAsk(rate)) {
                 forceSame(snapshot);
                 break;
             }

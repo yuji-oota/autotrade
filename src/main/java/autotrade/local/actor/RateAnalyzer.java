@@ -184,7 +184,7 @@ public class RateAnalyzer {
         log.info("isSenceOfDirection {}, internal count {}", isSenceOfDirection, count);
     }
     public boolean hasDoubtfulRates() {
-        if (doubtfulCounter > 100) {
+        if (doubtfulCounter > 500) {
             return true;
         }
         return false;
