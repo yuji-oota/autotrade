@@ -131,6 +131,12 @@ public class AutoTraderFourth extends AutoTrader {
                 break;
             }
 
+            if (recoveryManager.isReachedRecover()
+                    && !recoveryManager.isRecovered(snapshot)) {
+                forceSame(snapshot);
+                break;
+            }
+
             if (isReachedThreshold.test(rate)) {
                 // 下値閾値を超えた場合
 
@@ -163,6 +169,12 @@ public class AutoTraderFourth extends AutoTrader {
 
             // 騙しの５分対策
             if (rateAnalyzer.isReachedCountertradingAsk(rate)) {
+                forceSame(snapshot);
+                break;
+            }
+
+            if (recoveryManager.isReachedRecover()
+                    && !recoveryManager.isRecovered(snapshot)) {
                 forceSame(snapshot);
                 break;
             }
@@ -261,11 +273,13 @@ public class AutoTraderFourth extends AutoTrader {
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 fixAsk(snapshot);
                 rateAnalyzer.resetCountertrading();
+                recoveryManager.resetReachedRecover();
                 break;
             }
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 fixBid(snapshot);
                 rateAnalyzer.resetCountertrading();
+                recoveryManager.resetReachedRecover();
                 break;
             }
 

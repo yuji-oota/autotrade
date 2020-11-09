@@ -11,6 +11,7 @@ public class RecoveryManager {
     private boolean isOpen;
     private boolean isCutOffAsk;
     private boolean isCutOffBid;
+    private boolean isReachedRecover;
     private Snapshot snapshotWhenStart;
     private Snapshot shapshotWhenCutOffAsk;
     private Snapshot shapshotWhenCutOffBid;
@@ -33,6 +34,7 @@ public class RecoveryManager {
     }
     public void close() {
         isOpen = false;
+        resetReachedRecover();
         cutOffDone();
         log.info("recovery done.");
     }
@@ -41,12 +43,19 @@ public class RecoveryManager {
         isCutOffBid = false;
         log.info("cut off done.");
     }
+    public void resetReachedRecover() {
+        isReachedRecover = false;
+    }
     public boolean isClose() {
         return !isOpen;
     }
 
     public boolean isRecovered(Snapshot snapshot) {
-        return snapshotWhenStart.getMargin() <= snapshot.getMargin() + snapshot.getPositionProfit();
+        boolean isRecovered = snapshotWhenStart.getMargin() <= snapshot.getMargin() + snapshot.getPositionProfit();
+        if (!isReachedRecover) {
+            isReachedRecover = isRecovered;
+        }
+        return isRecovered;
     }
     public boolean isSuccessCutOffAsk(Snapshot snapshot) {
         return shapshotWhenCutOffAsk.getRate().getBid() >= snapshot.getRate().getAsk();
