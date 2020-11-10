@@ -278,13 +278,13 @@ public class AutoTraderFourth extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            if (rateAnalyzer.isReachedBidThreshold(rate)) {
+            if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
                 fixAsk(snapshot);
                 rateAnalyzer.resetCountertrading();
                 recoveryManager.resetReachedRecover();
                 break;
             }
-            if (rateAnalyzer.isReachedAskThreshold(rate)) {
+            if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
                 fixBid(snapshot);
                 rateAnalyzer.resetCountertrading();
                 recoveryManager.resetReachedRecover();
