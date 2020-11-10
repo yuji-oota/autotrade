@@ -240,8 +240,12 @@ public class AutoTraderFourth extends AutoTrader {
             } else {
                 // リカバリ後の場合
 
+//                if (recoveryManager.isRecovered(snapshot)
+//                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofSeconds(60))) {
+//                    fixAll(snapshot);
+//                }
                 if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofSeconds(60))) {
+                        && rateAnalyzer.isBidDown()) {
                     fixAll(snapshot);
                 }
             }
@@ -260,8 +264,12 @@ public class AutoTraderFourth extends AutoTrader {
             } else {
                 // リカバリ後の場合
 
+//                if (recoveryManager.isRecovered(snapshot)
+//                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofSeconds(60))) {
+//                    fixAll(snapshot);
+//                }
                 if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofSeconds(60))) {
+                        && rateAnalyzer.isAskUp()) {
                     fixAll(snapshot);
                 }
             }

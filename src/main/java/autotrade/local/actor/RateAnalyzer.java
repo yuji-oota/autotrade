@@ -37,6 +37,8 @@ public class RateAnalyzer {
     private Duration thresholdDuration;
     private boolean isMoved;
     private int doubtfulCounter;
+    private boolean isAskUp;
+    private boolean isBidDown;
 
     public RateAnalyzer() {
         rates = new ArrayList<>();
@@ -58,10 +60,12 @@ public class RateAnalyzer {
             isMoved = true;
             doubtfulCounter = 0;
         }
-        latestRate = rate;
         if (!rate.isDoubtful()) {
             rates.add(rate);
             updateWaterMark(rate);
+            isAskUp = latestRate.getAsk() < rate.getAsk();
+            isBidDown = latestRate.getBid() > rate.getBid();
+            latestRate = rate;
         }
         rates = rates.stream()
                 .filter(r -> r.passed().toMillis() <= Duration.ofMinutes(20).toMillis())
