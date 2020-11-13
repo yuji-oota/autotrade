@@ -101,16 +101,10 @@ public class AutoTraderFifth extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
-            if (recoveryManager.isReachedRecover()
-                    && !recoveryManager.isRecovered(snapshot)) {
-                forceSame(snapshot);
-                break;
-            }
-
             if (snapshot.getAskProfit() < 0) {
                 // ポジション損益がマイナスの場合
 
-                if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(5))) {
+                if (rateAnalyzer.isReachedBidThreshold(rate)) {
                     if (lotManager.isLimit(snapshot)) {
                         fixAll(snapshot);
                     } else {
@@ -119,12 +113,9 @@ public class AutoTraderFifth extends AutoTrader {
                             forceSame(snapshot);
                         } else {
                             orderBid(snapshot);
+                            fixAsk(snapshot);
                         }
                     }
-                    break;
-                }
-                if (rateAnalyzer.isReachedBidThreshold(rate)) {
-                    forceSame(snapshot);
                     break;
                 }
             } else {
@@ -140,15 +131,9 @@ public class AutoTraderFifth extends AutoTrader {
         case BID_SIDE:
             // 売りポジションが多い場合
 
-            if (recoveryManager.isReachedRecover()
-                    && !recoveryManager.isRecovered(snapshot)) {
-                forceSame(snapshot);
-                break;
-            }
-
             if (snapshot.getBidProfit() < 0) {
                 // ポジション損益がマイナスの場合
-                if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(5))) {
+                if (rateAnalyzer.isReachedAskThreshold(rate)) {
                     if (lotManager.isLimit(snapshot)) {
                         fixAll(snapshot);
                     } else {
@@ -157,12 +142,9 @@ public class AutoTraderFifth extends AutoTrader {
                             forceSame(snapshot);
                         } else {
                             orderAsk(snapshot);
+                            fixBid(snapshot);
                         }
                     }
-                    break;
-                }
-                if (rateAnalyzer.isReachedAskThreshold(rate)) {
-                    forceSame(snapshot);
                     break;
                 }
             } else {
@@ -225,10 +207,18 @@ public class AutoTraderFifth extends AutoTrader {
             } else {
                 // リカバリ後の場合
 
+                if (recoveryManager.isReachedRecover()
+                        && !recoveryManager.isRecovered(snapshot)) {
+                    fixAll(snapshot);
+                    break;
+                }
+
                 if (recoveryManager.isRecovered(snapshot)
                         && rateAnalyzer.isBidDown()) {
                     fixAll(snapshot);
+                    break;
                 }
+
             }
 
             break;
@@ -245,9 +235,16 @@ public class AutoTraderFifth extends AutoTrader {
             } else {
                 // リカバリ後の場合
 
+                if (recoveryManager.isReachedRecover()
+                        && !recoveryManager.isRecovered(snapshot)) {
+                    fixAll(snapshot);
+                    break;
+                }
+
                 if (recoveryManager.isRecovered(snapshot)
                         && rateAnalyzer.isAskUp()) {
                     fixAll(snapshot);
+                    break;
                 }
             }
 
@@ -255,12 +252,12 @@ public class AutoTraderFifth extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            if (snapshot.getAskProfit() >= 0 && rateAnalyzer.isBidDown()) {
+            if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 fixAsk(snapshot);
                 recoveryManager.resetReachedRecover();
                 break;
             }
-            if (snapshot.getBidProfit() >= 0 && rateAnalyzer.isAskUp()) {
+            if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 fixBid(snapshot);
                 recoveryManager.resetReachedRecover();
                 break;
