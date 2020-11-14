@@ -89,11 +89,13 @@ public class AutoTraderFifth extends AutoTrader {
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 orderAsk(snapshot);
                 recoveryManager.open(snapshot);
+                recoveryManager.setCounterTradingRate(rate);
                 return;
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
                 recoveryManager.open(snapshot);
+                recoveryManager.setCounterTradingRate(rate);
                 return;
             }
 
@@ -101,10 +103,15 @@ public class AutoTraderFifth extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
-            if (snapshot.getAskProfit() < 0) {
-                // ポジション損益がマイナスの場合
+            if (recoveryManager.isReachedRecover()
+                    && !recoveryManager.isRecovered(snapshot)) {
+                forceSame(snapshot);
+                break;
+            }
 
-                if (rateAnalyzer.isReachedBidThreshold(rate)) {
+            if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
+                if (!recoveryManager.isSuccessCounterTradingAsk(rate)) {
+                    // 反対売買失敗中の場合
                     if (lotManager.isLimit(snapshot)) {
                         fixAll(snapshot);
                     } else {
@@ -116,24 +123,39 @@ public class AutoTraderFifth extends AutoTrader {
                             fixAsk(snapshot);
                         }
                     }
-                    break;
-                }
-            } else {
-                // ポジション損益がプラスの場合
+                } else {
+                    // 反対売買成功中の場合
 
-                if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(5))) {
                     forceSame(snapshot);
-                    break;
+                    if (pair.getMinSpread() >= snapshot.getRate().getSpread()) {
+                        // スプレッドが開いていない場合
+
+                        fixAsk(snapshot);
+                    }
                 }
+                recoveryManager.setCounterTradingRate(rate);
+                break;
+            }
+            if (!snapshot.hasBothSide()
+                    && !recoveryManager.isSuccessCounterTradingAsk(rate)
+                    && rateAnalyzer.isReachedBidThreshold(rate)) {
+                orderBid(snapshot.getAskLot() / 2);
+                break;
             }
 
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
 
-            if (snapshot.getBidProfit() < 0) {
-                // ポジション損益がマイナスの場合
-                if (rateAnalyzer.isReachedAskThreshold(rate)) {
+            if (recoveryManager.isReachedRecover()
+                    && !recoveryManager.isRecovered(snapshot)) {
+                forceSame(snapshot);
+                break;
+            }
+
+            if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+                if (!recoveryManager.isSuccessCounterTradingBid(rate)) {
+                    // 反対売買失敗中の場合
                     if (lotManager.isLimit(snapshot)) {
                         fixAll(snapshot);
                     } else {
@@ -145,14 +167,24 @@ public class AutoTraderFifth extends AutoTrader {
                             fixBid(snapshot);
                         }
                     }
-                    break;
-                }
-            } else {
-                // ポジション損益がプラスの場合
-                if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(5))) {
+                } else {
+                    // 反対売買成功中の場合
+
                     forceSame(snapshot);
-                    break;
+                    if (pair.getMinSpread() >= snapshot.getRate().getSpread()) {
+                        // スプレッドが開いていない場合
+
+                        fixBid(snapshot);
+                    }
                 }
+                recoveryManager.setCounterTradingRate(rate);
+                break;
+            }
+            if (!snapshot.hasBothSide()
+                    && !recoveryManager.isSuccessCounterTradingBid(rate)
+                    && rateAnalyzer.isReachedAskThreshold(rate)) {
+                orderAsk(snapshot.getBidLot() / 2);
+                break;
             }
 
             break;
@@ -197,67 +229,46 @@ public class AutoTraderFifth extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
-            if (recoveryManager.isClose()) {
-                // リカバリ前の場合
-
-                if (snapshot.getAskProfit() >= 0
-                        && rateAnalyzer.isReachedBidThreshold(rate)) {
-                    fixAsk(snapshot);
-                }
-            } else {
-                // リカバリ後の場合
-
-                if (recoveryManager.isReachedRecover()
-                        && !recoveryManager.isRecovered(snapshot)) {
-                    fixAll(snapshot);
-                    break;
-                }
-
-                if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isBidDown()) {
-                    fixAll(snapshot);
-                    break;
-                }
-
+            if (recoveryManager.isRecovered(snapshot)
+                    && rateAnalyzer.isBidDown()) {
+                fixAll(snapshot);
+                break;
+            }
+            if (snapshot.hasBothSide()
+                    && snapshot.getBidProfit() >= 0
+                    && rateAnalyzer.isReachedAskThreshold(rate)) {
+                fixBid(snapshot);
+                break;
             }
 
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
 
-            if (recoveryManager.isClose()) {
-                // リカバリ前の場合
-
-                if (snapshot.getBidProfit() >= 0
-                    && rateAnalyzer.isReachedAskThreshold(rate)) {
-                    fixBid(snapshot);
-                }
-            } else {
-                // リカバリ後の場合
-
-                if (recoveryManager.isReachedRecover()
-                        && !recoveryManager.isRecovered(snapshot)) {
-                    fixAll(snapshot);
-                    break;
-                }
-
-                if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isAskUp()) {
-                    fixAll(snapshot);
-                    break;
-                }
+            if (recoveryManager.isRecovered(snapshot)
+                    && rateAnalyzer.isAskUp()) {
+                fixAll(snapshot);
+                break;
+            }
+            if (snapshot.hasBothSide()
+                    && snapshot.getAskProfit() >= 0
+                    && rateAnalyzer.isReachedBidThreshold(rate)) {
+                fixAsk(snapshot);
+                break;
             }
 
             break;
         case SAME:
             // ポジションが同数の場合
 
-            if (rateAnalyzer.isReachedBidThreshold(rate)) {
+            if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
+                recoveryManager.setCounterTradingRate(rate);
                 fixAsk(snapshot);
                 recoveryManager.resetReachedRecover();
                 break;
             }
-            if (rateAnalyzer.isReachedAskThreshold(rate)) {
+            if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+                recoveryManager.setCounterTradingRate(rate);
                 fixBid(snapshot);
                 recoveryManager.resetReachedRecover();
                 break;

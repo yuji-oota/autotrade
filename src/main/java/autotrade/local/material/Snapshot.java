@@ -61,12 +61,20 @@ public class Snapshot implements Serializable {
         return PositionStatus.SAME;
     }
 
+    public boolean hasOneSide() {
+        if ((askLot > 0 && bidLot == 0)
+                || (askLot == 0 && bidLot > 0)) {
+            return true;
+        }
+        return false;
+    }
     public boolean hasBothSide() {
         if (askLot > 0 && bidLot > 0) {
             return true;
         }
         return false;
     }
+
 
     public boolean hasPosition() {
         if (askLot > 0 || bidLot > 0) {

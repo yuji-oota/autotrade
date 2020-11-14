@@ -1,7 +1,9 @@
 package autotrade.local.actor;
 
+import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -15,6 +17,9 @@ public class RecoveryManager {
     private Snapshot snapshotWhenStart;
     private Snapshot shapshotWhenCutOffAsk;
     private Snapshot shapshotWhenCutOffBid;
+
+    @Setter
+    private Rate counterTradingRate;
 
     public void open(Snapshot snapshot) {
         if (!isOpen) {
@@ -63,5 +68,11 @@ public class RecoveryManager {
     }
     public boolean isSuccessCutOffBid(Snapshot snapshot) {
         return shapshotWhenCutOffBid.getRate().getAsk() <= snapshot.getRate().getBid();
+    }
+    public boolean isSuccessCounterTradingAsk(Rate rate) {
+        return counterTradingRate.getAsk() <= rate.getBid();
+    }
+    public boolean isSuccessCounterTradingBid(Rate rate) {
+        return counterTradingRate.getBid() >= rate.getAsk();
     }
 }
