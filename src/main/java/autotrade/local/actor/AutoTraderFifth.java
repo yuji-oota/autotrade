@@ -44,6 +44,11 @@ public class AutoTraderFifth extends AutoTrader {
                 "snapshotWhenRecoveryStart",
                 Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(recoveryManager.getSnapshotWhenStart())));
         log.info("saved snapshot when recovery start {}.", recoveryManager.getSnapshotWhenStart());
+
+        Messenger.set(
+                "counterTradingRate",
+                Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(recoveryManager.getCounterTradingRate())));
+        log.info("saved countertrading rate {}.", recoveryManager.getCounterTradingRate());
     }
 
     @Override
@@ -53,6 +58,10 @@ public class AutoTraderFifth extends AutoTrader {
         recoveryManager.open(
                 AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenRecoveryStart"))));
         log.info("loaded snapshot when recovery start to RecoveryManager {}.", recoveryManager.getSnapshotWhenStart());
+
+        recoveryManager.setCounterTradingRate(
+                AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("counterTradingRate"))));
+        log.info("loaded saved countertrading rate to RecoveryManager {}.", recoveryManager.getCounterTradingRate());
 
     }
 
