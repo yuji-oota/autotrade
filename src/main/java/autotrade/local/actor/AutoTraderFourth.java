@@ -66,7 +66,7 @@ public class AutoTraderFourth extends AutoTrader {
                 break;
             case ASK_SIDE:
             case BID_SIDE:
-                if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25) {
+                if (isCalm()) {
                     // 閾値間隔が狭い場合は注文しない
                     return false;
                 }
@@ -206,7 +206,7 @@ public class AutoTraderFourth extends AutoTrader {
         case BID_SIDE:
             break;
         case SAME:
-            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25) {
+            if (isCalm()) {
                 return false;
             }
             if (pair.getMinSpread() < snapshot.getRate().getSpread()) {

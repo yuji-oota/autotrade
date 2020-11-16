@@ -365,7 +365,7 @@ public abstract class AutoTrader {
 //                // 利益確定から一定時間内の場合は注文しない
 //                return false;
 //            }
-            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25) {
+            if (isCalm()) {
                 // 閾値間隔が狭い場合は注文しない
                 return false;
             }
@@ -400,6 +400,10 @@ public abstract class AutoTrader {
 
     protected boolean isInactiveTime() {
         return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
+    }
+
+    protected boolean isCalm() {
+        return rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25;
     }
 
     protected void orderAsk(Snapshot snapshot) {

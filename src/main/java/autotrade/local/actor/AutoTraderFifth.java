@@ -119,6 +119,13 @@ public class AutoTraderFifth extends AutoTrader {
             }
 
             if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
+
+                if (isCalm()) {
+                    // 値動きがない場合
+                    forceSame(snapshot);
+                    break;
+                }
+
                 if (!recoveryManager.isSuccessCounterTradingAsk(rate)) {
                     // 反対売買失敗中の場合
                     if (lotManager.isLimit(snapshot)) {
@@ -163,6 +170,13 @@ public class AutoTraderFifth extends AutoTrader {
             }
 
             if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+
+                if (isCalm()) {
+                    // 値動きがない場合
+                    forceSame(snapshot);
+                    break;
+                }
+
                 if (!recoveryManager.isSuccessCounterTradingBid(rate)) {
                     // 反対売買失敗中の場合
                     if (lotManager.isLimit(snapshot)) {
@@ -214,7 +228,7 @@ public class AutoTraderFifth extends AutoTrader {
         case BID_SIDE:
             break;
         case SAME:
-            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25) {
+            if (isCalm()) {
                 return false;
             }
             if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
