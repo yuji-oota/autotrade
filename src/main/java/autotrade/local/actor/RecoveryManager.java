@@ -1,5 +1,9 @@
 package autotrade.local.actor;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import lombok.Getter;
@@ -19,11 +23,12 @@ public class RecoveryManager {
     private Snapshot shapshotWhenCutOffBid;
 
     @Setter
-    private Rate counterTradingRate;
+    private Snapshot counterTradingSnapshot;
 
     public void open(Snapshot snapshot) {
         if (!isOpen) {
             snapshotWhenStart = snapshot;
+            counterTradingSnapshot = snapshot;
         }
         isOpen = true;
     }
@@ -70,9 +75,20 @@ public class RecoveryManager {
         return shapshotWhenCutOffBid.getRate().getAsk() <= snapshot.getRate().getBid();
     }
     public boolean isSuccessCounterTradingAsk(Rate rate) {
-        return counterTradingRate.getAsk() <= rate.getBid();
+        return counterTradingSnapshot.getRate().getAsk() <= rate.getBid();
     }
     public boolean isSuccessCounterTradingBid(Rate rate) {
-        return counterTradingRate.getBid() >= rate.getAsk();
+        return counterTradingSnapshot.getRate().getBid() >= rate.getAsk();
+    }
+    public int getRecoveryProgress(Snapshot snapshot) {
+        int lossCounterTradingStart = counterTradingSnapshot.getMargin() + counterTradingSnapshot.getPositionProfit() - snapshotWhenStart.getMargin();
+        int lossCounterTrading = snapshot.getMargin() + snapshot.getPositionProfit() - snapshotWhenStart.getMargin();
+        if (lossCounterTradingStart == 0) {
+            return 0;
+        }
+        return BigDecimal.ONE
+                .subtract(BigDecimal.valueOf(lossCounterTrading).divide(BigDecimal.valueOf(lossCounterTradingStart), new MathContext(2, RoundingMode.HALF_UP)))
+                .multiply(BigDecimal.valueOf(100))
+                .intValue();
     }
 }

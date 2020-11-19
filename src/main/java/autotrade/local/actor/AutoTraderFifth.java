@@ -46,9 +46,9 @@ public class AutoTraderFifth extends AutoTrader {
         log.info("saved snapshot when recovery start {}.", recoveryManager.getSnapshotWhenStart());
 
         Messenger.set(
-                "counterTradingRate",
-                Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(recoveryManager.getCounterTradingRate())));
-        log.info("saved countertrading rate {}.", recoveryManager.getCounterTradingRate());
+                "counterTradingSnapshot",
+                Base64.getEncoder().encodeToString(AutoTradeUtils.serialize(recoveryManager.getCounterTradingSnapshot())));
+        log.info("saved countertrading rate {}.", recoveryManager.getCounterTradingSnapshot());
     }
 
     @Override
@@ -59,9 +59,9 @@ public class AutoTraderFifth extends AutoTrader {
                 AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenRecoveryStart"))));
         log.info("loaded snapshot when recovery start to RecoveryManager {}.", recoveryManager.getSnapshotWhenStart());
 
-        recoveryManager.setCounterTradingRate(
-                AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("counterTradingRate"))));
-        log.info("loaded saved countertrading rate to RecoveryManager {}.", recoveryManager.getCounterTradingRate());
+        recoveryManager.setCounterTradingSnapshot(
+                AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("counterTradingSnapshot"))));
+        log.info("loaded saved countertrading rate to RecoveryManager {}.", recoveryManager.getCounterTradingSnapshot());
 
     }
 
@@ -81,6 +81,17 @@ public class AutoTraderFifth extends AutoTrader {
         return isOrderable;
     }
 
+    private Duration getDurationByRecoveryProgress(Snapshot snapshot) {
+        int progress = recoveryManager.getRecoveryProgress(snapshot);
+        if (progress <= 0) {
+            return Duration.ofSeconds(600);
+        }
+        if (progress >= 100) {
+            return Duration.ofSeconds(600);
+        }
+        return Duration.ofSeconds(600 * (100 - progress) / 100);
+    }
+
     @Override
     protected void order(Snapshot snapshot) {
 
@@ -98,13 +109,13 @@ public class AutoTraderFifth extends AutoTrader {
             if (rateAnalyzer.isReachedAskThreshold(rate)) {
                 orderAsk(snapshot);
                 recoveryManager.open(snapshot);
-                recoveryManager.setCounterTradingRate(rate);
+                recoveryManager.setCounterTradingSnapshot(snapshot);
                 return;
             }
             if (rateAnalyzer.isReachedBidThreshold(rate)) {
                 orderBid(snapshot);
                 recoveryManager.open(snapshot);
-                recoveryManager.setCounterTradingRate(rate);
+                recoveryManager.setCounterTradingSnapshot(snapshot);
                 return;
             }
 
@@ -118,7 +129,7 @@ public class AutoTraderFifth extends AutoTrader {
                 break;
             }
 
-            if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
+            if (rateAnalyzer.isReachedBidThresholdWithin(rate, getDurationByRecoveryProgress(snapshot))) {
 
                 if (isCalm()) {
                     // 値動きがない場合
@@ -149,7 +160,7 @@ public class AutoTraderFifth extends AutoTrader {
                         fixAsk(snapshot);
                     }
                 }
-                recoveryManager.setCounterTradingRate(rate);
+                recoveryManager.setCounterTradingSnapshot(snapshot);
                 break;
             }
             if (!snapshot.hasBothSide()
@@ -169,7 +180,7 @@ public class AutoTraderFifth extends AutoTrader {
                 break;
             }
 
-            if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+            if (rateAnalyzer.isReachedAskThresholdWithin(rate, getDurationByRecoveryProgress(snapshot))) {
 
                 if (isCalm()) {
                     // 値動きがない場合
@@ -200,7 +211,7 @@ public class AutoTraderFifth extends AutoTrader {
                         fixBid(snapshot);
                     }
                 }
-                recoveryManager.setCounterTradingRate(rate);
+                recoveryManager.setCounterTradingSnapshot(snapshot);
                 break;
             }
             if (!snapshot.hasBothSide()
@@ -285,13 +296,13 @@ public class AutoTraderFifth extends AutoTrader {
             // ポジションが同数の場合
 
             if (rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
-                recoveryManager.setCounterTradingRate(rate);
+                recoveryManager.setCounterTradingSnapshot(snapshot);
                 fixAsk(snapshot);
                 recoveryManager.resetReachedRecover();
                 break;
             }
             if (rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
-                recoveryManager.setCounterTradingRate(rate);
+                recoveryManager.setCounterTradingSnapshot(snapshot);
                 fixBid(snapshot);
                 recoveryManager.resetReachedRecover();
                 break;
