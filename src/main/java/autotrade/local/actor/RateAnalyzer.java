@@ -113,7 +113,7 @@ public class RateAnalyzer {
     public int averageBetween(Temporal from, Temporal to) {
         return (int) rates.stream()
                 .filter(rateBetweenFilter(from, to))
-                .mapToInt(r -> (r.getAsk() + r.getBid()) / 2)
+                .mapToInt(Rate::getMiddle)
                 .average()
                 .orElse(0.0);
     }
@@ -159,6 +159,12 @@ public class RateAnalyzer {
     }
     public boolean isReachedCountertradingBid(Rate rate) {
         return rate.getBid() <= countertradingBid;
+    }
+    public boolean isReachedAverageAsk(Rate rate) {
+        return averageWithin(thresholdDuration) <= rate.getAsk();
+    }
+    public boolean isReachedAverageBid(Rate rate) {
+        return averageWithin(thresholdDuration) >= rate.getBid();
     }
     public Rate getEarliestRate() {
         return rates.stream()
