@@ -104,21 +104,24 @@ public class LotManager {
 
     public void changeInitialLot(CurrencyPair pair, int margin) {
         int marginRequirement = Integer.parseInt(marginRequirementMap.get(pair.name()).toString());
-        int roughEstimateLimit = (int) (margin / marginRequirement * 0.7);
-
+        int roughEstimateLimit = (int) (margin / marginRequirement * 0.9);
         int initialLot = 0;
         int limitLot = 0;
         while (limitLot < roughEstimateLimit) {
             initialLot++;
-
-            limitLot = initialLot;
-            for (int i = 0; i < countertradingCount; i++) {
-                limitLot = countertradingMagnification.multiply(BigDecimal.valueOf(limitLot)).setScale(0, RoundingMode.UP).intValue();
-            }
+            limitLot = calculateLimitLot(initialLot);
         }
+        initialLot--;
         initialPositive = initialLot;
-        limit = limitLot;
+        limit = calculateLimitLot(initialLot);
         log.info("initialPositive changed to {}.", initialPositive);
+    }
+    private int calculateLimitLot(int initialLot) {
+        int limitLot = initialLot;
+        for (int i = 0; i < countertradingCount; i++) {
+            limitLot = countertradingMagnification.multiply(BigDecimal.valueOf(limitLot)).setScale(0, RoundingMode.UP).intValue();
+        }
+        return limitLot;
     }
 
 }
