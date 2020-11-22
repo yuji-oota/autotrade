@@ -91,16 +91,6 @@ public class AutoTraderSixth extends AutoTrader {
         return isOrderable;
     }
 
-    private boolean isReachedAskThreshold(Rate rate) {
-        if (rateAnalyzer.isAskUp()
-                && (rateAnalyzer.isReachedAskThreshold(rate)
-                        || rateAnalyzer.averageWithin(Duration.ofMinutes(10)) < rate.getAsk())) {
-            return true;
-        }
-        return false;
-    }
-
-
     @Override
     protected void order(Snapshot snapshot) {
 
