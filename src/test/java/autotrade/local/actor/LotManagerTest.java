@@ -47,27 +47,27 @@ public class LotManagerTest {
 //        next = lotManager.nextLot(snapshot);
 //        System.out.println("next bid:" + next);
 //        snapshot.setBidLot(next + snapshot.getBidLot());
-        lotManager.changeInitialLot(CurrencyPair.EURUSD, 900000);
+        lotManager.changePair(CurrencyPair.EURUSD, 900000);
         System.out.println(lotManager.getInitial());
-        lotManager.changeInitialLot(CurrencyPair.EURUSD, 1000000);
+        lotManager.changePair(CurrencyPair.EURUSD, 1000000);
         System.out.println(lotManager.getInitial());
-        lotManager.changeInitialLot(CurrencyPair.EURUSD, 1100000);
+        lotManager.changePair(CurrencyPair.EURUSD, 1100000);
         System.out.println(lotManager.getInitial());
-        lotManager.changeInitialLot(CurrencyPair.EURUSD, 1200000);
+        lotManager.changePair(CurrencyPair.EURUSD, 1200000);
         System.out.println(lotManager.getInitial());
-        lotManager.changeInitialLot(CurrencyPair.EURUSD, 1300000);
+        lotManager.changePair(CurrencyPair.EURUSD, 1300000);
         System.out.println(lotManager.getInitial());
-        lotManager.changeInitialLot(CurrencyPair.EURUSD, 1400000);
+        lotManager.changePair(CurrencyPair.EURUSD, 1400000);
         System.out.println(lotManager.getInitial());
-        lotManager.changeInitialLot(CurrencyPair.EURUSD, 1500000);
+        lotManager.changePair(CurrencyPair.EURUSD, 1500000);
         System.out.println(lotManager.getInitial());
-        lotManager.changeInitialLot(CurrencyPair.EURUSD, 1600000);
+        lotManager.changePair(CurrencyPair.EURUSD, 1600000);
         System.out.println(lotManager.getInitial());
-        lotManager.changeInitialLot(CurrencyPair.EURUSD, 1700000);
+        lotManager.changePair(CurrencyPair.EURUSD, 1700000);
         System.out.println(lotManager.getInitial());
-        lotManager.changeInitialLot(CurrencyPair.EURUSD, 1800000);
+        lotManager.changePair(CurrencyPair.EURUSD, 1800000);
         System.out.println(lotManager.getInitial());
-        lotManager.changeInitialLot(CurrencyPair.EURUSD, 1900000);
+        lotManager.changePair(CurrencyPair.EURUSD, 1900000);
         System.out.println(lotManager.getInitial());
     }
 }

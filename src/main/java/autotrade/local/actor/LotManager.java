@@ -102,7 +102,7 @@ public class LotManager {
         log.info("initialPositive changed to {}.", initialPositive);
     }
 
-    public void changeInitialLot(CurrencyPair pair, int margin) {
+    public void changePair(CurrencyPair pair, int margin) {
         int marginRequirement = Integer.parseInt(marginRequirementMap.get(pair.name()).toString());
         int roughEstimateLimit = (int) (margin / marginRequirement * 0.9);
         int initialLot = 0;
