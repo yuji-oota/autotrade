@@ -223,8 +223,8 @@ public class RateAnalyzer {
         if (rate.getAsk() == 0 || rate.getBid() == 0) {
             return true;
         }
-        if (latestRate.getAsk() == Integer.MAX_VALUE
-                || latestRate.getBid() == Integer.MIN_VALUE) {
+        if (latestRate.getAsk() == Integer.MIN_VALUE
+                || latestRate.getBid() == Integer.MAX_VALUE) {
             return false;
         }
         if (Math.abs(latestRate.getAsk() - rate.getAsk()) > 500
