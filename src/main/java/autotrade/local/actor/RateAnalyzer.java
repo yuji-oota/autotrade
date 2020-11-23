@@ -60,7 +60,7 @@ public class RateAnalyzer {
             isMoved = true;
             doubtfulCounter = 0;
         }
-        if (!rate.isDoubtful()) {
+        if (!isDoubtful(rate)) {
             rates.add(rate);
             updateWaterMark(rate);
             isAskUp = latestRate.getAsk() < rate.getAsk();
@@ -215,5 +215,22 @@ public class RateAnalyzer {
     public void resetCountertrading() {
         countertradingAsk = Integer.MAX_VALUE;
         countertradingBid = Integer.MIN_VALUE;
+    }
+    public boolean isDoubtful(Rate rate) {
+        if (rate.getSpread() > 100) {
+            return true;
+        }
+        if (rate.getAsk() == 0 || rate.getBid() == 0) {
+            return true;
+        }
+        if (latestRate.getAsk() == Integer.MAX_VALUE
+                || latestRate.getBid() == Integer.MIN_VALUE) {
+            return false;
+        }
+        if (Math.abs(latestRate.getAsk() - rate.getAsk()) > 500
+                || Math.abs(latestRate.getBid() - rate.getBid()) > 500) {
+            return true;
+        }
+        return false;
     }
 }

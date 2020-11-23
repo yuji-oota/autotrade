@@ -18,16 +18,6 @@ public class Rate implements Serializable {
         return ask - bid;
     }
 
-    public boolean isDoubtful() {
-        if (getSpread() > 100) {
-            return true;
-        }
-        if (ask == 0 || bid == 0) {
-            return true;
-        }
-        return false;
-    }
-
     public Duration passed() {
         return Duration.between(timestamp, LocalDateTime.now());
     }

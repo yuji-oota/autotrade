@@ -159,9 +159,14 @@ public class AutoTraderSixth extends AutoTrader {
                     counterTrading = s -> forceSame(s);
                     fix = s -> fixAsk(s);
                 }
-                if (isCalm()) {
+                if (isCalm()
+                        || pair.isSpreadWiden(rate.getSpread())) {
                     counterTrading = s -> forceSame(s);
                     fix = s -> {};
+                }
+                if (lotManager.isLimit(snapshot)) {
+                    counterTrading = s -> {};
+                    fix = s -> fixAll(s);
                 }
 
                 if (isReachedThreshold.test(rate)) {
@@ -177,7 +182,7 @@ public class AutoTraderSixth extends AutoTrader {
                     && rateAnalyzer.isAskUp()
                     && !pair.isSpreadWiden(rate.getSpread())
                     && rateAnalyzer.isReachedAskThreshold(rate)) {
-                nextOrderPoint = OrderPoint.AVERAGE;
+                nextOrderPoint = nextOrderPoint.next();
             }
 
             break;
@@ -201,9 +206,14 @@ public class AutoTraderSixth extends AutoTrader {
                     counterTrading = s -> forceSame(s);
                     fix = s -> fixBid(s);
                 }
-                if (isCalm()) {
+                if (isCalm()
+                        || pair.isSpreadWiden(rate.getSpread())) {
                     counterTrading = s -> forceSame(s);
                     fix = s -> {};
+                }
+                if (lotManager.isLimit(snapshot)) {
+                    counterTrading = s -> {};
+                    fix = s -> fixAll(s);
                 }
 
                 if (isReachedThreshold.test(rate)) {
@@ -219,7 +229,7 @@ public class AutoTraderSixth extends AutoTrader {
                     && rateAnalyzer.isBidDown()
                     && !pair.isSpreadWiden(rate.getSpread())
                     && rateAnalyzer.isReachedBidThreshold(rate)) {
-                nextOrderPoint = OrderPoint.AVERAGE;
+                nextOrderPoint = nextOrderPoint.next();
             }
 
             break;

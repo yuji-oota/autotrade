@@ -349,7 +349,7 @@ public abstract class AutoTrader {
             // 過去Rateがある程度存在しない場合は注文しない
             return false;
         }
-        if (snapshot.getRate().isDoubtful()) {
+        if (rateAnalyzer.isDoubtful(snapshot.getRate())) {
             // スプレッドが開きすぎの場合は注文しない
             return false;
         }
