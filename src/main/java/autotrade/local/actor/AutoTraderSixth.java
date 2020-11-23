@@ -104,35 +104,23 @@ public class AutoTraderSixth extends AutoTrader {
             // ポジションがない場合
 
             if (rateAnalyzer.isAskUp()) {
-                if (rateAnalyzer.isReachedAskThreshold(rate)) {
+                if (rateAnalyzer.isReachedAskThreshold(rate)
+                        || rateAnalyzer.isReachedAverageAsk(rate)) {
                     orderAsk(snapshot);
                     recoveryManager.open(snapshot);
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                     nextOrderPoint = OrderPoint.AVERAGE;
-                    return;
-                }
-                if (rateAnalyzer.isReachedAverageAsk(rate)) {
-                    orderAsk(snapshot);
-                    recoveryManager.open(snapshot);
-                    recoveryManager.setCounterTradingSnapshot(snapshot);
-                    nextOrderPoint = OrderPoint.THRESHOLD;
                     return;
                 }
             }
 
             if (rateAnalyzer.isBidDown()) {
-                if (rateAnalyzer.isReachedBidThreshold(rate)) {
+                if (rateAnalyzer.isReachedBidThreshold(rate)
+                        || rateAnalyzer.isReachedAverageBid(rate)) {
                     orderBid(snapshot);
                     recoveryManager.open(snapshot);
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                     nextOrderPoint = OrderPoint.AVERAGE;
-                    return;
-                }
-                if (rateAnalyzer.isReachedAverageBid(rate)) {
-                    orderBid(snapshot);
-                    recoveryManager.open(snapshot);
-                    recoveryManager.setCounterTradingSnapshot(snapshot);
-                    nextOrderPoint = OrderPoint.THRESHOLD;
                     return;
                 }
             }
