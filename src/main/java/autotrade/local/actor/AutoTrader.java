@@ -222,7 +222,7 @@ public abstract class AutoTrader {
 
     protected Rate buildRateWrapper() {
         Rate rate = buildRate();
-        if (rate.getSpread() <= pair.getMinSpread()
+        if (!pair.isSpreadWiden(rate.getSpread())
                 || indicatorManager.isPrevIndicatorWithin(Duration.ofMinutes(5))) {
             return rate;
         }
@@ -337,7 +337,7 @@ public abstract class AutoTrader {
     protected boolean isSleep(Snapshot snapshot) {
         return isInactiveTime()
                 && snapshot.isPositionNone()
-                && pair.getMinSpread() < snapshot.getRate().getSpread();
+                && pair.isSpreadWiden(snapshot.getRate().getSpread());
     }
 
     protected boolean isFixable(Snapshot snapshot) {
@@ -373,7 +373,7 @@ public abstract class AutoTrader {
                 // 指標が近い場合は注文しない
                 return false;
             }
-            if (!isIgnoreSpread && pair.getMinSpread() < snapshot.getRate().getSpread()) {
+            if (!isIgnoreSpread && pair.isSpreadWiden(snapshot.getRate().getSpread())) {
                 // スプレッドを無視しない
                 // 且つスプレッドが開いている場合は注文しない
                 return false;

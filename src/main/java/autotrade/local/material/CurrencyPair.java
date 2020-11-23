@@ -29,6 +29,9 @@ public enum CurrencyPair {
     public String getDescription() {
         return new StringBuilder(this.name()).insert(3, "/").toString();
     }
+    public boolean isSpreadWiden(int spread) {
+        return minSpread < spread;
+    }
 
     public static List<String> getDescriptions() {
         return descriptions;

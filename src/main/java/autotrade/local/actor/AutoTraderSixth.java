@@ -173,6 +173,13 @@ public class AutoTraderSixth extends AutoTrader {
                 }
             }
 
+            if (nextOrderPoint == OrderPoint.THRESHOLD
+                    && rateAnalyzer.isAskUp()
+                    && !pair.isSpreadWiden(rate.getSpread())
+                    && rateAnalyzer.isReachedAskThreshold(rate)) {
+                nextOrderPoint = OrderPoint.AVERAGE;
+            }
+
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
@@ -208,6 +215,13 @@ public class AutoTraderSixth extends AutoTrader {
                 }
             }
 
+            if (nextOrderPoint == OrderPoint.THRESHOLD
+                    && rateAnalyzer.isBidDown()
+                    && !pair.isSpreadWiden(rate.getSpread())
+                    && rateAnalyzer.isReachedBidThreshold(rate)) {
+                nextOrderPoint = OrderPoint.AVERAGE;
+            }
+
             break;
         case SAME:
             // ポジションが同数の場合
@@ -229,7 +243,7 @@ public class AutoTraderSixth extends AutoTrader {
             if (isCalm()) {
                 return false;
             }
-            if (pair.getMinSpread() < snapshot.getRate().getSpread()) {
+            if (pair.isSpreadWiden(snapshot.getRate().getSpread())) {
                 return false;
             }
             break;
