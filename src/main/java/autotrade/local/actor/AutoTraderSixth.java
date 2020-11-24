@@ -241,7 +241,8 @@ public class AutoTraderSixth extends AutoTrader {
     @Override
     protected void fix(Snapshot snapshot) {
 
-        if (!lotManager.isInitial(snapshot)
+        if (snapshot.hasPosition()
+                && !lotManager.isInitial(snapshot)
                 && recoveryManager.isRecovered(snapshot)) {
             fixAll(snapshot);
             return;
