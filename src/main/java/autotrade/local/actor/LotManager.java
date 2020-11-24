@@ -48,7 +48,7 @@ public class LotManager {
             more = snapshot.getBidLot();
             less = snapshot.getAskLot();
         }
-        return more >= getRoughLimit() ?
+        return more >= limit ?
                 more - less :
                     countertradingMagnification.multiply(BigDecimal.valueOf(more)).setScale(0, RoundingMode.UP).intValue() - less;
     }
@@ -76,15 +76,18 @@ public class LotManager {
         return !isPositive();
     }
     public boolean isLimit(Snapshot snapshot) {
-        if (snapshot.getAskLot() >= getRoughLimit()
-                || snapshot.getBidLot() >= getRoughLimit()) {
+        if (snapshot.getAskLot() >= limit
+                || snapshot.getBidLot() >= limit) {
             return true;
         }
         return false;
     }
-
-    private int getRoughLimit() {
-        return getInitial() * power.setScale(0, RoundingMode.DOWN).intValue();
+    public boolean isInitial(Snapshot snapshot) {
+        if (snapshot.getAskLot() == initialPositive
+                || snapshot.getBidLot() == initialPositive) {
+            return true;
+        }
+        return false;
     }
     public int getInitial() {
         if (isPositive()) {

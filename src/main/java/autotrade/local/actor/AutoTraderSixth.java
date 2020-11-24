@@ -129,12 +129,6 @@ public class AutoTraderSixth extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
-            if (recoveryManager.isReachedRecover()
-                    && !recoveryManager.isRecovered(snapshot)) {
-                forceSame(snapshot);
-                break;
-            }
-
             if (rateAnalyzer.isBidDown()) {
 
                 isReachedThreshold = r -> rateAnalyzer.isReachedBidThreshold(r);
@@ -176,12 +170,6 @@ public class AutoTraderSixth extends AutoTrader {
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
-
-            if (recoveryManager.isReachedRecover()
-                    && !recoveryManager.isRecovered(snapshot)) {
-                forceSame(snapshot);
-                break;
-            }
 
             if (rateAnalyzer.isAskUp()) {
                 isReachedThreshold = r -> rateAnalyzer.isReachedAskThreshold(r);
@@ -252,6 +240,12 @@ public class AutoTraderSixth extends AutoTrader {
 
     @Override
     protected void fix(Snapshot snapshot) {
+
+        if (!lotManager.isInitial(snapshot)
+                && recoveryManager.isRecovered(snapshot)) {
+            fixAll(snapshot);
+            return;
+        }
 
         Rate rate = snapshot.getRate();
         Predicate<Rate> isReachedThreshold;
