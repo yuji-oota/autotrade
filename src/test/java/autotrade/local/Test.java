@@ -2,13 +2,26 @@ package autotrade.local;
 
 
 import java.io.IOException;
-import java.math.BigDecimal;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class Test {
 
+    private enum OrderPoint {
+        THRESHOLD, AVERAGE;
+        private static OrderPoint prev = THRESHOLD;
+        public OrderPoint next() {
+            // THRESHOLD,THRESHOLD,AVERAGE,THRESHOLD,THRESHOLD,AVERAGEの順番
+            if (prev == THRESHOLD
+                    && prev == this) {
+                prev = this;
+                return AVERAGE;
+            }
+            prev = this;
+            return THRESHOLD;
+        }
+    }
     public static void main(String[] args) throws IOException, ClassNotFoundException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
 //        System.out.println(Paths.get("").toAbsolutePath().toString());
 //        String classpath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
@@ -24,11 +37,20 @@ public class Test {
 //            }
 //        }
 
-        System.out.println(
-                BigDecimal.ONE
-                .subtract(BigDecimal.valueOf(-1200).divide(BigDecimal.valueOf(-1000)))
-                .multiply(BigDecimal.valueOf(100))
-                .intValue());
+        OrderPoint orderPoint = OrderPoint.AVERAGE;
+        System.out.println(orderPoint);
+        orderPoint = orderPoint.next();
+        System.out.println(orderPoint);
+        orderPoint = orderPoint.next();
+        System.out.println(orderPoint);
+        orderPoint = orderPoint.next();
+        System.out.println(orderPoint);
+        orderPoint = orderPoint.next();
+        System.out.println(orderPoint);
+        orderPoint = orderPoint.next();
+        System.out.println(orderPoint);
+        orderPoint = orderPoint.next();
+        System.out.println(orderPoint);
     }
 
 }

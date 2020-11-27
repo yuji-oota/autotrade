@@ -20,11 +20,15 @@ public class AutoTraderSixth extends AutoTrader {
     private RecoveryManager recoveryManager;
     private enum OrderPoint {
         THRESHOLD, AVERAGE;
+        private static OrderPoint prev = THRESHOLD;
         public OrderPoint next() {
-            if (this == AVERAGE) {
-                return THRESHOLD;
+            if (prev == THRESHOLD
+                    && prev == this) {
+                prev = this;
+                return AVERAGE;
             }
-            return AVERAGE;
+            prev = this;
+            return THRESHOLD;
         }
     }
     private OrderPoint nextOrderPoint;
@@ -132,11 +136,13 @@ public class AutoTraderSixth extends AutoTrader {
             if (rateAnalyzer.isBidDown()) {
 
                 isReachedThreshold = r -> rateAnalyzer.isReachedBidThreshold(r);
-                if (nextOrderPoint == OrderPoint.AVERAGE) {
-                    isReachedThreshold = r -> rateAnalyzer.isReachedAverageBid(r);
-                }
                 counterTrading = s -> orderBid(s);
                 fix = s -> fixAsk(s);
+                if (nextOrderPoint == OrderPoint.AVERAGE) {
+                    isReachedThreshold = r -> rateAnalyzer.isReachedAverageBid(r);
+                    counterTrading = s -> forceSame(s);
+                    fix = s -> fixAsk(s);
+                }
                 if (recoveryManager.isSuccessCounterTradingAsk(rate)) {
                     counterTrading = s -> forceSame(s);
                     fix = s -> fixAsk(s);
@@ -160,24 +166,19 @@ public class AutoTraderSixth extends AutoTrader {
                 }
             }
 
-            if (nextOrderPoint == OrderPoint.THRESHOLD
-                    && rateAnalyzer.isAskUp()
-                    && !pair.isSpreadWiden(rate.getSpread())
-                    && rateAnalyzer.isReachedAskThreshold(rate)) {
-                nextOrderPoint = nextOrderPoint.next();
-            }
-
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
 
             if (rateAnalyzer.isAskUp()) {
                 isReachedThreshold = r -> rateAnalyzer.isReachedAskThreshold(r);
-                if (nextOrderPoint == OrderPoint.AVERAGE) {
-                    isReachedThreshold = r -> rateAnalyzer.isReachedAverageAsk(r);
-                }
                 counterTrading = s -> orderAsk(s);
                 fix = s -> fixBid(s);
+                if (nextOrderPoint == OrderPoint.AVERAGE) {
+                    isReachedThreshold = r -> rateAnalyzer.isReachedAverageAsk(r);
+                    counterTrading = s -> forceSame(s);
+                    fix = s -> fixBid(s);
+                }
                 if (recoveryManager.isSuccessCounterTradingBid(rate)) {
                     counterTrading = s -> forceSame(s);
                     fix = s -> fixBid(s);
@@ -201,13 +202,6 @@ public class AutoTraderSixth extends AutoTrader {
                 }
             }
 
-            if (nextOrderPoint == OrderPoint.THRESHOLD
-                    && rateAnalyzer.isBidDown()
-                    && !pair.isSpreadWiden(rate.getSpread())
-                    && rateAnalyzer.isReachedBidThreshold(rate)) {
-                nextOrderPoint = nextOrderPoint.next();
-            }
-
             break;
         case SAME:
             // ポジションが同数の場合
@@ -226,6 +220,9 @@ public class AutoTraderSixth extends AutoTrader {
         case BID_SIDE:
             break;
         case SAME:
+            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 50) {
+                return false;
+            }
             if (isCalm()) {
                 return false;
             }
