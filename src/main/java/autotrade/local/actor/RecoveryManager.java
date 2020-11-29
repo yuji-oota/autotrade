@@ -81,14 +81,24 @@ public class RecoveryManager {
         return counterTradingSnapshot.getRate().getBid() >= rate.getAsk();
     }
     public int getRecoveryProgress(Snapshot snapshot) {
-        int lossCounterTradingStart = counterTradingSnapshot.getMargin() + counterTradingSnapshot.getPositionProfit() - snapshotWhenStart.getMargin();
-        int lossCounterTrading = snapshot.getMargin() + snapshot.getPositionProfit() - snapshotWhenStart.getMargin();
+        int lossCounterTradingStart = getLossCounterTradingStart();
+        int loss = getLoss(snapshot);
         if (lossCounterTradingStart == 0) {
             return 0;
         }
         return BigDecimal.ONE
-                .subtract(BigDecimal.valueOf(lossCounterTrading).divide(BigDecimal.valueOf(lossCounterTradingStart), new MathContext(2, RoundingMode.HALF_UP)))
+                .subtract(BigDecimal.valueOf(loss).divide(BigDecimal.valueOf(lossCounterTradingStart), new MathContext(2, RoundingMode.HALF_UP)))
                 .multiply(BigDecimal.valueOf(100))
                 .intValue();
+    }
+    private int getLossCounterTradingStart() {
+        return counterTradingSnapshot.getMargin() + counterTradingSnapshot.getPositionProfit() - snapshotWhenStart.getMargin();
+    }
+    private int getLoss(Snapshot snapshot) {
+        return snapshot.getMargin() + snapshot.getPositionProfit() - snapshotWhenStart.getMargin();
+    }
+    public void printSummary(Snapshot snapshot) {
+        log.info("recovery progress is {}%. start:{} end:{}",
+                getRecoveryProgress(snapshot), getLossCounterTradingStart(), getLoss(snapshot));
     }
 }

@@ -140,8 +140,6 @@ public class AutoTraderSixth extends AutoTrader {
                 fix = s -> fixAsk(s);
                 if (nextOrderPoint == OrderPoint.AVERAGE) {
                     isReachedThreshold = r -> rateAnalyzer.isReachedAverageBid(r);
-                    counterTrading = s -> forceSame(s);
-                    fix = s -> fixAsk(s);
                 }
                 if (recoveryManager.isSuccessCounterTradingAsk(rate)) {
                     counterTrading = s -> forceSame(s);
@@ -176,8 +174,6 @@ public class AutoTraderSixth extends AutoTrader {
                 fix = s -> fixBid(s);
                 if (nextOrderPoint == OrderPoint.AVERAGE) {
                     isReachedThreshold = r -> rateAnalyzer.isReachedAverageAsk(r);
-                    counterTrading = s -> forceSame(s);
-                    fix = s -> fixBid(s);
                 }
                 if (recoveryManager.isSuccessCounterTradingBid(rate)) {
                     counterTrading = s -> forceSame(s);
@@ -262,6 +258,11 @@ public class AutoTraderSixth extends AutoTrader {
                 fixAll(snapshot);
                 break;
             }
+            if (rateAnalyzer.isBidDown()
+                    && recoveryManager.getRecoveryProgress(snapshot) >= 75) {
+                fixAll(snapshot);
+                break;
+            }
 
             break;
         case BID_SIDE:
@@ -269,6 +270,11 @@ public class AutoTraderSixth extends AutoTrader {
 
             if (recoveryManager.isRecovered(snapshot)
                     && rateAnalyzer.isAskUp()) {
+                fixAll(snapshot);
+                break;
+            }
+            if (rateAnalyzer.isAskUp()
+                    && recoveryManager.getRecoveryProgress(snapshot) >= 75) {
                 fixAll(snapshot);
                 break;
             }
@@ -302,6 +308,7 @@ public class AutoTraderSixth extends AutoTrader {
     @Override
     protected void fixAll(Snapshot snapshot) {
         super.fixAll(snapshot);
+        recoveryManager.printSummary(snapshot);
         recoveryManager.close();
     }
 
