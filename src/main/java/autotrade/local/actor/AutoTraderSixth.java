@@ -145,8 +145,7 @@ public class AutoTraderSixth extends AutoTrader {
                     counterTrading = s -> forceSame(s);
                     fix = s -> fixAsk(s);
                 }
-                if (isCalm()
-                        || pair.isSpreadWiden(rate.getSpread())) {
+                if (pair.isSpreadWiden(rate.getSpread())) {
                     counterTrading = s -> forceSame(s);
                     fix = s -> {};
                 }
@@ -179,8 +178,7 @@ public class AutoTraderSixth extends AutoTrader {
                     counterTrading = s -> forceSame(s);
                     fix = s -> fixBid(s);
                 }
-                if (isCalm()
-                        || pair.isSpreadWiden(rate.getSpread())) {
+                if (pair.isSpreadWiden(rate.getSpread())) {
                     counterTrading = s -> forceSame(s);
                     fix = s -> {};
                 }
@@ -209,6 +207,12 @@ public class AutoTraderSixth extends AutoTrader {
     }
 
     @Override
+    protected boolean isCalm() {
+        return rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25
+                || rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 50;
+    }
+
+    @Override
     protected boolean isFixable(Snapshot snapshot) {
         switch (snapshot.getStatus()) {
         case NONE:
@@ -216,9 +220,6 @@ public class AutoTraderSixth extends AutoTrader {
         case BID_SIDE:
             break;
         case SAME:
-            if (rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 50) {
-                return false;
-            }
             if (isCalm()) {
                 return false;
             }
