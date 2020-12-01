@@ -208,8 +208,8 @@ public class AutoTraderSixth extends AutoTrader {
 
     @Override
     protected boolean isCalm() {
-        return rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25
-                || rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 50;
+        return rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 50
+                || rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 100;
     }
 
     @Override
@@ -255,7 +255,8 @@ public class AutoTraderSixth extends AutoTrader {
             // 買いポジションが多い場合
 
             if (recoveryManager.isRecovered(snapshot)
-                    && rateAnalyzer.isBidDown()) {
+                    && rateAnalyzer.isBidDown()
+                    && snapshot.getAskPipProfit() >= 5) {
                 fixAll(snapshot);
                 break;
             }
@@ -270,7 +271,8 @@ public class AutoTraderSixth extends AutoTrader {
             // 売りポジションが多い場合
 
             if (recoveryManager.isRecovered(snapshot)
-                    && rateAnalyzer.isAskUp()) {
+                    && rateAnalyzer.isAskUp()
+                    && snapshot.getBidPipProfit() >= 5) {
                 fixAll(snapshot);
                 break;
             }
