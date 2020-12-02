@@ -30,6 +30,9 @@ public class AutoTraderSixth extends AutoTrader {
             prev = this;
             return THRESHOLD;
         }
+        public OrderPoint prev() {
+            return prev;
+        }
     }
     private OrderPoint nextOrderPoint;
 
@@ -141,6 +144,13 @@ public class AutoTraderSixth extends AutoTrader {
                 if (nextOrderPoint == OrderPoint.AVERAGE) {
                     isReachedThreshold = r -> rateAnalyzer.isReachedAverageBid(r);
                 }
+                // test↓
+                if (nextOrderPoint == OrderPoint.THRESHOLD
+                        && nextOrderPoint.prev() == OrderPoint.AVERAGE) {
+                    counterTrading = s -> {};
+                    fix = s -> fixAll(s);
+                }
+                // test↑
                 if (recoveryManager.isSuccessCounterTradingAsk(rate)) {
                     counterTrading = s -> forceSame(s);
                     fix = s -> fixAsk(s);
@@ -174,6 +184,13 @@ public class AutoTraderSixth extends AutoTrader {
                 if (nextOrderPoint == OrderPoint.AVERAGE) {
                     isReachedThreshold = r -> rateAnalyzer.isReachedAverageAsk(r);
                 }
+                // test↓
+                if (nextOrderPoint == OrderPoint.THRESHOLD
+                        && nextOrderPoint.prev() == OrderPoint.AVERAGE) {
+                    counterTrading = s -> {};
+                    fix = s -> fixAll(s);
+                }
+                // test↑
                 if (recoveryManager.isSuccessCounterTradingBid(rate)) {
                     counterTrading = s -> forceSame(s);
                     fix = s -> fixBid(s);
