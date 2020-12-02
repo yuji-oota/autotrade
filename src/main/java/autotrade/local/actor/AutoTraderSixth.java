@@ -208,8 +208,7 @@ public class AutoTraderSixth extends AutoTrader {
 
     @Override
     protected boolean isCalm() {
-        return rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 50
-                || rateAnalyzer.rangeWithin(Duration.ofMinutes(10)) < 100;
+        return rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 50;
     }
 
     @Override
