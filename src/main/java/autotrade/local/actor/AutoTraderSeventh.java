@@ -15,7 +15,7 @@ import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AutoTraderSixth extends AutoTrader {
+public class AutoTraderSeventh extends AutoTrader {
 
     private RecoveryManager recoveryManager;
     private enum OrderPoint {
@@ -36,13 +36,13 @@ public class AutoTraderSixth extends AutoTrader {
     }
     private OrderPoint nextOrderPoint;
 
-    public AutoTraderSixth() {
+    public AutoTraderSeventh() {
         super();
         recoveryManager = new RecoveryManager();
         pairAnalyzerMap.get(
-                CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderSixth.order.pair"))).setThresholdDuration(
+                CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderSeventh.order.pair"))).setThresholdDuration(
                         Duration.ofSeconds(
-                                AutoTradeProperties.getInt("autoTraderSixth.rateAnalizer.threshold.seconds")));
+                                AutoTradeProperties.getInt("autoTraderSeventh.rateAnalizer.threshold.seconds")));
 
         System.out.print("do you need cloud load? (y or any) :");
         try (Scanner scanner = new Scanner(System.in)) {
@@ -144,6 +144,11 @@ public class AutoTraderSixth extends AutoTrader {
                 if (nextOrderPoint == OrderPoint.AVERAGE) {
                     isReachedThreshold = r -> rateAnalyzer.isReachedAverageBid(r);
                 }
+                if (nextOrderPoint == OrderPoint.THRESHOLD
+                        && nextOrderPoint.prev() == OrderPoint.AVERAGE) {
+                    counterTrading = s -> {};
+                    fix = s -> fixAll(s);
+                }
                 if (recoveryManager.isSuccessCounterTradingAsk(rate)) {
                     counterTrading = s -> forceSame(s);
                     fix = s -> fixAsk(s);
@@ -176,6 +181,11 @@ public class AutoTraderSixth extends AutoTrader {
                 fix = s -> fixBid(s);
                 if (nextOrderPoint == OrderPoint.AVERAGE) {
                     isReachedThreshold = r -> rateAnalyzer.isReachedAverageAsk(r);
+                }
+                if (nextOrderPoint == OrderPoint.THRESHOLD
+                        && nextOrderPoint.prev() == OrderPoint.AVERAGE) {
+                    counterTrading = s -> {};
+                    fix = s -> fixAll(s);
                 }
                 if (recoveryManager.isSuccessCounterTradingBid(rate)) {
                     counterTrading = s -> forceSame(s);
@@ -256,8 +266,7 @@ public class AutoTraderSixth extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
-            if (recoveryManager.isRecovered(snapshot)
-                    && rateAnalyzer.isBidDown()
+            if (rateAnalyzer.isBidDown()
                     && snapshot.getAskPipProfit() >= 5) {
                 fixAll(snapshot);
                 break;
@@ -272,8 +281,7 @@ public class AutoTraderSixth extends AutoTrader {
         case BID_SIDE:
             // 売りポジションが多い場合
 
-            if (recoveryManager.isRecovered(snapshot)
-                    && rateAnalyzer.isAskUp()
+            if (rateAnalyzer.isAskUp()
                     && snapshot.getBidPipProfit() >= 5) {
                 fixAll(snapshot);
                 break;
