@@ -18,16 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AutoTraderSeventh extends AutoTrader {
 
     private RecoveryManager recoveryManager;
-    private enum OrderPoint {
-        THRESHOLD, AVERAGE;
-        public OrderPoint next() {
-            if (this == THRESHOLD) {
-                return AVERAGE;
-            }
-            return THRESHOLD;
-        }
-    }
-    private OrderPoint orderPoint;
 
     public AutoTraderSeventh() {
         super();
@@ -112,7 +102,6 @@ public class AutoTraderSeventh extends AutoTrader {
                     orderAsk(snapshot);
                     recoveryManager.open(snapshot);
                     recoveryManager.setCounterTradingSnapshot(snapshot);
-                    orderPoint = OrderPoint.THRESHOLD;
                     return;
                 }
             }
@@ -123,7 +112,6 @@ public class AutoTraderSeventh extends AutoTrader {
                     orderBid(snapshot);
                     recoveryManager.open(snapshot);
                     recoveryManager.setCounterTradingSnapshot(snapshot);
-                    orderPoint = OrderPoint.THRESHOLD;
                     return;
                 }
             }
@@ -136,16 +124,12 @@ public class AutoTraderSeventh extends AutoTrader {
 
                 isReachedThreshold = r -> rateAnalyzer.isReachedBidThreshold(r);
                 counterTrading = s -> orderBid(s);
-                if (orderPoint.next() == OrderPoint.AVERAGE) {
-                    isReachedThreshold = r -> rateAnalyzer.isReachedAverageBid(r);
-                }
                 if (pair.isSpreadWiden(rate.getSpread())) {
                     counterTrading = s -> forceSame(s);
                 }
 
                 if (isReachedThreshold.test(rate)) {
                     counterTrading.accept(snapshot);
-                    orderPoint = orderPoint.next();
                     return;
                 }
             }
@@ -158,16 +142,12 @@ public class AutoTraderSeventh extends AutoTrader {
 
                 isReachedThreshold = r -> rateAnalyzer.isReachedAskThreshold(r);
                 counterTrading = s -> orderAsk(s);
-                if (orderPoint.next() == OrderPoint.AVERAGE) {
-                    isReachedThreshold = r -> rateAnalyzer.isReachedAverageAsk(r);
-                }
                 if (pair.isSpreadWiden(rate.getSpread())) {
                     counterTrading = s -> forceSame(s);
                 }
 
                 if (isReachedThreshold.test(rate)) {
                     counterTrading.accept(snapshot);
-                    orderPoint = orderPoint.next();
                     return;
                 }
             }
@@ -195,9 +175,6 @@ public class AutoTraderSeventh extends AutoTrader {
         case BID_SIDE:
             break;
         case SAME:
-            if (isCalm()) {
-                return false;
-            }
             if (pair.isSpreadWiden(snapshot.getRate().getSpread())) {
                 return false;
             }
@@ -251,17 +228,16 @@ public class AutoTraderSeventh extends AutoTrader {
             isReachedThreshold = r -> false;
             fix = s -> {};
             if (rateAnalyzer.isBidDown()) {
-                isReachedThreshold = r -> rateAnalyzer.isReachedBidThreshold(r);
+                isReachedThreshold = r -> snapshot.getAskPipProfit() >= 5;
                 fix = s -> fixAsk(s);
             }
             if (rateAnalyzer.isAskUp()) {
-                isReachedThreshold = r -> rateAnalyzer.isReachedAskThreshold(r);
+                isReachedThreshold = r -> snapshot.getBidPipProfit() >= 5;
                 fix = s -> fixBid(s);
             }
 
             if (isReachedThreshold.test(rate)) {
                 fix.accept(snapshot);
-                orderPoint = OrderPoint.THRESHOLD;
             }
 
             break;
