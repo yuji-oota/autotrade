@@ -100,6 +100,7 @@ public class AutoTraderSeventh extends AutoTrader {
                 if (rateAnalyzer.isReachedAskThreshold(rate)
                         || rateAnalyzer.isReachedAverageAsk(rate)) {
                     orderAsk(snapshot);
+                    recoveryManager.close();
                     recoveryManager.open(snapshot);
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                     return;
@@ -110,6 +111,7 @@ public class AutoTraderSeventh extends AutoTrader {
                 if (rateAnalyzer.isReachedBidThreshold(rate)
                         || rateAnalyzer.isReachedAverageBid(rate)) {
                     orderBid(snapshot);
+                    recoveryManager.close();
                     recoveryManager.open(snapshot);
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                     return;
@@ -130,6 +132,7 @@ public class AutoTraderSeventh extends AutoTrader {
 
                 if (isReachedThreshold.test(rate)) {
                     counterTrading.accept(snapshot);
+                    recoveryManager.setCounterTradingSnapshot(snapshot);
                     return;
                 }
             }
@@ -148,6 +151,7 @@ public class AutoTraderSeventh extends AutoTrader {
 
                 if (isReachedThreshold.test(rate)) {
                     counterTrading.accept(snapshot);
+                    recoveryManager.setCounterTradingSnapshot(snapshot);
                     return;
                 }
             }
@@ -188,8 +192,7 @@ public class AutoTraderSeventh extends AutoTrader {
     protected void fix(Snapshot snapshot) {
 
         if (snapshot.hasPosition()
-                && !lotManager.isInitial(snapshot)
-                && recoveryManager.isRecovered(snapshot)) {
+                && recoveryManager.getRecoveryProgress(snapshot) >= 100) {
             fixAll(snapshot);
             return;
         }
