@@ -209,6 +209,11 @@ public class AutoTraderSeventh extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
+            if (lotManager.isLimit(snapshot)
+                    && snapshot.hasOneSide()) {
+                break;
+            }
+
             if (rateAnalyzer.isBidDown()
                     && snapshot.getAskPipProfit() >= 5) {
                 fixAsk(snapshot);
@@ -218,6 +223,11 @@ public class AutoTraderSeventh extends AutoTrader {
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
+
+            if (lotManager.isLimit(snapshot)
+                    && snapshot.hasOneSide()) {
+                break;
+            }
 
             if (rateAnalyzer.isAskUp()
                     && snapshot.getBidPipProfit() >= 5) {
