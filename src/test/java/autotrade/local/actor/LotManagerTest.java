@@ -9,29 +9,18 @@ public class LotManagerTest {
     @Test
     public void test() {
         LotManager lotManager = new LotManager();
-        lotManager.changePair(CurrencyPair.EURUSD, 100000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
-        lotManager.changePair(CurrencyPair.EURUSD, 200000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
-        lotManager.changePair(CurrencyPair.EURUSD, 300000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
-        lotManager.changePair(CurrencyPair.EURUSD, 400000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
-        lotManager.changePair(CurrencyPair.EURUSD, 500000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
-        lotManager.changePair(CurrencyPair.EURUSD, 600000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
-        lotManager.changePair(CurrencyPair.EURUSD, 700000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
-        lotManager.changePair(CurrencyPair.EURUSD, 800000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
-        lotManager.changePair(CurrencyPair.EURUSD, 900000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
-        lotManager.changePair(CurrencyPair.EURUSD, 1000000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
-        lotManager.changePair(CurrencyPair.EURUSD, 1500000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
-        lotManager.changePair(CurrencyPair.EURUSD, 2000000);
-        System.out.println(lotManager.getInitial() + ", " + lotManager.getLimit());
+        int margin = 0;
+        margin = 100000;
+        lotManager.changePair(CurrencyPair.EURUSD, margin);
+        System.out.println("margin:" + margin + ", " + lotManager.getInitial() + ", " + lotManager.getLimit());
+        margin = 300000;
+        lotManager.changePair(CurrencyPair.EURUSD, margin);
+        System.out.println("margin:" + margin + ", " + lotManager.getInitial() + ", " + lotManager.getLimit());
+        margin = 350000;
+        lotManager.changePair(CurrencyPair.EURUSD, margin);
+        System.out.println("margin:" + margin + ", " + lotManager.getInitial() + ", " + lotManager.getLimit());
+        margin = 360000;
+        lotManager.changePair(CurrencyPair.EURUSD, margin);
+        System.out.println("margin:" + margin + ", " + lotManager.getInitial() + ", " + lotManager.getLimit());
     }
 }
