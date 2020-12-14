@@ -1,7 +1,6 @@
 package autotrade.local.actor;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -59,9 +58,7 @@ public abstract class AutoTrader {
     @SuppressWarnings("unused")
     protected StatefulRedisPubSubConnection<String, String> pubSubConnection;
 
-    protected int targetAmountOneDay;
     protected int startMargin;
-    protected BigDecimal targetAmountRatio;
 
     protected LocalTime inactiveStart;
     protected LocalTime inactiveEnd;
@@ -80,8 +77,6 @@ public abstract class AutoTrader {
                 .map(CurrencyPair::valueOf)
                 .collect(Collectors.toSet());
         displayMode = DisplayMode.CHART;
-
-        targetAmountRatio = AutoTradeProperties.getBigDecimal("autotrade.targetAmount.ratio");
 
         inactiveStart = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime.from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
@@ -192,9 +187,6 @@ public abstract class AutoTrader {
         // 開始時の証拠金を取得
         startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
 
-        // 目標金額設定
-        targetAmountOneDay = BigDecimal.valueOf(startMargin).multiply(targetAmountRatio).intValue();
-
         // 通貨ペア変更
         wrapper.displayRateList();
         Stream.of(CurrencyPair.values()).forEach(this::changePair);
@@ -284,12 +276,6 @@ public abstract class AutoTrader {
     }
 
     protected void tradePostProcess(Snapshot snapshot) {
-
-        // 注文モード変更
-        if (snapshot.getTotalProfit() > targetAmountOneDay) {
-            // 一日の目標金額を達成した場合は消極的に取引する
-            lotManager.modeNegative();
-        }
 
         // 指標アラート
         if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
