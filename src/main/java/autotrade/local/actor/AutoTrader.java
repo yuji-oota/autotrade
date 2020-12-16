@@ -185,7 +185,9 @@ public abstract class AutoTrader {
 //        AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
         // 開始時の証拠金を取得
-        startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
+        if (startMargin == 0) {
+            startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
+        }
 
         // 通貨ペア変更
         wrapper.displayRateList();
