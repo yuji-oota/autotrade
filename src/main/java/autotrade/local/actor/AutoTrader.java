@@ -180,10 +180,6 @@ public abstract class AutoTrader {
         wrapper.orderSettings();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
-        // 通貨ペア設定
-//        wrapper.pairSettings();
-//        AutoTradeUtils.sleep(Duration.ofSeconds(1));
-
         // 開始時の証拠金を取得
         if (startMargin == 0) {
             startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
@@ -314,12 +310,6 @@ public abstract class AutoTrader {
             throw new ApplicationException("RateAnalyzer has doubtful rates.");
         }
 
-        // 非活性時間開始時点でクラウドセーブ
-//        if (inactiveStart.isBefore(inactiveStart.plusSeconds(1))) {
-//            cloudSave();
-//            AutoTradeUtils.sleep(Duration.ofSeconds(1));
-//        }
-
     }
 
     protected boolean isSleep(Snapshot snapshot) {
@@ -349,10 +339,6 @@ public abstract class AutoTrader {
         switch (snapshot.getStatus()) {
         case NONE:
         case SAME:
-//            if (System.currentTimeMillis() - lastFixed < Duration.ofSeconds(10).toMillis()) {
-//                // 利益確定から一定時間内の場合は注文しない
-//                return false;
-//            }
             if (isCalm()) {
                 // 閾値間隔が狭い場合は注文しない
                 return false;
