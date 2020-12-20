@@ -101,4 +101,10 @@ public class RecoveryManager {
         log.info("recovery progress is {}%. start:{} end:{}",
                 getRecoveryProgress(snapshot), getLossCounterTradingStart(), getLoss(snapshot));
     }
+    public boolean isAfterCounterTrading() {
+        if (snapshotWhenStart.equals(counterTradingSnapshot)) {
+            return false;
+        }
+        return true;
+    }
 }

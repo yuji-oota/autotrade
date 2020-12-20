@@ -102,7 +102,6 @@ public class AutoTraderSeventh extends AutoTrader {
                     orderAsk(snapshot);
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
-                    recoveryManager.setCounterTradingSnapshot(snapshot);
                     return;
                 }
             }
@@ -113,7 +112,6 @@ public class AutoTraderSeventh extends AutoTrader {
                     orderBid(snapshot);
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
-                    recoveryManager.setCounterTradingSnapshot(snapshot);
                     return;
                 }
             }
@@ -192,7 +190,8 @@ public class AutoTraderSeventh extends AutoTrader {
     protected void fix(Snapshot snapshot) {
 
         if (snapshot.hasPosition()
-                && recoveryManager.getRecoveryProgress(snapshot) >= 100) {
+                && recoveryManager.isAfterCounterTrading()
+                && recoveryManager.isRecovered(snapshot)) {
             fixAll(snapshot);
             return;
         }
