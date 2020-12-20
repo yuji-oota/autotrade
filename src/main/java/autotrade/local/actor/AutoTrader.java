@@ -275,6 +275,8 @@ public abstract class AutoTrader {
 
     protected void tradePostProcess(Snapshot snapshot) {
 
+        LocalDateTime now = LocalDateTime.now();
+
         // 指標アラート
         if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
                 && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(59))) {
@@ -286,7 +288,7 @@ public abstract class AutoTrader {
         if (isSleep(snapshot)) {
 
             // 非活性時間の終了までスリープする
-            Duration durationToActive = Duration.between(LocalDateTime.now(), LocalDateTime.of(LocalDate.now(), inactiveEnd));
+            Duration durationToActive = Duration.between(now, LocalDateTime.of(LocalDate.now(), inactiveEnd));
             log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
             AutoTradeUtils.sleep(durationToActive);
         }
@@ -308,6 +310,15 @@ public abstract class AutoTrader {
         // お知らせ対策
         if (rateAnalyzer.hasDoubtfulRates()) {
             throw new ApplicationException("RateAnalyzer has doubtful rates.");
+        }
+
+        // 5:00時点でクラウドセーブ
+        if (snapshot.hasPosition()
+                && now.getHour() == 5
+                && now.getMinute() == 0
+                && now.getSecond() < 1) {
+            cloudSave();
+            AutoTradeUtils.sleep(Duration.ofSeconds(1));
         }
 
     }
