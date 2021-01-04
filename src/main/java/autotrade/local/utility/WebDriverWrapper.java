@@ -108,6 +108,9 @@ public class WebDriverWrapper {
     public String getMargin() {
         return driver.findElement(By.xpath("//div[@id='account-status-01-value']")).getText();
     }
+    public String getEffectiveMargin() {
+        return driver.findElement(By.xpath("//div[@id='account-status-02-value']")).getText();
+    }
     public String getAskLot() {
         return driver.findElement(By.xpath("//div[@id='order-quick']/div[3]/div[2]/div/div[3]")).getText().replace("　(0)", "");
     }

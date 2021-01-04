@@ -480,7 +480,7 @@ public abstract class AutoTrader {
         wrapper.changePair(this.pair.getDescription());
         this.changeDisplay(this.displayMode);
         this.rateAnalyzer = this.pairAnalyzerMap.get(this.pair);
-        this.lotManager.changePair(pair, this.startMargin);
+        this.lotManager.changePair(pair, AutoTradeUtils.toInt(wrapper.getEffectiveMargin()));
         log.info("currency pair is changed to {}.", this.pair.getDescription());
     }
     protected void changeRecommended() {
