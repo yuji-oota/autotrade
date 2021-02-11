@@ -196,10 +196,6 @@ public class AutoTraderSeventh extends AutoTrader {
             return;
         }
 
-        Rate rate = snapshot.getRate();
-        Predicate<Rate> isReachedThreshold;
-        Consumer<Snapshot> fix;
-
         switch (snapshot.getStatus()) {
         case NONE:
             // ポジションがない場合
@@ -213,8 +209,8 @@ public class AutoTraderSeventh extends AutoTrader {
                 break;
             }
 
-            if (rateAnalyzer.isBidDown()
-                    && snapshot.getAskPipProfit() >= 5) {
+            if (isCalm()
+                    && snapshot.getAskPipProfit() >= 0) {
                 fixAsk(snapshot);
                 break;
             }
@@ -228,8 +224,8 @@ public class AutoTraderSeventh extends AutoTrader {
                 break;
             }
 
-            if (rateAnalyzer.isAskUp()
-                    && snapshot.getBidPipProfit() >= 5) {
+            if (isCalm()
+                    && snapshot.getBidPipProfit() >= 0) {
                 fixBid(snapshot);
                 break;
             }
@@ -237,19 +233,16 @@ public class AutoTraderSeventh extends AutoTrader {
             break;
         case SAME:
             // ポジションが同数の場合
-            isReachedThreshold = r -> false;
-            fix = s -> {};
-            if (rateAnalyzer.isBidDown()) {
-                isReachedThreshold = r -> snapshot.getAskPipProfit() >= 5;
-                fix = s -> fixAsk(s);
-            }
-            if (rateAnalyzer.isAskUp()) {
-                isReachedThreshold = r -> snapshot.getBidPipProfit() >= 5;
-                fix = s -> fixBid(s);
-            }
 
-            if (isReachedThreshold.test(rate)) {
-                fix.accept(snapshot);
+            if (isCalm()
+                    && snapshot.getAskPipProfit() >= 0) {
+                fixAsk(snapshot);
+                break;
+            }
+            if (isCalm()
+                    && snapshot.getBidPipProfit() >= 0) {
+                fixBid(snapshot);
+                break;
             }
 
             break;
