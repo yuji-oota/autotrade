@@ -2,12 +2,14 @@ package autotrade.local.utility;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -104,4 +106,22 @@ public class AutoTradeUtils {
         return str.chars().allMatch(Character::isDigit);
     }
 
+    public static void localSave(Path path, Object object) {
+        try {
+            path.getParent().toFile().mkdir();
+            FileWriter fileWriter = new FileWriter(path.toFile());
+            fileWriter.write(Base64.getEncoder().encodeToString(serialize(object)));
+            fileWriter.close();
+        } catch (IOException e) {
+            throw new ApplicationException(e);
+        }
+    }
+
+    public static <T> T localLoad(Path path) {
+        try {
+            return deserialize(Base64.getDecoder().decode(Files.readString(path)));
+        } catch (IOException e) {
+            throw new ApplicationException(e);
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package autotrade.local.actor;
 
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Scanner;
@@ -33,6 +34,15 @@ public class AutoTraderSeventh extends AutoTrader {
             if ("y".equals(input.toLowerCase())) {
                 cloudLoad();
             }
+        };
+        System.out.print("do you need local load? (y or any) :");
+        try (Scanner scanner = new Scanner(System.in)) {
+            String input = scanner.next();
+            if ("y".equals(input.toLowerCase())) {
+                recoveryManager.open(AutoTradeUtils.localLoad(Paths.get("localSave", "snapshotWhenRecoveryStart")));
+                log.info("loaded snapshot when recovery start to RecoveryManager {}.", recoveryManager.getSnapshotWhenStart());
+            }
+            recoveryManager.setCounterTradingSnapshot(null);
         };
     }
 
@@ -102,6 +112,7 @@ public class AutoTraderSeventh extends AutoTrader {
                     orderAsk(snapshot);
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
+                    AutoTradeUtils.localSave(Paths.get("localSave", "snapshotWhenRecoveryStart"), snapshot);
                     return;
                 }
             }
@@ -112,6 +123,7 @@ public class AutoTraderSeventh extends AutoTrader {
                     orderBid(snapshot);
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
+                    AutoTradeUtils.localSave(Paths.get("localSave", "snapshotWhenRecoveryStart"), snapshot);
                     return;
                 }
             }

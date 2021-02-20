@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder()
+@Builder
 public class Snapshot implements Serializable {
 
     private String pair;
