@@ -234,16 +234,26 @@ public class AutoTraderSeventh extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            if (isCalm()
-                    && snapshot.getAskPipProfit() >= 0) {
-                fixAsk(snapshot);
-                break;
+            if (isCalm()) {
+                if (snapshot.getAskPipProfit() >= 0) {
+                    fixAsk(snapshot);
+                    break;
+                }
+                if (snapshot.getBidPipProfit() >= 0) {
+                    fixBid(snapshot);
+                    break;
+                }
+                if (rateAnalyzer.isReachedAskThresholdWithin(snapshot.getRate(), Duration.ofMinutes(10))) {
+                    fixBid(snapshot);
+                    break;
+                }
+                if (rateAnalyzer.isReachedBidThresholdWithin(snapshot.getRate(), Duration.ofMinutes(10))) {
+                    fixAsk(snapshot);
+                    break;
+                }
             }
-            if (isCalm()
-                    && snapshot.getBidPipProfit() >= 0) {
-                fixBid(snapshot);
-                break;
-            }
+
+
 
             break;
         default:
