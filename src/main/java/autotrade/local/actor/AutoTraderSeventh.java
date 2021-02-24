@@ -28,21 +28,14 @@ public class AutoTraderSeventh extends AutoTrader {
                         Duration.ofSeconds(
                                 AutoTradeProperties.getInt("autoTraderSeventh.rateAnalizer.threshold.seconds")));
 
-        System.out.print("do you need cloud load? (y or any) :");
         try (Scanner scanner = new Scanner(System.in)) {
-            String input = scanner.next();
-            if ("y".equals(input.toLowerCase())) {
-                cloudLoad();
-            }
-        };
-        System.out.print("do you need local load? (y or any) :");
-        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.print("do you need local load? (y or any) :");
             String input = scanner.next();
             if ("y".equals(input.toLowerCase())) {
                 recoveryManager.open(AutoTradeUtils.localLoad(Paths.get("localSave", "snapshotWhenRecoveryStart")));
                 log.info("loaded snapshot when recovery start to RecoveryManager {}.", recoveryManager.getSnapshotWhenStart());
+                recoveryManager.setCounterTradingSnapshot(null);
             }
-            recoveryManager.setCounterTradingSnapshot(null);
         };
     }
 
