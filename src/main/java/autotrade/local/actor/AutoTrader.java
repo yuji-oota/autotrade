@@ -369,6 +369,15 @@ public abstract class AutoTrader {
             break;
         default:
         }
+
+        int verifyAskLot = AutoTradeUtils.toInt(wrapper.getAskLot());
+        int verifyBidLot = AutoTradeUtils.toInt(wrapper.getBidLot());
+        if (snapshot.getAskLot() != verifyAskLot
+                || snapshot.getBidLot() != verifyBidLot) {
+            // Fixされている場合は注文しない
+            return false;
+        }
+
         return true;
     }
 
