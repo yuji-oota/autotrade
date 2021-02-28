@@ -175,20 +175,40 @@ public class AutoTraderEighth extends AutoTrader {
         case ASK_SIDE:
             // 買いポジションが多い場合
 
-            if (snapshot.getAskPipProfit() >= 0
-                && rateAnalyzer.isReachedBidThreshold(rate)) {
-                fixAsk(snapshot);
-                break;
+            if (snapshot.hasBothSide()) {
+                if (rateAnalyzer.isAskUp()
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+                    fixBid(snapshot);
+                    break;
+                }
+            }
+            if (snapshot.hasOneSide()) {
+                if (rateAnalyzer.isBidDown()
+                        && recoveryManager.isRecovered(snapshot)
+                        && rateAnalyzer.isReachedBidThreshold(rate)) {
+                    fixAll(snapshot);
+                    break;
+                }
             }
 
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
 
-            if (snapshot.getBidPipProfit() >= 0
-                && rateAnalyzer.isReachedAskThreshold(rate)) {
-                fixBid(snapshot);
-                break;
+            if (snapshot.hasBothSide()) {
+                if (rateAnalyzer.isBidDown()
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
+                    fixAsk(snapshot);
+                    break;
+                }
+            }
+            if (snapshot.hasOneSide()) {
+                if (rateAnalyzer.isAskUp()
+                        && recoveryManager.isRecovered(snapshot)
+                        && rateAnalyzer.isReachedAskThreshold(rate)) {
+                    fixAll(snapshot);
+                    break;
+                }
             }
 
             break;
@@ -201,14 +221,14 @@ public class AutoTraderEighth extends AutoTrader {
                     break;
                 }
             } else {
-                if (snapshot.getAskPipProfit() >= 0
-                    && rateAnalyzer.isReachedBidThreshold(rate)) {
-                    fixAsk(snapshot);
+                if (rateAnalyzer.isAskUp()
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+                    fixBid(snapshot);
                     break;
                 }
-                if (snapshot.getBidPipProfit() >= 0
-                    && rateAnalyzer.isReachedAskThreshold(rate)) {
-                    fixBid(snapshot);
+                if (rateAnalyzer.isBidDown()
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
+                    fixAsk(snapshot);
                     break;
                 }
             }
