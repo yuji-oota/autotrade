@@ -2,7 +2,8 @@ package autotrade.local.utility;
 
 import java.text.MessageFormat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 
 public class WebDriverWrapperTest {
 

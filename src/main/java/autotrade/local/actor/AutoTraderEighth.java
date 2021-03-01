@@ -70,9 +70,11 @@ public class AutoTraderEighth extends AutoTrader {
         case NONE:
             // ポジションがない場合
 
+            int initialLot = snapshot.getMargin() / 100000;
+
             if (rateAnalyzer.isAskUp()) {
                 if (rateAnalyzer.isReachedAskThreshold(rate)) {
-                    orderAsk(1);
+                    orderAsk(initialLot);
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     AutoTradeUtils.localSave(Paths.get("localSave", "snapshotWhenRecoveryStart"), snapshot);
@@ -82,7 +84,7 @@ public class AutoTraderEighth extends AutoTrader {
 
             if (rateAnalyzer.isBidDown()) {
                 if (rateAnalyzer.isReachedBidThreshold(rate)) {
-                    orderBid(1);
+                    orderBid(initialLot);
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     AutoTradeUtils.localSave(Paths.get("localSave", "snapshotWhenRecoveryStart"), snapshot);

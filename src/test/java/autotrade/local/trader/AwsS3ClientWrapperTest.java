@@ -2,7 +2,7 @@ package autotrade.local.trader;
 
 import java.nio.file.Paths;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import autotrade.local.utility.AwsS3ClientWrapper;
 
