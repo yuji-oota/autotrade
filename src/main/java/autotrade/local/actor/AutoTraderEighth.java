@@ -185,7 +185,7 @@ public class AutoTraderEighth extends AutoTrader {
             if (snapshot.hasOneSide()) {
                 if (rateAnalyzer.isBidDown()
                         && recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedBidThreshold(rate)) {
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
                     fixAll(snapshot);
                     break;
                 }
@@ -205,7 +205,7 @@ public class AutoTraderEighth extends AutoTrader {
             if (snapshot.hasOneSide()) {
                 if (rateAnalyzer.isAskUp()
                         && recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedAskThreshold(rate)) {
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
                     fixAll(snapshot);
                     break;
                 }
