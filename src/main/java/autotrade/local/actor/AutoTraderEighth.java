@@ -100,6 +100,9 @@ public class AutoTraderEighth extends AutoTrader {
 
                 isReachedThreshold = r -> rateAnalyzer.isReachedBidThreshold(r);
                 counterTrading = s -> orderBid(s.getAskLot() - s.getBidLot() + 1);
+                if (snapshot.getAskProfit() < 0) {
+                    isReachedThreshold = r -> rateAnalyzer.isReachedBidThresholdWithin(r, Duration.ofMinutes(1));
+                }
                 if (pair.isSpreadWiden(rate.getSpread())
                         || lotManager.isLimit(snapshot)) {
                     counterTrading = s -> forceSame(s);
@@ -120,6 +123,9 @@ public class AutoTraderEighth extends AutoTrader {
 
                 isReachedThreshold = r -> rateAnalyzer.isReachedAskThreshold(r);
                 counterTrading = s -> orderAsk(s.getBidLot() - s.getAskLot() + 1);
+                if (snapshot.getBidProfit() < 0) {
+                    isReachedThreshold = r -> rateAnalyzer.isReachedAskThresholdWithin(r, Duration.ofMinutes(1));
+                }
                 if (pair.isSpreadWiden(rate.getSpread())
                         || lotManager.isLimit(snapshot)) {
                     counterTrading = s -> forceSame(s);
