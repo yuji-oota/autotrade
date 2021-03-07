@@ -17,7 +17,6 @@ public class LotManager {
     private int initialNegative;
     private BigDecimal countertradingMagnification;
     private int countertradingCount;
-    private BigDecimal power;
     private Mode mode;
     private Map<String, Object> marginRequirementMap;
 
@@ -33,7 +32,6 @@ public class LotManager {
         initialNegative = AutoTradeProperties.getInt("autotrade.lot.negative");
         countertradingMagnification = AutoTradeProperties.getBigDecimal("autotrade.lot.countertrading.magnification");
         countertradingCount = AutoTradeProperties.getInt("autotrade.lot.countertrading.count");
-        power = BigDecimal.valueOf(Math.pow(countertradingMagnification.doubleValue(), countertradingCount));
         marginRequirementMap = AutoTradeProperties.getMap("autotrade.lot.marginRequirement");
         modePositive();
     }
@@ -116,7 +114,8 @@ public class LotManager {
         }
         initialLot--;
         initialPositive = initialLot;
-        limit = calculateLimitLot(initialLot);
+//        limit = calculateLimitLot(initialLot);
+        limit = roughEstimateLimit;
         log.info("initialPositive changed to {}.", initialPositive);
     }
     private int calculateLimitLot(int initialLot) {
