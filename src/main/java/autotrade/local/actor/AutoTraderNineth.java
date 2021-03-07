@@ -33,8 +33,6 @@ public class AutoTraderNineth extends AutoTrader {
             if ("y".equals(input.toLowerCase())) {
                 Snapshot snapshot = AutoTradeUtils.localLoad(Paths.get("localSave", "snapshotWhenRecoveryStart"));
                 recoveryManager.open(snapshot);
-                log.info("loaded snapshot when recovery start to RecoveryManager {}.", recoveryManager.getSnapshotWhenStart());
-                recoveryManager.setCounterTradingSnapshot(snapshot);
             }
         };
     }

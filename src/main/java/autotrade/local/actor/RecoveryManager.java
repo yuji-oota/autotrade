@@ -29,6 +29,7 @@ public class RecoveryManager {
         if (!isOpen) {
             snapshotWhenStart = snapshot;
             counterTradingSnapshot = snapshot;
+            log.info("RecoveryManager opened {}.", snapshot);
         }
         isOpen = true;
     }
