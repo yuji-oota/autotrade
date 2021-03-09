@@ -214,6 +214,15 @@ public class AutoTraderNineth extends AutoTrader {
                 }
             }
 
+            if (rateAnalyzer.isAskUp()
+                    && snapshot.hasBothSide()
+                    && snapshot.getAskPipProfit() > snapshot.getBidPipProfit()
+                    && snapshot.getAskAverageRate() - snapshot.getBidAverageRate() >= 100
+                    && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+                fixBid(snapshot);
+                break;
+            }
+
             break;
         case BID_SIDE:
             // 売りポジションが多い場合
@@ -229,6 +238,15 @@ public class AutoTraderNineth extends AutoTrader {
                     fixBid(snapshot);
                     break;
                 }
+            }
+
+            if (rateAnalyzer.isBidDown()
+                    && snapshot.hasBothSide()
+                    && snapshot.getAskPipProfit() < snapshot.getBidPipProfit()
+                    && snapshot.getAskAverageRate() - snapshot.getBidAverageRate() >= 100
+                    && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
+                fixAsk(snapshot);
+                break;
             }
 
             break;
