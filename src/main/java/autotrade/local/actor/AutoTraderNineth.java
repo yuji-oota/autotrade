@@ -38,27 +38,6 @@ public class AutoTraderNineth extends AutoTrader {
     }
 
     @Override
-    protected boolean isOrderable(Snapshot snapshot) {
-        boolean isOrderable = super.isOrderable(snapshot);
-
-        if (isOrderable) {
-            switch (snapshot.getStatus()) {
-            case NONE:
-            case SAME:
-                break;
-            case ASK_SIDE:
-            case BID_SIDE:
-                if (isCalm()) {
-                    return false;
-                }
-                break;
-            default:
-            }
-        }
-        return isOrderable;
-    }
-
-    @Override
     protected void order(Snapshot snapshot) {
 
         Rate rate = snapshot.getRate();
@@ -99,11 +78,14 @@ public class AutoTraderNineth extends AutoTrader {
 
                 isReachedThreshold = r -> rateAnalyzer.isReachedBidThreshold(r);
                 counterTrading = s -> orderBid(s.getAskLot() - s.getBidLot() + 1);
-                if (pair.isSpreadWiden(rate.getSpread())
-                        || lotManager.isLimit(snapshot)) {
-                    counterTrading = s -> forceSame(s);
+                if (isCalm()) {
+                    isReachedThreshold = r -> rateAnalyzer.isReachedBidThresholdWithin(r, Duration.ofMinutes(10));
+                } else {
+                    if (pair.isSpreadWiden(rate.getSpread())
+                            || lotManager.isLimit(snapshot)) {
+                        counterTrading = s -> forceSame(s);
+                    }
                 }
-
                 if (isReachedThreshold.test(rate)) {
                     counterTrading.accept(snapshot);
                     recoveryManager.setCounterTradingSnapshot(snapshot);
@@ -119,11 +101,14 @@ public class AutoTraderNineth extends AutoTrader {
 
                 isReachedThreshold = r -> rateAnalyzer.isReachedAskThreshold(r);
                 counterTrading = s -> orderAsk(s.getBidLot() - s.getAskLot() + 1);
-                if (pair.isSpreadWiden(rate.getSpread())
-                        || lotManager.isLimit(snapshot)) {
-                    counterTrading = s -> forceSame(s);
+                if (isCalm()) {
+                    isReachedThreshold = r -> rateAnalyzer.isReachedAskThresholdWithin(r, Duration.ofMinutes(10));
+                } else {
+                    if (pair.isSpreadWiden(rate.getSpread())
+                            || lotManager.isLimit(snapshot)) {
+                        counterTrading = s -> forceSame(s);
+                    }
                 }
-
                 if (isReachedThreshold.test(rate)) {
                     counterTrading.accept(snapshot);
                     recoveryManager.setCounterTradingSnapshot(snapshot);
@@ -172,23 +157,6 @@ public class AutoTraderNineth extends AutoTrader {
     }
 
     @Override
-    protected boolean isFixable(Snapshot snapshot) {
-        switch (snapshot.getStatus()) {
-        case NONE:
-        case ASK_SIDE:
-        case BID_SIDE:
-            break;
-        case SAME:
-            if (pair.isSpreadWiden(snapshot.getRate().getSpread())) {
-                return false;
-            }
-            break;
-        default:
-        }
-        return true;
-    }
-
-    @Override
     protected void fix(Snapshot snapshot) {
 
         Rate rate = snapshot.getRate();
@@ -203,24 +171,16 @@ public class AutoTraderNineth extends AutoTrader {
 
             if (rateAnalyzer.isBidDown()) {
                 if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedBidThreshold(rate)) {
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
                     fixAll(snapshot);
                     break;
                 }
                 if (snapshot.getAskProfit() >= 0
-                    && rateAnalyzer.isReachedBidThreshold(rate)) {
+                        && snapshot.hasBothSide()
+                        && rateAnalyzer.isReachedBidThreshold(rate)) {
                     fixAsk(snapshot);
                     break;
                 }
-            }
-
-            if (rateAnalyzer.isAskUp()
-                    && snapshot.hasBothSide()
-                    && snapshot.getAskPipProfit() > snapshot.getBidPipProfit()
-                    && snapshot.getAskAverageRate() - snapshot.getBidAverageRate() >= 100
-                    && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
-                fixBid(snapshot);
-                break;
             }
 
             break;
@@ -229,24 +189,16 @@ public class AutoTraderNineth extends AutoTrader {
 
             if (rateAnalyzer.isAskUp()) {
                 if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedAskThreshold(rate)) {
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
                     fixAll(snapshot);
                     break;
                 }
                 if (snapshot.getBidProfit() >= 0
-                    && rateAnalyzer.isReachedAskThreshold(rate)) {
+                        && snapshot.hasBothSide()
+                        && rateAnalyzer.isReachedAskThreshold(rate)) {
                     fixBid(snapshot);
                     break;
                 }
-            }
-
-            if (rateAnalyzer.isBidDown()
-                    && snapshot.hasBothSide()
-                    && snapshot.getAskPipProfit() < snapshot.getBidPipProfit()
-                    && snapshot.getAskAverageRate() - snapshot.getBidAverageRate() >= 100
-                    && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
-                fixAsk(snapshot);
-                break;
             }
 
             break;
