@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AutoTraderNineth extends AutoTrader {
 
     private RecoveryManager recoveryManager;
+    private Duration fixDuration;
 
     public AutoTraderNineth() {
         super();
@@ -26,6 +27,7 @@ public class AutoTraderNineth extends AutoTrader {
                 CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderNineth.order.pair"))).setThresholdDuration(
                         Duration.ofSeconds(
                                 AutoTradeProperties.getInt("autoTraderNineth.rateAnalizer.threshold.seconds")));
+        fixDuration = Duration.ofSeconds(AutoTradeProperties.getInt("autoTraderNineth.fix.duration.seconds"));
 
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
@@ -35,6 +37,17 @@ public class AutoTraderNineth extends AutoTrader {
                 recoveryManager.open(snapshot);
             }
         };
+    }
+
+    @Override
+    protected boolean isOrderable(Snapshot snapshot) {
+        boolean isOrderable = super.isOrderable(snapshot);
+        if (isOrderable
+                && recoveryManager.isOpen()
+                && recoveryManager.isRecovered(snapshot)) {
+            isOrderable = false;
+        }
+        return isOrderable;
     }
 
     @Override
@@ -171,7 +184,7 @@ public class AutoTraderNineth extends AutoTrader {
 
             if (rateAnalyzer.isBidDown()) {
                 if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(1))) {
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, fixDuration)) {
                     fixAll(snapshot);
                     break;
                 }
@@ -189,7 +202,7 @@ public class AutoTraderNineth extends AutoTrader {
 
             if (rateAnalyzer.isAskUp()) {
                 if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(1))) {
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, fixDuration)) {
                     fixAll(snapshot);
                     break;
                 }
