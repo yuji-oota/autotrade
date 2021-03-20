@@ -43,6 +43,7 @@ public class AutoTraderNineth extends AutoTrader {
     protected boolean isOrderable(Snapshot snapshot) {
         boolean isOrderable = super.isOrderable(snapshot);
         if (isOrderable
+                && snapshot.hasPosition()
                 && recoveryManager.isOpen()
                 && recoveryManager.isRecovered(snapshot)) {
             isOrderable = false;
