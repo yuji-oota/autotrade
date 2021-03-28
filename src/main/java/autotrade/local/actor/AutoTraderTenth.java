@@ -2,6 +2,7 @@ package autotrade.local.actor;
 
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Scanner;
 
 import autotrade.local.actor.MessageListener.ReservedMessage;
@@ -92,28 +93,44 @@ public class AutoTraderTenth extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            if (rateAnalyzer.isAskUp()
-                    && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+            if (Objects.isNull(orderDirection)) {
                 orderDirection = OrderDirection.ASK;
-                if (snapshot.getAskLot() < snapshot.getBidLot()) {
-                    forceSame(snapshot);
-                    break;
+                if (snapshot.getBidLot() > snapshot.getAskLot()) {
+                    orderDirection = OrderDirection.BID;
                 }
             }
-            if (rateAnalyzer.isBidDown()
-                    && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
-                orderDirection = OrderDirection.BID;
-                if (snapshot.getAskLot() > snapshot.getBidLot()) {
-                    forceSame(snapshot);
-                    break;
-                }
-            }
+
+//          if (rateAnalyzer.isAskUp()
+//                  && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+//              orderDirection = OrderDirection.ASK;
+//              if (snapshot.getAskLot() < snapshot.getBidLot()) {
+//                  forceSame(snapshot);
+//                  break;
+//              }
+//          }
+//          if (rateAnalyzer.isBidDown()
+//                  && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
+//              orderDirection = OrderDirection.BID;
+//              if (snapshot.getAskLot() > snapshot.getBidLot()) {
+//                  forceSame(snapshot);
+//                  break;
+//              }
+//          }
+
+          if (rateAnalyzer.isAskUp()
+                  && rateAnalyzer.isReachedAskThreshold(rate)) {
+              orderDirection = OrderDirection.ASK;
+          }
+          if (rateAnalyzer.isBidDown()
+                  && rateAnalyzer.isReachedBidThreshold(rate)) {
+              orderDirection = OrderDirection.BID;
+          }
 
             switch (orderDirection) {
             case ASK:
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThreshold(rate)
-                        && !lotManager.isLimit(snapshot)) {
+                        && snapshot.getAskLot() < lotManager.getLimit()) {
                     orderAsk(1);
                     break;
                 }
@@ -121,7 +138,7 @@ public class AutoTraderTenth extends AutoTrader {
             case BID:
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThreshold(rate)
-                        && !lotManager.isLimit(snapshot)) {
+                        && snapshot.getBidLot() < lotManager.getLimit()) {
                     orderBid(1);
                     break;
                 }
@@ -145,6 +162,12 @@ public class AutoTraderTenth extends AutoTrader {
 
         Rate rate = snapshot.getRate();
 
+        if (recoveryManager.isOpen()
+                && recoveryManager.isRecoveredWithProfit(snapshot, snapshot.getMargin() / 10000)) {
+            fixAll(snapshot);
+            return;
+        }
+
         switch (snapshot.getStatus()) {
         case NONE:
             // ポジションがない場合
@@ -158,11 +181,6 @@ public class AutoTraderTenth extends AutoTrader {
             // ポジションが同数の場合
 
             if (rateAnalyzer.isBidDown()) {
-                if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, fixDuration)) {
-                    fixAll(snapshot);
-                    break;
-                }
                 if (snapshot.getAskProfit() >= 0
                         && snapshot.hasBothSide()
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
@@ -172,11 +190,6 @@ public class AutoTraderTenth extends AutoTrader {
             }
 
             if (rateAnalyzer.isAskUp()) {
-                if (recoveryManager.isRecovered(snapshot)
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, fixDuration)) {
-                    fixAll(snapshot);
-                    break;
-                }
                 if (snapshot.getBidProfit() >= 0
                         && snapshot.hasBothSide()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
@@ -185,6 +198,22 @@ public class AutoTraderTenth extends AutoTrader {
                 }
             }
             break;
+
+
+//            if (lotManager.isLimit(snapshot)) {
+//                if (rateAnalyzer.isBidDown()
+//                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
+//                    fixAsk(snapshot);
+//                    break;
+//                }
+//
+//                if (rateAnalyzer.isAskUp()
+//                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
+//                    fixBid(snapshot);
+//                    break;
+//                }
+//            }
+
         default:
         }
     }

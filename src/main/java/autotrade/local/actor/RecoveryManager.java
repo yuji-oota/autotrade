@@ -60,9 +60,14 @@ public class RecoveryManager {
     public boolean isClose() {
         return !isOpen;
     }
-
     public boolean isRecovered(Snapshot snapshot) {
-        boolean isRecovered = snapshotWhenStart.getMargin() <= snapshot.getMargin() + snapshot.getPositionProfit();
+        return isRecovered(snapshotWhenStart.getMargin(), snapshot.getMargin() + snapshot.getPositionProfit());
+    }
+    public boolean isRecoveredWithProfit(Snapshot snapshot, int profit) {
+        return isRecovered(snapshotWhenStart.getMargin() + profit, snapshot.getMargin() + snapshot.getPositionProfit());
+    }
+    private boolean isRecovered(int startMargin, int margin) {
+        boolean isRecovered = startMargin <= margin;
         if (!isReachedRecover && isRecovered) {
             log.info("reached recovery.");
             isReachedRecover = isRecovered;
