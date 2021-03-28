@@ -416,7 +416,6 @@ public abstract class AutoTrader {
         wrapper.orderAsk();
         verifyOrder(beforeLot + lot, Snapshot::getAskLot);
         log.info("order ask. lot {}", lot);
-        AutoTradeUtils.playAudioRandom(AudioPath.OrderSoundEffect);
     }
     protected void orderBid(int lot) {
         int beforeLot = AutoTradeUtils.toInt(wrapper.getBidLot());
@@ -424,7 +423,6 @@ public abstract class AutoTrader {
         wrapper.orderBid();
         verifyOrder(beforeLot + lot, Snapshot::getBidLot);
         log.info("order bid. lot {}", lot);
-        AutoTradeUtils.playAudioRandom(AudioPath.OrderSoundEffect);
     }
     protected void fixAll(Snapshot snapshot) {
         wrapper.fixAll();
