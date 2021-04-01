@@ -18,23 +18,27 @@ public class Snapshot implements Serializable {
     private int totalProfit;
 
     private int margin;
+    private int effectiveMargin;
 
     private Rate rate;
     private int askLot;
     private int bidLot;
     private int askAverageRate;
     private int bidAverageRate;
-//    private int askProfit;
-//    private int bidProfit;
-    private int askPipProfit;
-    private int bidPipProfit;
     private int todaysProfit;
 
+    public int getAskPipProfit() {
+        return rate.getBid() - askAverageRate;
+    }
+    public int getBidPipProfit() {
+        return bidAverageRate - rate.getAsk();
+    }
+
     public int getAskProfit() {
-        return askLot * askPipProfit;
+        return askLot * getAskPipProfit();
     }
     public int getBidProfit() {
-        return bidLot * bidPipProfit;
+        return bidLot * getBidPipProfit();
     }
 
     public int getPositionProfit() {

@@ -202,9 +202,8 @@ public abstract class AutoTrader {
                 .bidLot(AutoTradeUtils.toInt(wrapper.getBidLot()))
                 .askAverageRate(AutoTradeUtils.toInt(wrapper.getAskAverageRate()))
                 .bidAverageRate(AutoTradeUtils.toInt(wrapper.getBidAverageRate()))
-                .askPipProfit(AutoTradeUtils.toInt(wrapper.getAskPipProfit()))
-                .bidPipProfit(AutoTradeUtils.toInt(wrapper.getBidPipProfit()))
                 .margin(AutoTradeUtils.toInt(wrapper.getMargin()))
+                .effectiveMargin(AutoTradeUtils.toInt(wrapper.getEffectiveMargin()))
                 .todaysProfit(AutoTradeUtils.toInt(wrapper.getMargin()) - startMargin)
                 .rate(buildRateWrapper())
                 .build();
