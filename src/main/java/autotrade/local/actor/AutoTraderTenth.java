@@ -19,7 +19,7 @@ public class AutoTraderTenth extends AutoTrader {
     private enum OrderDirection {ASK, BID}
     private OrderDirection orderDirection;
     private RecoveryManager recoveryManager;
-    private Duration fixDuration;
+    private Duration orderDirectionDuration;
 
     public AutoTraderTenth() {
         super();
@@ -28,7 +28,7 @@ public class AutoTraderTenth extends AutoTrader {
                 CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderTenth.order.pair"))).setThresholdDuration(
                         Duration.ofSeconds(
                                 AutoTradeProperties.getInt("autoTraderTenth.rateAnalizer.threshold.seconds")));
-        fixDuration = Duration.ofSeconds(AutoTradeProperties.getInt("autoTraderTenth.fix.duration.seconds"));
+        orderDirectionDuration = Duration.ofSeconds(AutoTradeProperties.getInt("autoTraderTenth.order.direction.duration.seconds"));
 
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
@@ -100,31 +100,22 @@ public class AutoTraderTenth extends AutoTrader {
                 }
             }
 
-//          if (rateAnalyzer.isAskUp()
-//                  && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
-//              orderDirection = OrderDirection.ASK;
-//              if (snapshot.getAskLot() < snapshot.getBidLot()) {
-//                  forceSame(snapshot);
-//                  break;
-//              }
-//          }
-//          if (rateAnalyzer.isBidDown()
-//                  && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
-//              orderDirection = OrderDirection.BID;
-//              if (snapshot.getAskLot() > snapshot.getBidLot()) {
-//                  forceSame(snapshot);
-//                  break;
-//              }
-//          }
-
-          if (rateAnalyzer.isAskUp()
-                  && rateAnalyzer.isReachedAskThreshold(rate)) {
-              orderDirection = OrderDirection.ASK;
-          }
-          if (rateAnalyzer.isBidDown()
-                  && rateAnalyzer.isReachedBidThreshold(rate)) {
-              orderDirection = OrderDirection.BID;
-          }
+//            if (rateAnalyzer.isAskUp()
+//                    && rateAnalyzer.isReachedAskThreshold(rate)) {
+//                orderDirection = OrderDirection.ASK;
+//            }
+//            if (rateAnalyzer.isBidDown()
+//                    && rateAnalyzer.isReachedBidThreshold(rate)) {
+//                orderDirection = OrderDirection.BID;
+//            }
+            if (rateAnalyzer.isAskUp()
+                    && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDirectionDuration)) {
+                orderDirection = OrderDirection.ASK;
+            }
+            if (rateAnalyzer.isBidDown()
+                    && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDirectionDuration)) {
+                orderDirection = OrderDirection.BID;
+            }
 
             switch (orderDirection) {
             case ASK:
@@ -198,21 +189,6 @@ public class AutoTraderTenth extends AutoTrader {
                 }
             }
             break;
-
-
-//            if (lotManager.isLimit(snapshot)) {
-//                if (rateAnalyzer.isBidDown()
-//                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofMinutes(10))) {
-//                    fixAsk(snapshot);
-//                    break;
-//                }
-//
-//                if (rateAnalyzer.isAskUp()
-//                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofMinutes(10))) {
-//                    fixBid(snapshot);
-//                    break;
-//                }
-//            }
 
         default:
         }
