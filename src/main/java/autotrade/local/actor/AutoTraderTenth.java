@@ -2,7 +2,6 @@ package autotrade.local.actor;
 
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.Objects;
 import java.util.Scanner;
 
 import autotrade.local.actor.MessageListener.ReservedMessage;
@@ -16,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AutoTraderTenth extends AutoTrader {
 
-    private enum OrderDirection {ASK, BID}
+    private enum OrderDirection {ASK, BID, NONE}
     private OrderDirection orderDirection;
     private RecoveryManager recoveryManager;
     private Duration orderDirectionDuration;
@@ -29,6 +28,7 @@ public class AutoTraderTenth extends AutoTrader {
                         Duration.ofSeconds(
                                 AutoTradeProperties.getInt("autoTraderTenth.rateAnalizer.threshold.seconds")));
         orderDirectionDuration = Duration.ofSeconds(AutoTradeProperties.getInt("autoTraderTenth.order.direction.duration.seconds"));
+        orderDirection = OrderDirection.NONE;
 
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
@@ -93,13 +93,6 @@ public class AutoTraderTenth extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            if (Objects.isNull(orderDirection)) {
-                orderDirection = OrderDirection.ASK;
-                if (snapshot.getBidLot() > snapshot.getAskLot()) {
-                    orderDirection = OrderDirection.BID;
-                }
-            }
-
 //            if (rateAnalyzer.isAskUp()
 //                    && rateAnalyzer.isReachedAskThreshold(rate)) {
 //                orderDirection = OrderDirection.ASK;
@@ -110,10 +103,18 @@ public class AutoTraderTenth extends AutoTrader {
 //            }
             if (rateAnalyzer.isAskUp()
                     && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDirectionDuration)) {
+                if (orderDirection == OrderDirection.BID
+                        && snapshot.getBidLot() >= lotManager.getLimit()) {
+                    fixBid(snapshot);
+                }
                 orderDirection = OrderDirection.ASK;
             }
             if (rateAnalyzer.isBidDown()
                     && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDirectionDuration)) {
+                if (orderDirection == OrderDirection.ASK
+                        && snapshot.getAskLot() >= lotManager.getLimit()) {
+                    fixAsk(snapshot);
+                }
                 orderDirection = OrderDirection.BID;
             }
 
