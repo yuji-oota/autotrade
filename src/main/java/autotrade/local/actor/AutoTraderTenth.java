@@ -56,12 +56,11 @@ public class AutoTraderTenth extends AutoTrader {
     protected void order(Snapshot snapshot) {
 
         Rate rate = snapshot.getRate();
+        int initialLot = snapshot.getMargin() / 100000;
 
         switch (snapshot.getStatus()) {
         case NONE:
             // ポジションがない場合
-
-            int initialLot = snapshot.getMargin() / 100000;
 
             if (rateAnalyzer.isAskUp()) {
                 if (rateAnalyzer.isReachedAskThreshold(rate)) {
@@ -93,18 +92,13 @@ public class AutoTraderTenth extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-//            if (rateAnalyzer.isAskUp()
-//                    && rateAnalyzer.isReachedAskThreshold(rate)) {
-//                orderDirection = OrderDirection.ASK;
-//            }
-//            if (rateAnalyzer.isBidDown()
-//                    && rateAnalyzer.isReachedBidThreshold(rate)) {
-//                orderDirection = OrderDirection.BID;
-//            }
             if (rateAnalyzer.isAskUp()
                     && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDirectionDuration)) {
                 if (orderDirection == OrderDirection.BID
                         && snapshot.getBidLot() >= lotManager.getLimit()) {
+                    if (snapshot.hasOneSide()) {
+                        orderAsk(initialLot);
+                    }
                     fixBid(snapshot);
                 }
                 orderDirection = OrderDirection.ASK;
@@ -113,6 +107,9 @@ public class AutoTraderTenth extends AutoTrader {
                     && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDirectionDuration)) {
                 if (orderDirection == OrderDirection.ASK
                         && snapshot.getAskLot() >= lotManager.getLimit()) {
+                    if (snapshot.hasOneSide()) {
+                        orderBid(initialLot);
+                    }
                     fixAsk(snapshot);
                 }
                 orderDirection = OrderDirection.BID;
@@ -123,7 +120,7 @@ public class AutoTraderTenth extends AutoTrader {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThreshold(rate)
                         && snapshot.getAskLot() < lotManager.getLimit()) {
-                    orderAsk(1);
+                    orderAsk(snapshot.getAskLot() == 0 ? initialLot : 1);
                     break;
                 }
                 break;
@@ -131,7 +128,7 @@ public class AutoTraderTenth extends AutoTrader {
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThreshold(rate)
                         && snapshot.getBidLot() < lotManager.getLimit()) {
-                    orderBid(1);
+                    orderBid(snapshot.getBidLot() == 0 ? initialLot : 1);
                     break;
                 }
                 break;
