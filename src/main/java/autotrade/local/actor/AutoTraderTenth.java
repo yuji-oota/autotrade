@@ -147,6 +147,17 @@ public class AutoTraderTenth extends AutoTrader {
     }
 
     @Override
+    protected boolean isFixable(Snapshot snapshot) {
+        boolean isFixable = super.isFixable(snapshot);
+        if (isFixable
+                && snapshot.isPositionSame()
+                && isCalm()) {
+            isFixable = false;
+        }
+        return isFixable;
+    }
+
+    @Override
     protected void fix(Snapshot snapshot) {
 
         Rate rate = snapshot.getRate();
