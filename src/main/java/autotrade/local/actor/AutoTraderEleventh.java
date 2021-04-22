@@ -93,7 +93,7 @@ public class AutoTraderEleventh extends AutoTrader {
             orderTerm = OrderTerm.SHORT;
 
             if (rateAnalyzer.isAskUp()) {
-                if (rateAnalyzer.isReachedAskThresholdWithin(rate, orderTerm.getDuration())) {
+                if (rateAnalyzer.isReachedAskThreshold(rate)) {
                     orderAsk(initialLot);
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
@@ -103,7 +103,7 @@ public class AutoTraderEleventh extends AutoTrader {
             }
 
             if (rateAnalyzer.isBidDown()) {
-                if (rateAnalyzer.isReachedBidThresholdWithin(rate, orderTerm.getDuration())) {
+                if (rateAnalyzer.isReachedBidThreshold(rate)) {
                     orderBid(initialLot);
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
@@ -122,16 +122,26 @@ public class AutoTraderEleventh extends AutoTrader {
 
             if (rateAnalyzer.isAskUp()
                     && rateAnalyzer.isReachedAskThresholdWithin(rate, orderTerm.getDuration())) {
-                if (orderDirection == OrderDirection.BID) {
-                    orderTerm = orderTerm.change();
+                if (orderDirection == OrderDirection.ASK
+                        && orderTerm == OrderTerm.LONG) {
+                    orderTerm = OrderTerm.SHORT;
+                }
+                if (orderDirection == OrderDirection.BID
+                        &&  orderTerm == OrderTerm.SHORT) {
+                    orderTerm = OrderTerm.LONG;
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                 }
                 orderDirection = OrderDirection.ASK;
             }
             if (rateAnalyzer.isBidDown()
                     && rateAnalyzer.isReachedBidThresholdWithin(rate, orderTerm.getDuration())) {
-                if (orderDirection == OrderDirection.ASK) {
-                    orderTerm = orderTerm.change();
+                if (orderDirection == OrderDirection.BID
+                        && orderTerm == OrderTerm.LONG) {
+                    orderTerm = OrderTerm.SHORT;
+                }
+                if (orderDirection == OrderDirection.ASK
+                        &&  orderTerm == OrderTerm.SHORT) {
+                    orderTerm = OrderTerm.LONG;
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                 }
                 orderDirection = OrderDirection.BID;
@@ -140,17 +150,29 @@ public class AutoTraderEleventh extends AutoTrader {
             switch (orderDirection) {
             case ASK:
                 if (rateAnalyzer.isAskUp()
-                        && rateAnalyzer.isReachedAskThreshold(rate)
-                        && snapshot.getAskLot() < lotManager.getLimit()) {
-                    orderAsk(snapshot.getAskLot() == 0 ? initialLot : 1);
+                        && snapshot.getAskLot() < snapshot.getBidLot()
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, OrderTerm.LONG.getDuration())) {
+                    forceSame(snapshot);
+                    break;
+                }
+                if (rateAnalyzer.isAskUp()
+                        && snapshot.getAskLot() < lotManager.getLimit()
+                        && rateAnalyzer.isReachedAskThreshold(rate)) {
+                    orderAsk(snapshot.getAskLot() >= snapshot.getBidLot() ? 1 : 2);
                     break;
                 }
                 break;
             case BID:
                 if (rateAnalyzer.isBidDown()
-                        && rateAnalyzer.isReachedBidThreshold(rate)
-                        && snapshot.getBidLot() < lotManager.getLimit()) {
-                    orderBid(snapshot.getBidLot() == 0 ? initialLot : 1);
+                        && snapshot.getBidLot() < snapshot.getAskLot()
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, OrderTerm.LONG.getDuration())) {
+                    forceSame(snapshot);
+                    break;
+                }
+                if (rateAnalyzer.isBidDown()
+                        && snapshot.getBidLot() < lotManager.getLimit()
+                        && rateAnalyzer.isReachedBidThreshold(rate)) {
+                    orderBid(snapshot.getBidLot() >= snapshot.getAskLot() ? 1 : 2);
                     break;
                 }
                 break;
@@ -205,7 +227,7 @@ public class AutoTraderEleventh extends AutoTrader {
             if (rateAnalyzer.isBidDown()) {
                 if (snapshot.getAskProfit() >= 0
                         && snapshot.hasBothSide()
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, OrderTerm.LONG.getDuration())) {
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, OrderTerm.SHORT.getDuration())) {
                     fixAsk(snapshot);
                     break;
                 }
@@ -214,7 +236,7 @@ public class AutoTraderEleventh extends AutoTrader {
             if (rateAnalyzer.isAskUp()) {
                 if (snapshot.getBidProfit() >= 0
                         && snapshot.hasBothSide()
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, OrderTerm.LONG.getDuration())) {
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, OrderTerm.SHORT.getDuration())) {
                     fixBid(snapshot);
                     break;
                 }
