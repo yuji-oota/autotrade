@@ -224,10 +224,17 @@ public class AutoTraderEleventh extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
+            OrderTerm fixTerm = OrderTerm.SHORT;
+            if (snapshot.isPositionSame()
+                    && lotManager.isLimit(snapshot)) {
+                fixTerm = OrderTerm.LONG;
+            }
+
+
             if (rateAnalyzer.isBidDown()) {
                 if (snapshot.getAskProfit() >= 0
                         && snapshot.hasBothSide()
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, OrderTerm.SHORT.getDuration())) {
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, fixTerm.getDuration())) {
                     fixAsk(snapshot);
                     break;
                 }
@@ -236,7 +243,7 @@ public class AutoTraderEleventh extends AutoTrader {
             if (rateAnalyzer.isAskUp()) {
                 if (snapshot.getBidProfit() >= 0
                         && snapshot.hasBothSide()
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, OrderTerm.SHORT.getDuration())) {
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, fixTerm.getDuration())) {
                     fixBid(snapshot);
                     break;
                 }
