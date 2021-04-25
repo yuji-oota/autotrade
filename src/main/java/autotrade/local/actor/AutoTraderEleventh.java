@@ -73,6 +73,11 @@ public class AutoTraderEleventh extends AutoTrader {
                 && recoveryManager.isRecovered(snapshot)) {
             isOrderable = false;
         }
+        if (isOrderable
+                && snapshot.isPositionNone()
+                && isInactiveTime()) {
+            isOrderable = false;
+        }
         return isOrderable;
     }
 
