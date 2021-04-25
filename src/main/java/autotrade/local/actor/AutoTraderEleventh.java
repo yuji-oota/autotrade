@@ -20,7 +20,7 @@ public class AutoTraderEleventh extends AutoTrader {
     private enum OrderDirection {ASK, BID, NONE}
 
     @AllArgsConstructor
-    private enum OrderTerm {
+    private enum Term {
          SHORT(Duration.ofSeconds(AutoTradeProperties.getInt("autoTraderEleventh.order.direction.duration.seconds.short")))
         ,LONG(Duration.ofSeconds(AutoTradeProperties.getInt("autoTraderEleventh.order.direction.duration.seconds.long")))
         ;
@@ -28,14 +28,10 @@ public class AutoTraderEleventh extends AutoTrader {
         @Getter
         private Duration duration;
 
-        public OrderTerm change() {
-            return this == SHORT ? LONG : SHORT;
-        }
-
     }
     private OrderDirection orderDirection;
     private RecoveryManager recoveryManager;
-    private OrderTerm orderTerm;
+    private Term orderTerm;
 
     public AutoTraderEleventh() {
         super();
@@ -45,7 +41,7 @@ public class AutoTraderEleventh extends AutoTrader {
                         Duration.ofSeconds(
                                 AutoTradeProperties.getInt("autoTraderEleventh.rateAnalizer.threshold.seconds")));
         orderDirection = OrderDirection.NONE;
-        orderTerm = OrderTerm.SHORT;
+        orderTerm = Term.SHORT;
 
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
@@ -54,7 +50,7 @@ public class AutoTraderEleventh extends AutoTrader {
                 Snapshot snapshot = AutoTradeUtils.localLoad(Paths.get("localSave", "snapshotWhenRecoveryStart"));
                 recoveryManager.open(snapshot);
                 orderDirection = OrderDirection.valueOf(AutoTradeUtils.localLoad(Paths.get("localSave", "orderDirection")));
-                orderTerm = OrderTerm.valueOf(AutoTradeUtils.localLoad(Paths.get("localSave", "orderTerm")));
+                orderTerm = Term.valueOf(AutoTradeUtils.localLoad(Paths.get("localSave", "orderTerm")));
             }
         };
 
@@ -90,7 +86,7 @@ public class AutoTraderEleventh extends AutoTrader {
         case NONE:
             // ポジションがない場合
 
-            orderTerm = OrderTerm.SHORT;
+            orderTerm = Term.SHORT;
 
             if (rateAnalyzer.isAskUp()) {
                 if (rateAnalyzer.isReachedAskThreshold(rate)) {
@@ -123,12 +119,12 @@ public class AutoTraderEleventh extends AutoTrader {
             if (rateAnalyzer.isAskUp()
                     && rateAnalyzer.isReachedAskThresholdWithin(rate, orderTerm.getDuration())) {
                 if (orderDirection == OrderDirection.ASK
-                        && orderTerm == OrderTerm.LONG) {
-                    orderTerm = OrderTerm.SHORT;
+                        && orderTerm == Term.LONG) {
+                    orderTerm = Term.SHORT;
                 }
                 if (orderDirection == OrderDirection.BID
-                        &&  orderTerm == OrderTerm.SHORT) {
-                    orderTerm = OrderTerm.LONG;
+                        &&  orderTerm == Term.SHORT) {
+                    orderTerm = Term.LONG;
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                 }
                 orderDirection = OrderDirection.ASK;
@@ -136,12 +132,12 @@ public class AutoTraderEleventh extends AutoTrader {
             if (rateAnalyzer.isBidDown()
                     && rateAnalyzer.isReachedBidThresholdWithin(rate, orderTerm.getDuration())) {
                 if (orderDirection == OrderDirection.BID
-                        && orderTerm == OrderTerm.LONG) {
-                    orderTerm = OrderTerm.SHORT;
+                        && orderTerm == Term.LONG) {
+                    orderTerm = Term.SHORT;
                 }
                 if (orderDirection == OrderDirection.ASK
-                        &&  orderTerm == OrderTerm.SHORT) {
-                    orderTerm = OrderTerm.LONG;
+                        &&  orderTerm == Term.SHORT) {
+                    orderTerm = Term.LONG;
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                 }
                 orderDirection = OrderDirection.BID;
@@ -151,7 +147,7 @@ public class AutoTraderEleventh extends AutoTrader {
             case ASK:
                 if (rateAnalyzer.isAskUp()
                         && snapshot.getAskLot() < snapshot.getBidLot()
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, OrderTerm.LONG.getDuration())) {
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Term.LONG.getDuration())) {
                     forceSame(snapshot);
                     break;
                 }
@@ -165,7 +161,7 @@ public class AutoTraderEleventh extends AutoTrader {
             case BID:
                 if (rateAnalyzer.isBidDown()
                         && snapshot.getBidLot() < snapshot.getAskLot()
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, OrderTerm.LONG.getDuration())) {
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Term.LONG.getDuration())) {
                     forceSame(snapshot);
                     break;
                 }
@@ -224,10 +220,10 @@ public class AutoTraderEleventh extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            OrderTerm fixTerm = OrderTerm.SHORT;
+            Term fixTerm = Term.SHORT;
             if (snapshot.isPositionSame()
                     && lotManager.isLimit(snapshot)) {
-                fixTerm = OrderTerm.LONG;
+                fixTerm = Term.LONG;
             }
 
 
