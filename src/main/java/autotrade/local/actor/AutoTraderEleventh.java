@@ -199,6 +199,11 @@ public class AutoTraderEleventh extends AutoTrader {
                 && isCalm()) {
             isFixable = false;
         }
+        if (isFixable
+                && snapshot.isPositionSame()
+                && lotManager.isLimit(snapshot)) {
+            isFixable = false;
+        }
         return isFixable;
     }
 
@@ -226,10 +231,6 @@ public class AutoTraderEleventh extends AutoTrader {
             // ポジションが同数の場合
 
             Term fixTerm = Term.SHORT;
-            if (snapshot.isPositionSame()
-                    && lotManager.isLimit(snapshot)) {
-                fixTerm = Term.LONG;
-            }
 
 
             if (rateAnalyzer.isBidDown()) {
