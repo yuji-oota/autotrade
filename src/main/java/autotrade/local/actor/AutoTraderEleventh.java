@@ -1,11 +1,11 @@
 package autotrade.local.actor;
 
+import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Scanner;
 
 import autotrade.local.actor.MessageListener.ReservedMessage;
-import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.utility.AutoTradeProperties;
@@ -36,10 +36,11 @@ public class AutoTraderEleventh extends AutoTrader {
     public AutoTraderEleventh() {
         super();
         recoveryManager = new RecoveryManager();
-        pairAnalyzerMap.get(
-                CurrencyPair.valueOf(AutoTradeProperties.get("autoTraderEleventh.order.pair"))).setThresholdDuration(
-                        Duration.ofSeconds(
-                                AutoTradeProperties.getInt("autoTraderEleventh.rateAnalizer.threshold.seconds")));
+        pairAnalyzerMap.values().stream().forEach(analyzer -> {
+            analyzer.setThresholdDuration(
+                    Duration.ofSeconds(
+                            AutoTradeProperties.getInt("autoTraderEleventh.rateAnalizer.threshold.seconds")));
+        });
         orderDirection = OrderDirection.NONE;
         orderTerm = Term.SHORT;
 
@@ -159,7 +160,7 @@ public class AutoTraderEleventh extends AutoTrader {
                 if (rateAnalyzer.isAskUp()
                         && snapshot.getAskLot() < lotManager.getLimit()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
-                    orderAsk(snapshot.getAskLot() >= snapshot.getBidLot() ? 1 : 2);
+                    orderAsk(calcLot(snapshot.getAskLot(), snapshot.getBidLot()));
                     break;
                 }
                 break;
@@ -173,7 +174,7 @@ public class AutoTraderEleventh extends AutoTrader {
                 if (rateAnalyzer.isBidDown()
                         && snapshot.getBidLot() < lotManager.getLimit()
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
-                    orderBid(snapshot.getBidLot() >= snapshot.getAskLot() ? 1 : 2);
+                    orderBid(calcLot(snapshot.getBidLot(), snapshot.getAskLot()));
                     break;
                 }
                 break;
@@ -184,6 +185,16 @@ public class AutoTraderEleventh extends AutoTrader {
         default:
         }
 
+    }
+
+    private int calcLot(int targetLot, int otherLot) {
+        int lot = 1;
+        BigDecimal other = BigDecimal.valueOf(otherLot * 1.5);
+        if (targetLot < other.intValue()) {
+            lot = 2;
+            lot = lot + ((other.intValue() - targetLot) / 10);
+        }
+        return lot;
     }
 
     @Override
@@ -231,7 +242,6 @@ public class AutoTraderEleventh extends AutoTrader {
             // ポジションが同数の場合
 
             Term fixTerm = Term.SHORT;
-
 
             if (rateAnalyzer.isBidDown()) {
                 if (snapshot.getAskProfit() >= 0
