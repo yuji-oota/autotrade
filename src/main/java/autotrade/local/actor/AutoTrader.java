@@ -307,7 +307,8 @@ public abstract class AutoTrader {
         }
 
         // お知らせ対策
-        if (rateAnalyzer.hasDoubtfulRates()) {
+        if (!isThroughOrder
+                && rateAnalyzer.hasDoubtfulRates()) {
             throw new ApplicationException("RateAnalyzer has doubtful rates.");
         }
 
