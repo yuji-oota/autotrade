@@ -1,7 +1,7 @@
 package autotrade.local;
 
 import autotrade.local.actor.AutoTrader;
-import autotrade.local.actor.AutoTraderEleventh;
+import autotrade.local.actor.AutoTraderTwelfth;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -9,7 +9,7 @@ public class Application {
 
     public static void main(String[] args) {
 
-        AutoTrader autoTrader = new AutoTraderEleventh();
+        AutoTrader autoTrader = new AutoTraderTwelfth();
         try {
             while(true) {
                 autoTrader.operation();
