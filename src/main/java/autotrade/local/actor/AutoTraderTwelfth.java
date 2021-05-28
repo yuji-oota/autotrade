@@ -101,6 +101,13 @@ public class AutoTraderTwelfth extends AutoTrader {
         case BID_SIDE:
             // 売りポジションが多い場合
 
+            if (snapshot.getAskLot() == 0) {
+                lastOrderDirection = OrderDirection.BID;
+            }
+            if (snapshot.getBidLot() == 0) {
+                lastOrderDirection = OrderDirection.ASK;
+            }
+
             switch (lastOrderDirection) {
             case BID:
                 if (rateAnalyzer.isAskUp()
@@ -181,6 +188,12 @@ public class AutoTraderTwelfth extends AutoTrader {
 
         Rate rate = snapshot.getRate();
 
+//        if (recoveryManager.isOpen()
+//                && recoveryManager.isRecoveredWithProfit(snapshot, snapshot.getMargin() / 10000)) {
+//            fixAll(snapshot);
+//            return;
+//        }
+
         switch (snapshot.getStatus()) {
         case NONE:
             // ポジションがない場合
@@ -193,13 +206,25 @@ public class AutoTraderTwelfth extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
+            if (recoveryManager.isRecoveredWithProfit(snapshot, snapshot.getMargin() / 10000)) {
+                if (rateAnalyzer.isBidDown()
+                        && snapshot.isPositionAskSide()
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofSeconds(30))) {
+                    fixAll(snapshot);
+                }
+                if (rateAnalyzer.isAskUp()
+                        && snapshot.isPositionBidSide()
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, Duration.ofSeconds(30))) {
+                    fixAll(snapshot);
+                }
+                break;
+            }
+
             if (rateAnalyzer.isBidDown()) {
                 if (snapshot.getAskProfit() >= 0
+                        && snapshot.getAskLot() > 0
+                        && snapshot.hasBothSide()
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
-                    if (recoveryManager.isRecovered(snapshot)) {
-                        fixAll(snapshot);
-                        break;
-                    }
                     fixAsk(snapshot);
                     break;
                 }
@@ -207,11 +232,9 @@ public class AutoTraderTwelfth extends AutoTrader {
 
             if (rateAnalyzer.isAskUp()) {
                 if (snapshot.getBidProfit() >= 0
+                        && snapshot.getBidLot() > 0
+                        && snapshot.hasBothSide()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
-                    if (recoveryManager.isRecovered(snapshot)) {
-                        fixAll(snapshot);
-                        break;
-                    }
                     fixBid(snapshot);
                     break;
                 }
