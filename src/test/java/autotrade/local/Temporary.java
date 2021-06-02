@@ -36,6 +36,7 @@ public class Temporary {
     @Test
     public void test02() {
         int target = 30;
+        System.out.println(calcLot(0, 9));
         System.out.println(calcLot(target, 10));
         System.out.println(calcLot(target, 15));
         System.out.println(calcLot(target, 19));
@@ -48,16 +49,21 @@ public class Temporary {
         System.out.println(calcLot(target, 40));
         System.out.println(calcLot(target, 45));
         System.out.println(calcLot(target, 49));
+        System.out.println(calcLot(target, 50));
+        System.out.println(calcLot(target, 60));
+        System.out.println(calcLot(target, 70));
+        System.out.println(calcLot(target, 80));
+        System.out.println(calcLot(target, 90));
     }
 
     private int calcLot(int targetLot, int otherLot) {
-        int lot = 1;
-        BigDecimal other = BigDecimal.valueOf(otherLot * 1.5);
-        if (targetLot < other.intValue()) {
-            lot = 2;
-            lot = lot + (( other.intValue() - targetLot) / 10);
+        if (targetLot < otherLot) {
+            int lotTobe = BigDecimal.valueOf(otherLot * 1.25).intValue();
+            if (lotTobe > 80) {
+                return lotTobe - 80;
+            }
+            return lotTobe - targetLot;
         }
-        return lot;
+        return 1;
     }
-
 }
