@@ -4,7 +4,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Scanner;
-import java.util.regex.Pattern;
 
 import org.openqa.selenium.By;
 
@@ -50,24 +49,34 @@ public class AutoTrader15th extends AutoTrader {
     }
 
     @Override
+    protected boolean isSleep(Snapshot snapshot) {
+        return isInactiveTime()
+                && snapshot.isPositionNone();
+    }
+
+    @Override
     protected void initialize() {
         super.initialize();
-        String theDayBefore = driver.findElement(By.xpath("//*[@id=\"hl-div\"]/span[5]")).getText();
-        log.info("theDayBefore:{}", theDayBefore);
-        // lastDayBeforeRate を作成する
-        Snapshot snapshot = buildSnapshot();
+        String theDayBeforeDiff = driver.findElement(By.xpath("//*[@id=\"hl-div\"]/span[5]")).getText();
         lastDayBeforeRate = Rate.builder().ask(0).bid(0).timestamp(LocalDateTime.now()).build();
-        int lastDayBeforeBid = 0;
-        if (Pattern.matches("\\d", theDayBefore.substring(0, 1))) {
-            lastDayBeforeBid = AutoTradeUtils.toInt(theDayBefore);
+        int lastDayBeforeBid = AutoTradeUtils.toInt(theDayBeforeDiff.substring(1));
+        if ("▼".equals(theDayBeforeDiff.substring(0, 1))) {
+            lastDayBeforeBid = lastDayBeforeBid * -1;
         }
+        Snapshot snapshot = buildSnapshot();
         lastDayBeforeRate.setBid(snapshot.getRate().getBid() - lastDayBeforeBid);
         lastDayBeforeRate.setAsk(lastDayBeforeRate.getBid() + pair.getMinSpread());
+        log.info("lastDayBeforeRate:{}", lastDayBeforeRate);
     }
 
     @Override
     protected boolean isOrderable(Snapshot snapshot) {
         boolean isOrderable = super.isOrderable(snapshot);
+        if (isOrderable) {
+            if (isCalm()) {
+                isOrderable = false;
+            }
+        }
         return isOrderable;
     }
 
@@ -81,7 +90,7 @@ public class AutoTrader15th extends AutoTrader {
         case NONE:
             // ポジションがない場合
 
-            if (isPlusTheDayBefore()) {
+            if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
                     orderAsk(initialLot);
@@ -109,7 +118,7 @@ public class AutoTrader15th extends AutoTrader {
             // ポジションが同数の場合
 
 
-            if (isPlusTheDayBefore()) {
+            if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
                 if (rateAnalyzer.isAskUp()) {
                     if (orderDirection == OrderDirection.BID
                             && snapshot.getAskLot() < lotManager.getLimit()
@@ -124,9 +133,6 @@ public class AutoTrader15th extends AutoTrader {
                     if (snapshot.getAskLot() < snapshot.getBidLot()
                             && rateAnalyzer.isReachedAskThreshold(rate)) {
                         forceSame(snapshot);
-                    }
-                    if (rateAnalyzer.isReachedAskThreshold(rate)) {
-                        orderDirection = OrderDirection.ASK;
                     }
                 }
             } else {
@@ -145,10 +151,16 @@ public class AutoTrader15th extends AutoTrader {
                             && rateAnalyzer.isReachedBidThreshold(rate)) {
                         forceSame(snapshot);
                     }
-                    if (rateAnalyzer.isReachedBidThreshold(rate)) {
-                        orderDirection = OrderDirection.BID;
-                    }
                 }
+            }
+
+            if (rateAnalyzer.isAskUp()
+                    && rateAnalyzer.isReachedAskThreshold(rate)) {
+                orderDirection = OrderDirection.ASK;
+            }
+            if (rateAnalyzer.isBidDown()
+                    && rateAnalyzer.isReachedBidThreshold(rate)) {
+                orderDirection = OrderDirection.BID;
             }
 
         default:
@@ -156,8 +168,8 @@ public class AutoTrader15th extends AutoTrader {
 
     }
 
-    private boolean isPlusTheDayBefore() {
-        return true;
+    private boolean isPlusTheDayBefore(int bid) {
+        return lastDayBeforeRate.getBid() < bid;
     }
 
     @Override
