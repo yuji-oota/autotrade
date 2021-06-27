@@ -76,6 +76,10 @@ public class AutoTrader15th extends AutoTrader {
             if (isCalm()) {
                 isOrderable = false;
             }
+            if (snapshot.isPositionSame()
+                    && Math.abs(lastDayBeforeRate.getBid() - snapshot.getRate().getBid()) < 100) {
+                isOrderable = false;
+            }
         }
         return isOrderable;
     }
@@ -123,11 +127,7 @@ public class AutoTrader15th extends AutoTrader {
                     if (orderDirection == OrderDirection.BID
                             && snapshot.getAskLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedAskThreshold(rate)) {
-                        if (snapshot.isPositionSame()) {
-                            orderAsk(initialLot / 2);
-                        } else {
-                            orderAsk(1);
-                        }
+                        orderAsk(1);
                         orderDirection = OrderDirection.ASK;
                     }
                     if (snapshot.getAskLot() < snapshot.getBidLot()
@@ -140,11 +140,7 @@ public class AutoTrader15th extends AutoTrader {
                     if (orderDirection == OrderDirection.ASK
                             && snapshot.getBidLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedBidThreshold(rate)) {
-                        if (snapshot.isPositionSame()) {
-                            orderBid(initialLot / 2);
-                        } else {
-                            orderBid(1);
-                        }
+                        orderBid(1);
                         orderDirection = OrderDirection.BID;
                     }
                     if (snapshot.getAskLot() > snapshot.getBidLot()
