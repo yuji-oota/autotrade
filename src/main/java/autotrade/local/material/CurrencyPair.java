@@ -14,10 +14,10 @@ public enum CurrencyPair {
     USDJPY(2),
     EURUSD(3),
     EURJPY(5),
-    GBPUSD(8),
+    GBPUSD(6),
     GBPJPY(10),
-    AUDUSD(8),
-    AUDJPY(7),
+    AUDUSD(4),
+    AUDJPY(6),
     ;
 
     private final static List<String> descriptions = Collections.unmodifiableList(

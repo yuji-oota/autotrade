@@ -176,11 +176,11 @@ public class AutoTrader15th extends AutoTrader {
     @Override
     protected boolean isFixable(Snapshot snapshot) {
         boolean isFixable = super.isFixable(snapshot);
-        if (isFixable
-                && snapshot.isPositionSame()
-                && lotManager.isLimit(snapshot)) {
-            isFixable = false;
-        }
+//        if (isFixable
+//                && snapshot.isPositionSame()
+//                && lotManager.isLimit(snapshot)) {
+//            isFixable = false;
+//        }
         return isFixable;
     }
 
@@ -202,6 +202,18 @@ public class AutoTrader15th extends AutoTrader {
                 fixAll(snapshot);
             }
             return;
+        }
+
+        if (snapshot.isPositionSame()
+                && lotManager.isLimit(snapshot)) {
+            if (rateAnalyzer.isBidDown()
+                    && lastDayBeforeRate.getBid() - rate.getBid() >= 100) {
+                fixAsk(snapshot);
+            }
+            if (rateAnalyzer.isAskUp()
+                    && rate.getBid() - lastDayBeforeRate.getBid() >= 100) {
+                fixBid(snapshot);
+            }
         }
 
     }
