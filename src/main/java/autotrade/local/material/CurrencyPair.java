@@ -13,7 +13,7 @@ import lombok.Getter;
 public enum CurrencyPair {
     USDJPY(2),
     EURUSD(3),
-    EURJPY(5),
+    EURJPY(4),
     GBPUSD(6),
     GBPJPY(10),
     AUDUSD(4),

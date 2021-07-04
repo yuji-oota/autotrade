@@ -3,10 +3,16 @@ package autotrade.local.actor;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.AbstractMap;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
 
+import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.utility.AutoTradeProperties;
@@ -21,6 +27,7 @@ public class AutoTrader15th extends AutoTrader {
     private RecoveryManager recoveryManager;
     private OrderDirection orderDirection;
     private Rate lastDayBeforeRate;
+    private Set<CurrencyPair> recommendedPairs;
 
     public AutoTrader15th() {
         super();
@@ -30,6 +37,9 @@ public class AutoTrader15th extends AutoTrader {
                     Duration.ofSeconds(
                             AutoTradeProperties.getInt("autoTrader15th.rateAnalizer.threshold.seconds")));
         });
+        recommendedPairs = AutoTradeProperties.getList("autoTrader15th.autoRecommended.pairs").stream()
+                .map(CurrencyPair::valueOf)
+                .collect(Collectors.toSet());
 
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
@@ -67,6 +77,18 @@ public class AutoTrader15th extends AutoTrader {
         lastDayBeforeRate.setBid(snapshot.getRate().getBid() - lastDayBeforeBid);
         lastDayBeforeRate.setAsk(lastDayBeforeRate.getBid() + pair.getMinSpread());
         log.info("lastDayBeforeRate:{}", lastDayBeforeRate);
+    }
+
+    @Override
+    protected void changeRecommended() {
+        CurrencyPair recommended = recommendedPairs.stream().map(pair ->{
+            return new AbstractMap.SimpleEntry<CurrencyPair, Integer>(
+                    pair, Math.abs(AutoTradeUtils.toInt(wrapper.getRateDiffFromList(pair))));
+        })
+        .max(Comparator.comparingInt(Map.Entry::getValue))
+        .get()
+        .getKey();
+        this.changePair(recommended);
     }
 
     @Override
@@ -176,11 +198,11 @@ public class AutoTrader15th extends AutoTrader {
     @Override
     protected boolean isFixable(Snapshot snapshot) {
         boolean isFixable = super.isFixable(snapshot);
-//        if (isFixable
-//                && snapshot.isPositionSame()
-//                && lotManager.isLimit(snapshot)) {
-//            isFixable = false;
-//        }
+        if (isFixable
+                && snapshot.isPositionSame()
+                && lotManager.isLimit(snapshot)) {
+            isFixable = false;
+        }
         return isFixable;
     }
 
@@ -204,17 +226,17 @@ public class AutoTrader15th extends AutoTrader {
             return;
         }
 
-        if (snapshot.isPositionSame()
-                && lotManager.isLimit(snapshot)) {
-            if (rateAnalyzer.isBidDown()
-                    && lastDayBeforeRate.getBid() - rate.getBid() >= 100) {
-                fixAsk(snapshot);
-            }
-            if (rateAnalyzer.isAskUp()
-                    && rate.getBid() - lastDayBeforeRate.getBid() >= 100) {
-                fixBid(snapshot);
-            }
-        }
+//        if (snapshot.isPositionSame()
+//                && lotManager.isLimit(snapshot)) {
+//            if (rateAnalyzer.isBidDown()
+//                    && lastDayBeforeRate.getBid() - rate.getBid() >= 100) {
+//                fixAsk(snapshot);
+//            }
+//            if (rateAnalyzer.isAskUp()
+//                    && rate.getBid() - lastDayBeforeRate.getBid() >= 100) {
+//                fixBid(snapshot);
+//            }
+//        }
 
     }
 

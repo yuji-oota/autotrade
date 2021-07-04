@@ -158,6 +158,10 @@ public class WebDriverWrapper {
         List<WebElement> elements = driver.findElements(By.xpath(xpath));
         return elements.stream().map(WebElement::getText).collect(Collectors.joining());
     }
+    public String getRateDiffFromList(CurrencyPair pair) {
+        String xpath = MessageFormat.format("//tr[@id=''tab_rate_brand_{0}'']//span[@class='rate_diff_2001']", pair.name());
+        return driver.findElements(By.xpath(xpath)).get(0).getText();
+    }
     public void setLot(int lot) {
         String lastLot = driver.findElement(By.id("lot-param-quick-val")).getAttribute("value");
         if (!lastLot.equals(String.valueOf(lot))) {
