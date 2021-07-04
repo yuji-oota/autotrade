@@ -64,9 +64,7 @@ public class AutoTrader15th extends AutoTrader {
                 && snapshot.isPositionNone();
     }
 
-    @Override
-    protected void initialize() {
-        super.initialize();
+    private void updateLastDayBeforeRate() {
         String theDayBeforeDiff = driver.findElement(By.xpath("//*[@id=\"hl-div\"]/span[5]")).getText();
         lastDayBeforeRate = Rate.builder().ask(0).bid(0).timestamp(LocalDateTime.now()).build();
         int lastDayBeforeBid = AutoTradeUtils.toInt(theDayBeforeDiff.substring(1));
@@ -80,6 +78,12 @@ public class AutoTrader15th extends AutoTrader {
     }
 
     @Override
+    protected void initialize() {
+        super.initialize();
+        updateLastDayBeforeRate();
+    }
+
+    @Override
     protected void changeRecommended() {
         CurrencyPair recommended = recommendedPairs.stream().map(pair ->{
             return new AbstractMap.SimpleEntry<CurrencyPair, Integer>(
@@ -89,6 +93,7 @@ public class AutoTrader15th extends AutoTrader {
         .get()
         .getKey();
         this.changePair(recommended);
+        updateLastDayBeforeRate();
     }
 
     @Override
