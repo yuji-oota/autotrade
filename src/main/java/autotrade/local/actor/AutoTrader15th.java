@@ -74,7 +74,6 @@ public class AutoTrader15th extends AutoTrader {
         Snapshot snapshot = buildSnapshot();
         lastDayBeforeRate.setBid(snapshot.getRate().getBid() - lastDayBeforeBid);
         lastDayBeforeRate.setAsk(lastDayBeforeRate.getBid() + pair.getMinSpread());
-        log.info("lastDayBeforeRate:{}", lastDayBeforeRate);
     }
 
     @Override

@@ -110,10 +110,10 @@ public abstract class AutoTrader {
                 // ペア別レート取得
                 Map<CurrencyPair, Rate> pairRateMap = new HashMap<>();
                 pairRateMap.put(pair, snapshot.getRate());
-                if (displayMode == DisplayMode.RATELIST) {
+                if (displayMode == DisplayMode.RATELIST
+                        && LocalDateTime.now().getSecond() % 10 == 0) {
                     changeablePairs.stream()
                     .filter(p -> p != pair)
-                    .filter(p -> Duration.between(pairAnalyzerMap.get(p).getLatestRate().getTimestamp(), LocalDateTime.now()).toSeconds() > 10)
                     .forEach(p -> pairRateMap.put(p, buildRateFromList(p)));
                 }
 

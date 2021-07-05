@@ -159,7 +159,8 @@ public class WebDriverWrapper {
         return elements.stream().map(WebElement::getText).collect(Collectors.joining());
     }
     public String getRateDiffFromList(CurrencyPair pair) {
-        String xpath = MessageFormat.format("//tr[@id=''tab_rate_brand_{0}'']//span[@class='rate_diff_2001']", pair.name());
+        // NOTE:rate_diff_xxxxのサフィックスが不定っぽいのでstarts-withにした
+        String xpath = MessageFormat.format("//tr[@id=''tab_rate_brand_{0}'']//span[starts-with(@class, ''rate_diff'')]", pair.name());
         return driver.findElements(By.xpath(xpath)).get(0).getText();
     }
     public void setLot(int lot) {
