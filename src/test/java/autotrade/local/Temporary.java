@@ -1,8 +1,8 @@
 package autotrade.local;
 
 
-import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.function.IntSupplier;
 
 import org.junit.jupiter.api.Test;
 
@@ -36,33 +36,26 @@ public class Temporary {
     @Test
     public void test02() {
         int target = 30;
-        System.out.println(calcLot(0, 9));
-        System.out.println(calcLot(target, 10));
-        System.out.println(calcLot(target, 15));
-        System.out.println(calcLot(target, 19));
-        System.out.println(calcLot(target, 20));
-        System.out.println(calcLot(target, 25));
-        System.out.println(calcLot(target, 29));
-        System.out.println(calcLot(target, 30));
-        System.out.println(calcLot(target, 35));
-        System.out.println(calcLot(target, 39));
-        System.out.println(calcLot(target, 40));
-        System.out.println(calcLot(target, 45));
-        System.out.println(calcLot(target, 49));
-        System.out.println(calcLot(target, 50));
-        System.out.println(calcLot(target, 60));
-        System.out.println(calcLot(target, 70));
-        System.out.println(calcLot(target, 80));
-        System.out.println(calcLot(target, 90));
+        System.out.println(calcLot(0, () -> 0));
+        System.out.println(calcLot(target, () -> 10));
+        System.out.println(calcLot(target, () -> 15));
+        System.out.println(calcLot(target, () -> 19));
+        System.out.println(calcLot(target, () -> 20));
+        System.out.println(calcLot(target, () -> 25));
+        System.out.println(calcLot(target, () -> 29));
+        System.out.println(calcLot(target, () -> 30));
+        System.out.println(calcLot(target, () -> 31));
+        System.out.println(calcLot(target, () -> 32));
     }
 
-    private int calcLot(int targetLot, int otherLot) {
-        if (targetLot < otherLot) {
-            int lotTobe = BigDecimal.valueOf(otherLot * 1.25).intValue();
-            if (lotTobe > 80) {
-                return lotTobe - 80;
+    private static int calcLot(int initialLot, IntSupplier lot) {
+        if (lot.getAsInt() < initialLot) {
+            int diff = initialLot - lot.getAsInt();
+            if (diff <= 10) {
+                return diff;
+            } else {
+                return 10;
             }
-            return lotTobe - targetLot;
         }
         return 1;
     }

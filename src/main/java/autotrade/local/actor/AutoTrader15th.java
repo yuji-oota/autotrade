@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
@@ -123,7 +124,7 @@ public class AutoTrader15th extends AutoTrader {
             if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
-                    orderAsk(initialLot);
+                    orderAsk(calcLot(initialLot, snapshot::getAskLot));
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     orderDirection = OrderDirection.ASK;
@@ -131,7 +132,7 @@ public class AutoTrader15th extends AutoTrader {
             } else {
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
-                    orderBid(initialLot);
+                    orderBid(calcLot(initialLot, snapshot::getBidLot));
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     orderDirection = OrderDirection.BID;
@@ -153,7 +154,7 @@ public class AutoTrader15th extends AutoTrader {
                     if (orderDirection == OrderDirection.BID
                             && snapshot.getAskLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedAskThreshold(rate)) {
-                        orderAsk(1);
+                        orderAsk(calcLot(initialLot, snapshot::getAskLot));
                         orderDirection = OrderDirection.ASK;
                     }
                     if (snapshot.getAskLot() < snapshot.getBidLot()
@@ -166,7 +167,7 @@ public class AutoTrader15th extends AutoTrader {
                     if (orderDirection == OrderDirection.ASK
                             && snapshot.getBidLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedBidThreshold(rate)) {
-                        orderBid(1);
+                        orderBid(calcLot(initialLot, snapshot::getBidLot));
                         orderDirection = OrderDirection.BID;
                     }
                     if (snapshot.getAskLot() > snapshot.getBidLot()
@@ -188,6 +189,18 @@ public class AutoTrader15th extends AutoTrader {
         default:
         }
 
+    }
+
+    private static int calcLot(int target, IntSupplier lot) {
+        if (lot.getAsInt() < target) {
+            int diff = target - lot.getAsInt();
+            if (diff <= 10) {
+                return diff;
+            } else {
+                return 10;
+            }
+        }
+        return 1;
     }
 
     private boolean isPlusTheDayBefore(int bid) {
