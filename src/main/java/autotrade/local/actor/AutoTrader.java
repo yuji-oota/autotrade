@@ -411,18 +411,20 @@ public abstract class AutoTrader {
         AutoTradeUtils.printObject(snapshot);
     }
     protected void orderAsk(int lot) {
+        String rate = wrapper.getAskRate();
         int beforeLot = AutoTradeUtils.toInt(wrapper.getAskLot());
         wrapper.setLot(lot);
         wrapper.orderAsk();
         verifyOrder(beforeLot + lot, Snapshot::getAskLot);
-        log.info("order ask. lot {}", lot);
+        log.info("order ask. lot {}, rate {}", lot, rate);
     }
     protected void orderBid(int lot) {
+        String rate = wrapper.getBidRate();
         int beforeLot = AutoTradeUtils.toInt(wrapper.getBidLot());
         wrapper.setLot(lot);
         wrapper.orderBid();
         verifyOrder(beforeLot + lot, Snapshot::getBidLot);
-        log.info("order bid. lot {}", lot);
+        log.info("order bid. lot {}, rate {}", lot, rate);
     }
     protected void fixAll(Snapshot snapshot) {
         wrapper.fixAll();
