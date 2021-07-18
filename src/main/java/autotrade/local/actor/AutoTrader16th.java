@@ -108,10 +108,6 @@ public class AutoTrader16th extends AutoTrader {
             if (isCalm()) {
                 isOrderable = false;
             }
-            if (snapshot.isPositionSame()
-                    && Math.abs(lastDayBeforeRate.getBid() - snapshot.getRate().getBid()) < 100) {
-                isOrderable = false;
-            }
         }
         return isOrderable;
     }
