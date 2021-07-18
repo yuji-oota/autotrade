@@ -66,8 +66,8 @@ public class Snapshot implements Serializable {
     }
 
     public boolean hasOneSide() {
-        if ((askLot > 0 && bidLot == 0)
-                || (askLot == 0 && bidLot > 0)) {
+        if ((hasAsk() && bidLot == 0)
+                || (askLot == 0 && hasBid())) {
             return true;
         }
         return false;
@@ -79,9 +79,16 @@ public class Snapshot implements Serializable {
         return false;
     }
 
+    public boolean hasAsk() {
+        return askLot > 0;
+    }
+
+    public boolean hasBid() {
+        return bidLot > 0;
+    }
 
     public boolean hasPosition() {
-        if (askLot > 0 || bidLot > 0) {
+        if (hasAsk() || hasBid()) {
             return true;
         }
         return false;

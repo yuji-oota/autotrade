@@ -171,7 +171,7 @@ public class AutoTrader16th extends AutoTrader {
                 }
                 if (rateAnalyzer.isBidDown()) {
                     if (doBidCounter
-                            && snapshot.getBidLot() > 0
+                            && snapshot.hasBid()
                             && snapshot.getBidLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
                         orderBid(1);
@@ -193,7 +193,7 @@ public class AutoTrader16th extends AutoTrader {
                 }
                 if (rateAnalyzer.isAskUp()) {
                     if (doAskCounter
-                            && snapshot.getAskLot() > 0
+                            && snapshot.hasAsk()
                             && snapshot.getAskLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
                         orderAsk(1);
