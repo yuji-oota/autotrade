@@ -106,4 +106,30 @@ public class Snapshot implements Serializable {
     public boolean isPositionSame() {
         return getStatus() == PositionStatus.SAME;
     }
+
+    public boolean isAskGtBid() {
+        return askLot > bidLot;
+    }
+    public boolean isAskGeBid() {
+        return askLot >= bidLot;
+    }
+    public boolean isBidGtAsk() {
+        return bidLot > askLot;
+    }
+    public boolean isBidGeAsk() {
+        return bidLot >= askLot;
+    }
+
+    public boolean isAskLtBid() {
+        return isBidGtAsk();
+    }
+    public boolean isAskLeBid() {
+        return isBidGeAsk();
+    }
+    public boolean isBidLtAsk() {
+        return isAskGtBid();
+    }
+    public boolean isBidLeAsk() {
+        return isAskGeBid();
+    }
 }

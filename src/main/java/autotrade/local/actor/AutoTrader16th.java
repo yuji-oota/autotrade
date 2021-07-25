@@ -155,14 +155,17 @@ public class AutoTrader16th extends AutoTrader {
             if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
                 if (rateAnalyzer.isAskUp()) {
                     if (doAsk
+                            && snapshot.isAskGeBid()
                             && snapshot.getAskLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedAskThreshold(rate)) {
                         orderAsk(calcLot(initialLot, snapshot.getAskLot(), snapshot.getBidLot()));
                         doAsk = false;
+                        return;
                     }
-                    if (snapshot.getAskLot() < snapshot.getBidLot()
-                            && rateAnalyzer.isReachedAskThreshold(rate)) {
-                        forceSame(snapshot);
+                    if (snapshot.isAskLtBid()
+                            && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
+                        orderAsk(calcLot(initialLot, snapshot.getAskLot(), snapshot.getBidLot()));
+                        return;
                     }
                 }
                 if (rateAnalyzer.isBidDown()) {
@@ -172,19 +175,23 @@ public class AutoTrader16th extends AutoTrader {
                             && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
                         orderBid(1);
                         doBidCounter = false;
+                        return;
                     }
                 }
             } else {
                 if (rateAnalyzer.isBidDown()) {
                     if (doBid
+                            && snapshot.isBidGeAsk()
                             && snapshot.getBidLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedBidThreshold(rate)) {
                         orderBid(calcLot(initialLot, snapshot.getBidLot(), snapshot.getAskLot()));
                         doBid = false;
+                        return;
                     }
-                    if (snapshot.getAskLot() > snapshot.getBidLot()
-                            && rateAnalyzer.isReachedBidThreshold(rate)) {
-                        forceSame(snapshot);
+                    if (snapshot.isBidLtAsk()
+                            && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
+                        orderBid(calcLot(initialLot, snapshot.getBidLot(), snapshot.getAskLot()));
+                        return;
                     }
                 }
                 if (rateAnalyzer.isAskUp()) {
@@ -194,6 +201,7 @@ public class AutoTrader16th extends AutoTrader {
                             && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
                         orderAsk(1);
                         doAskCounter = false;
+                        return;
                     }
                 }
             }

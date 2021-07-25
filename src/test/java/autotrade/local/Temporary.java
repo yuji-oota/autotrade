@@ -2,7 +2,6 @@ package autotrade.local;
 
 
 import java.time.Duration;
-import java.util.function.IntSupplier;
 
 import org.junit.jupiter.api.Test;
 
@@ -35,22 +34,14 @@ public class Temporary {
 
     @Test
     public void test02() {
-        int target = 30;
-        System.out.println(calcLot(0, () -> 0));
-        System.out.println(calcLot(target, () -> 10));
-        System.out.println(calcLot(target, () -> 15));
-        System.out.println(calcLot(target, () -> 19));
-        System.out.println(calcLot(target, () -> 20));
-        System.out.println(calcLot(target, () -> 25));
-        System.out.println(calcLot(target, () -> 29));
-        System.out.println(calcLot(target, () -> 30));
-        System.out.println(calcLot(target, () -> 31));
-        System.out.println(calcLot(target, () -> 32));
+        System.out.println(calcLot(12, 0, 18));
+        System.out.println(calcLot(12, 10, 18));
     }
 
-    private static int calcLot(int initialLot, IntSupplier lot) {
-        if (lot.getAsInt() < initialLot) {
-            int diff = initialLot - lot.getAsInt();
+    private static int calcLot(int initialLot, int lot, int counter) {
+        int target = initialLot < counter ? counter : initialLot;
+        if (lot < target) {
+            int diff = target - lot;
             if (diff <= 10) {
                 return diff;
             } else {
