@@ -186,6 +186,7 @@ public abstract class AutoTrader {
         }
 
         // 通貨ペア変更
+        wrapper.pairSettings();
         wrapper.displayRateList();
         Stream.of(CurrencyPair.values()).forEach(this::changePair);
         changePair(CurrencyPair.valueOf(AutoTradeProperties.get("autotrade.order.pair")));
