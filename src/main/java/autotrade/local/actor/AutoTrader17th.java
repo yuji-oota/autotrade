@@ -125,7 +125,7 @@ public class AutoTrader17th extends AutoTrader {
         case NONE:
             // ポジションがない場合
 
-            if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
+            if (rateAnalyzer.isUpwardWithin(counterDuration)) {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
                     orderAsk(calcLot(initialLot, snapshot.getAskLot(), snapshot.getBidLot()));

@@ -135,11 +135,21 @@ public class RateAnalyzer {
                     && !Duration.between(r.getTimestamp(), to).isNegative();
     }
 
-    public boolean isUpward(Rate rate) {
-        return averageWithin(Duration.ofMinutes(20)) < rate.getAsk();
+    public boolean isUpwardWithin(Duration duration) {
+        LocalDateTime whenMax = rates.stream()
+                .filter(rateBetweenFilter(LocalDateTime.now().minus(duration), LocalDateTime.now()))
+                .max(Comparator.comparing(Rate::getAsk))
+                .map(Rate::getTimestamp)
+                .orElse(LocalDateTime.now());
+        LocalDateTime whenMin = rates.stream()
+                .filter(rateBetweenFilter(LocalDateTime.now().minus(duration), LocalDateTime.now()))
+                .min(Comparator.comparing(Rate::getBid))
+                .map(Rate::getTimestamp)
+                .orElse(LocalDateTime.now());
+        return whenMax.isAfter(whenMin);
     }
-    public boolean isDownward(Rate rate) {
-        return averageWithin(Duration.ofMinutes(20)) > rate.getBid();
+    public boolean isDownwardWithin(Duration duration) {
+        return !isUpwardWithin(duration);
     }
 
     public boolean isReachedAskThreshold(Rate rate) {
