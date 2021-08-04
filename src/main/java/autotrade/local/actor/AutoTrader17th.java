@@ -136,6 +136,12 @@ public class AutoTrader17th extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
+            if (orderDirection == OrderDirection.NONE) {
+                orderDirection = OrderDirection.ASK;
+                if (snapshot.isBidGtAsk()) {
+                    orderDirection = OrderDirection.BID;
+                }
+            }
 
             if (isUpward(rate)) {
                 if (rateAnalyzer.isAskUp()) {
