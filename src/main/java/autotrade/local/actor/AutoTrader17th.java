@@ -2,15 +2,12 @@ package autotrade.local.actor;
 
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.openqa.selenium.By;
 
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
@@ -25,7 +22,6 @@ public class AutoTrader17th extends AutoTrader {
     private enum OrderDirection {ASK, BID, NONE}
 
     private RecoveryManager recoveryManager;
-    private Rate lastDayBeforeRate;
     private Set<CurrencyPair> recommendedPairs;
     private boolean doAsk;
     private boolean doBid;
@@ -73,22 +69,9 @@ public class AutoTrader17th extends AutoTrader {
                 && snapshot.isPositionNone();
     }
 
-    private void updateLastDayBeforeRate() {
-        String theDayBeforeDiff = driver.findElement(By.xpath("//*[@id=\"hl-div\"]/span[5]")).getText();
-        lastDayBeforeRate = Rate.builder().ask(0).bid(0).timestamp(LocalDateTime.now()).build();
-        int lastDayBeforeBid = AutoTradeUtils.toInt(theDayBeforeDiff.substring(1));
-        if ("▼".equals(theDayBeforeDiff.substring(0, 1))) {
-            lastDayBeforeBid = lastDayBeforeBid * -1;
-        }
-        Snapshot snapshot = buildSnapshot();
-        lastDayBeforeRate.setBid(snapshot.getRate().getBid() - lastDayBeforeBid);
-        lastDayBeforeRate.setAsk(lastDayBeforeRate.getBid() + pair.getMinSpread());
-    }
-
     @Override
     protected void initialize() {
         super.initialize();
-        updateLastDayBeforeRate();
     }
 
     @Override
@@ -101,7 +84,6 @@ public class AutoTrader17th extends AutoTrader {
         .get()
         .getKey();
         this.changePair(recommended);
-        updateLastDayBeforeRate();
     }
 
     @Override
@@ -214,10 +196,6 @@ public class AutoTrader17th extends AutoTrader {
             }
         }
         return 1;
-    }
-
-    private boolean isPlusTheDayBefore(int bid) {
-        return lastDayBeforeRate.getBid() < bid;
     }
 
     private boolean isUpward(Rate rate) {
