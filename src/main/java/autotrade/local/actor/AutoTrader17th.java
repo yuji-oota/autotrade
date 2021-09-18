@@ -192,7 +192,7 @@ public class AutoTrader17th extends AutoTrader {
     }
 
     private static int calcLot(int initialLot, int lot, int counter) {
-        int target = initialLot < counter ? counter : initialLot;
+        int target = initialLot < counter ? counter + initialLot : initialLot;
         if (lot < target) {
             int diff = target - lot;
             if (diff <= 10) {
