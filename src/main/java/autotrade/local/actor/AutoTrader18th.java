@@ -187,31 +187,36 @@ public class AutoTrader18th extends AutoTrader {
                 }
             }
 
-            if (rateAnalyzer.isAskUp()
-                    && rateAnalyzer.isReachedAskThreshold(rate)) {
-                doBid = true;
-            }
-            if (rateAnalyzer.isBidDown()
-                    && rateAnalyzer.isReachedBidThreshold(rate)) {
-                doAsk = true;
-            }
-            if (rateAnalyzer.isAskUp()
-                    && !doBidCounter // NOTE:↓の条件のコスト軽減のための条件
-                    && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
-                doBidCounter = true;
-            }
-            if (rateAnalyzer.isBidDown()
-                    && !doAskCounter // NOTE:↓の条件のコスト軽減のための条件
-                    && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
-                doAskCounter = true;
-            }
-
             break;
         case SAME:
             // ポジションが同数の場合
         default:
         }
 
+    }
+
+    @Override
+    protected void postOrder(Snapshot snapshot) {
+
+        Rate rate = snapshot.getRate();
+        if (rateAnalyzer.isAskUp()
+                && rateAnalyzer.isReachedAskThreshold(rate)) {
+            doBid = true;
+        }
+        if (rateAnalyzer.isBidDown()
+                && rateAnalyzer.isReachedBidThreshold(rate)) {
+            doAsk = true;
+        }
+        if (rateAnalyzer.isAskUp()
+                && !doBidCounter // NOTE:↓の条件のコスト軽減のための条件
+                && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
+            doBidCounter = true;
+        }
+        if (rateAnalyzer.isBidDown()
+                && !doAskCounter // NOTE:↓の条件のコスト軽減のための条件
+                && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
+            doAskCounter = true;
+        }
     }
 
     private boolean isPlusTheDayBefore(int bid) {

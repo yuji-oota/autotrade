@@ -253,25 +253,26 @@ public abstract class AutoTrader {
 
     protected void trade(Snapshot snapshot) {
 
+        preFix(snapshot);
         if (isFixable(snapshot)) {
-
-            // 確定見送り判定
-            if (!isThroughFix) {
-                // 最新情報を元に利益確定
-                fix(snapshot);
-            }
+            // 最新情報を元に利益確定
+            fix(snapshot);
         }
+        postFix(snapshot);
 
+        preOrder(snapshot);
         if (isOrderable(snapshot)) {
-
-            // 注文見送り判定
-            if (!isThroughOrder) {
-                // 最新情報を元に注文
-                order(snapshot);
-            }
+            // 最新情報を元に注文
+            order(snapshot);
         }
+        postOrder(snapshot);
 
     }
+
+    protected void preOrder(Snapshot snapshot) {}
+    protected void postOrder(Snapshot snapshot) {}
+    protected void preFix(Snapshot snapshot) {}
+    protected void postFix(Snapshot snapshot) {}
 
     protected void tradePostProcess(Snapshot snapshot) {
 
@@ -331,10 +332,16 @@ public abstract class AutoTrader {
     }
 
     protected boolean isFixable(Snapshot snapshot) {
+        if (isThroughFix) {
+            return false;
+        }
         return true;
     }
 
     protected boolean isOrderable(Snapshot snapshot) {
+        if (isThroughOrder) {
+            return false;
+        }
         if (Duration.between(rateAnalyzer.getEarliestRate().getTimestamp(), LocalDateTime.now()).toMinutes() < 1) {
             // 過去Rateがある程度存在しない場合は注文しない
             return false;
