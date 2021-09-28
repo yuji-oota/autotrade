@@ -27,8 +27,6 @@ public class AutoTrader18th extends AutoTrader {
     private Set<CurrencyPair> recommendedPairs;
     private boolean doAsk;
     private boolean doBid;
-    private boolean doAskCounter;
-    private boolean doBidCounter;
     private Duration counterDuration;
 
     public AutoTrader18th() {
@@ -128,7 +126,6 @@ public class AutoTrader18th extends AutoTrader {
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doAsk = false;
-                    doAskCounter = false;
                 }
             } else {
                 if (rateAnalyzer.isBidDown()
@@ -137,7 +134,6 @@ public class AutoTrader18th extends AutoTrader {
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doBid = false;
-                    doBidCounter = false;
                 }
             }
 
@@ -146,6 +142,8 @@ public class AutoTrader18th extends AutoTrader {
             // 買いポジションが多い場合
         case BID_SIDE:
             // 売りポジションが多い場合
+        case SAME:
+            // ポジションが同数の場合
 
             if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
                 if (rateAnalyzer.isAskUp()) {
@@ -158,11 +156,10 @@ public class AutoTrader18th extends AutoTrader {
                     }
                 }
                 if (rateAnalyzer.isBidDown()) {
-                    if (doBidCounter
-                            && snapshot.isBidLtAsk()
+                    if (snapshot.isBidLtAsk()
                             && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
-                        orderBid(snapshot.getAskLot());
-                        doBidCounter = false;
+//                        orderBid(snapshot.getAskLot());
+                        forceSame(snapshot);
                         return;
                     }
                 }
@@ -177,19 +174,16 @@ public class AutoTrader18th extends AutoTrader {
                     }
                 }
                 if (rateAnalyzer.isAskUp()) {
-                    if (doAskCounter
-                            && snapshot.isAskLtBid()
+                    if (snapshot.isAskLtBid()
                             && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
-                        orderAsk(snapshot.getBidLot());
-                        doAskCounter = false;
+//                        orderAsk(snapshot.getBidLot());
+                        forceSame(snapshot);
                         return;
                     }
                 }
             }
 
             break;
-        case SAME:
-            // ポジションが同数の場合
         default:
         }
 
@@ -206,16 +200,6 @@ public class AutoTrader18th extends AutoTrader {
         if (rateAnalyzer.isBidDown()
                 && rateAnalyzer.isReachedBidThreshold(rate)) {
             doAsk = true;
-        }
-        if (rateAnalyzer.isAskUp()
-                && !doBidCounter // NOTE:↓の条件のコスト軽減のための条件
-                && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
-            doBidCounter = true;
-        }
-        if (rateAnalyzer.isBidDown()
-                && !doAskCounter // NOTE:↓の条件のコスト軽減のための条件
-                && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
-            doAskCounter = true;
         }
     }
 
