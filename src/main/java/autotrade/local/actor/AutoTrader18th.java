@@ -98,16 +98,16 @@ public class AutoTrader18th extends AutoTrader {
         updateLastDayBeforeRate();
     }
 
-    @Override
-    protected boolean isOrderable(Snapshot snapshot) {
-        boolean isOrderable = super.isOrderable(snapshot);
-        if (isOrderable) {
-            if (isCalm()) {
-                isOrderable = false;
-            }
-        }
-        return isOrderable;
-    }
+//    @Override
+//    protected boolean isOrderable(Snapshot snapshot) {
+//        boolean isOrderable = super.isOrderable(snapshot);
+//        if (isOrderable) {
+//            if (isCalm()) {
+//                isOrderable = false;
+//            }
+//        }
+//        return isOrderable;
+//    }
 
     @Override
     protected void order(Snapshot snapshot) {
@@ -150,37 +150,43 @@ public class AutoTrader18th extends AutoTrader {
                     if (doAsk
                             && snapshot.getAskLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedAskThreshold(rate)) {
-                        orderAsk(snapshot.getAskLot() == 0 ? snapshot.getBidLot() : 1);
+                        if (snapshot.isAskLtBid()) {
+                            forceSame(snapshot);
+                        } else {
+                            orderAsk(1);
+                        }
                         doAsk = false;
                         return;
                     }
                 }
-                if (rateAnalyzer.isBidDown()) {
-                    if (snapshot.isBidLtAsk()
-                            && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
-//                        orderBid(snapshot.getAskLot());
-                        forceSame(snapshot);
-                        return;
-                    }
-                }
+//                if (rateAnalyzer.isBidDown()) {
+//                    if (snapshot.isBidLtAsk()
+//                            && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
+//                        forceSame(snapshot);
+//                        return;
+//                    }
+//                }
             } else {
                 if (rateAnalyzer.isBidDown()) {
                     if (doBid
                             && snapshot.getBidLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedBidThreshold(rate)) {
-                        orderBid(snapshot.getBidLot() == 0 ? snapshot.getAskLot() : 1);
+                        if (snapshot.isBidLtAsk()) {
+                            forceSame(snapshot);
+                        } else {
+                            orderBid(1);
+                        }
                         doBid = false;
                         return;
                     }
                 }
-                if (rateAnalyzer.isAskUp()) {
-                    if (snapshot.isAskLtBid()
-                            && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
-//                        orderAsk(snapshot.getBidLot());
-                        forceSame(snapshot);
-                        return;
-                    }
-                }
+//                if (rateAnalyzer.isAskUp()) {
+//                    if (snapshot.isAskLtBid()
+//                            && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
+//                        forceSame(snapshot);
+//                        return;
+//                    }
+//                }
             }
 
             break;
@@ -244,7 +250,7 @@ public class AutoTrader18th extends AutoTrader {
             return;
         }
 
-        if (snapshot.isPositionSame()) {
+        if (snapshot.hasBothSide()) {
             if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
