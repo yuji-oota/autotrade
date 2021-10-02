@@ -93,6 +93,9 @@ public class RateAnalyzer {
     public int minWithin(Duration duration) {
         return minBetween(LocalDateTime.now().minus(duration), LocalDateTime.now());
     }
+    public int middleWithin(Duration duration) {
+        return (maxWithin(duration) + minWithin(duration)) / 2;
+    }
     public int maxBetween(Temporal from, Temporal to) {
         return rates.stream()
                 .filter(rateBetweenFilter(from, to))
