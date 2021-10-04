@@ -54,6 +54,7 @@ public abstract class AutoTrader {
     protected UploadManager uploadManager;
     protected LotManager lotManager;
     protected ReserveManager reserveManager;
+    protected PairManager pairManager;
 
     @SuppressWarnings("unused")
     protected StatefulRedisPubSubConnection<String, String> pubSubConnection;
@@ -87,6 +88,7 @@ public abstract class AutoTrader {
         lotManager = new LotManager();
         indicatorManager = new IndicatorManager();
         reserveManager = new ReserveManager();
+        pairManager = new PairManager("USDJPY");
         pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
 
         isAutoRecommended = AutoTradeProperties.getBoolean("autotrade.autoRecommended.flag");
@@ -493,6 +495,7 @@ public abstract class AutoTrader {
             return;
         }
         this.pair = pair;
+        this.pairManager.changePair(pair.name());
         wrapper.displayRateList();
         wrapper.changePair(this.pair.getDescription());
         this.changeDisplay(this.displayMode);

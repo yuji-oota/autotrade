@@ -87,6 +87,9 @@ public class AutoTradeProperties {
     public static Map<String, Object> getMap(String key) {
         return resolvePropertie(key, properties);
     }
+    public static List<Map<String, Object>> getListMap(String key) {
+        return resolvePropertie(key, properties);
+    }
 
     @SuppressWarnings("unchecked")
     private static <T> T resolvePropertie(String key, Map<String, Object> map) {
