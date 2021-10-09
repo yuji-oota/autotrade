@@ -46,6 +46,7 @@ public class AutoTrader19th extends AutoTrader {
             if ("y".equals(input.toLowerCase())) {
                 Snapshot snapshot = AutoTradeUtils.localLoad(Paths.get("localSave", "snapshotWhenRecoveryStart"));
                 recoveryManager.open(snapshot);
+                dynamicThreshold = AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThreshold"));
             }
         }
         ;
@@ -55,6 +56,7 @@ public class AutoTrader19th extends AutoTrader {
                 () -> {
                     AutoTradeUtils.localSave(Paths.get("localSave", "snapshotWhenRecoveryStart"),
                             recoveryManager.getSnapshotWhenStart());
+                    AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThreshold"), dynamicThreshold);
                 }));
     }
 
@@ -117,7 +119,7 @@ public class AutoTrader19th extends AutoTrader {
             if (isAboveDynamicThreshold(snapshot.getRate())) {
                 if (rateAnalyzer.isAskUp()) {
                     if (doAsk
-                            && snapshot.getAskLot() < lotManager.getLimit()
+                            && snapshot.isAskLtLimit()
                             && rateAnalyzer.isReachedAskThreshold(rate)) {
                         if (snapshot.isAskLtBid()) {
                             forceSame(snapshot);
@@ -131,7 +133,7 @@ public class AutoTrader19th extends AutoTrader {
             } else {
                 if (rateAnalyzer.isBidDown()) {
                     if (doBid
-                            && snapshot.getBidLot() < lotManager.getLimit()
+                            && snapshot.isBidLtLimit()
                             && rateAnalyzer.isReachedBidThreshold(rate)) {
                         if (snapshot.isBidLtAsk()) {
                             forceSame(snapshot);
@@ -181,7 +183,7 @@ public class AutoTrader19th extends AutoTrader {
         boolean isFixable = super.isFixable(snapshot);
         if (isFixable
                 && snapshot.isPositionSame()
-                && lotManager.isLimit(snapshot)) {
+                && snapshot.isAskGeLimit()) {
             isFixable = false;
         }
         return isFixable;

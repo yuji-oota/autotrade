@@ -129,7 +129,7 @@ public class AutoTraderSeventh extends AutoTrader {
 
                 isReachedThreshold = r -> rateAnalyzer.isReachedBidThreshold(r);
                 counterTrading = s -> orderBid(s);
-                if (pair.isSpreadWiden(rate.getSpread())) {
+                if (snapshot.isSpreadWiden()) {
                     counterTrading = s -> forceSame(s);
                 }
 
@@ -148,7 +148,7 @@ public class AutoTraderSeventh extends AutoTrader {
 
                 isReachedThreshold = r -> rateAnalyzer.isReachedAskThreshold(r);
                 counterTrading = s -> orderAsk(s);
-                if (pair.isSpreadWiden(rate.getSpread())) {
+                if (snapshot.isSpreadWiden()) {
                     counterTrading = s -> forceSame(s);
                 }
 
@@ -182,7 +182,7 @@ public class AutoTraderSeventh extends AutoTrader {
         case BID_SIDE:
             break;
         case SAME:
-            if (pair.isSpreadWiden(snapshot.getRate().getSpread())) {
+            if (snapshot.isSpreadWiden()) {
                 return false;
             }
             break;

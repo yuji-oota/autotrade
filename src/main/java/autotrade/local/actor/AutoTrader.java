@@ -54,7 +54,6 @@ public abstract class AutoTrader {
     protected UploadManager uploadManager;
     protected LotManager lotManager;
     protected ReserveManager reserveManager;
-    protected PairManager pairManager;
 
     @SuppressWarnings("unused")
     protected StatefulRedisPubSubConnection<String, String> pubSubConnection;
@@ -88,7 +87,6 @@ public abstract class AutoTrader {
         lotManager = new LotManager();
         indicatorManager = new IndicatorManager();
         reserveManager = new ReserveManager();
-        pairManager = new PairManager("USDJPY");
         pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
 
         isAutoRecommended = AutoTradeProperties.getBoolean("autotrade.autoRecommended.flag");
@@ -200,7 +198,7 @@ public abstract class AutoTrader {
 
     protected Snapshot buildSnapshot() {
         return Snapshot.builder()
-                .pair(wrapper.getPair())
+                .pair(CurrencyPair.valueOf(wrapper.getPair()))
                 .askLot(AutoTradeUtils.toInt(wrapper.getAskLot()))
                 .bidLot(AutoTradeUtils.toInt(wrapper.getBidLot()))
                 .askAverageRate(AutoTradeUtils.toInt(wrapper.getAskAverageRate()))
@@ -214,13 +212,12 @@ public abstract class AutoTrader {
 
     protected Rate buildRateWrapper() {
         Rate rate = buildRate();
-        if (!pair.isSpreadWiden(rate.getSpread())
+        if (pair.getMinSpread() >= rate.getSpread()
                 || indicatorManager.isPrevIndicatorWithin(Duration.ofMinutes(5))) {
             return rate;
         }
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
-        Rate reBuild = buildRate();
-        return reBuild;
+        return buildRate();
     }
 
     protected Rate buildRate() {
@@ -330,7 +327,7 @@ public abstract class AutoTrader {
     protected boolean isSleep(Snapshot snapshot) {
         return isInactiveTime()
                 && snapshot.isPositionNone()
-                && pair.isSpreadWiden(snapshot.getRate().getSpread());
+                && snapshot.isSpreadWiden();
     }
 
     protected boolean isFixable(Snapshot snapshot) {
@@ -368,7 +365,7 @@ public abstract class AutoTrader {
                 // 指標が近い場合は注文しない
                 return false;
             }
-            if (!isIgnoreSpread && pair.isSpreadWiden(snapshot.getRate().getSpread())) {
+            if (!isIgnoreSpread && snapshot.isSpreadWiden()) {
                 // スプレッドを無視しない
                 // 且つスプレッドが開いている場合は注文しない
                 return false;
@@ -495,7 +492,6 @@ public abstract class AutoTrader {
             return;
         }
         this.pair = pair;
-        this.pairManager.changePair(pair.name());
         wrapper.displayRateList();
         wrapper.changePair(this.pair.getDescription());
         this.changeDisplay(this.displayMode);

@@ -9,7 +9,7 @@ import lombok.Data;
 @Builder
 public class Snapshot implements Serializable {
 
-    private String pair;
+    private CurrencyPair pair;
 
     // Tostring用
     @SuppressWarnings("unused")
@@ -131,5 +131,22 @@ public class Snapshot implements Serializable {
     }
     public boolean isBidLeAsk() {
         return isAskGeBid();
+    }
+
+    public boolean isAskLtLimit() {
+        return askLot < pair.getLimitLot(effectiveMargin);
+    }
+    public boolean isBidLtLimit() {
+        return bidLot < pair.getLimitLot(effectiveMargin);
+    }
+    public boolean isAskGeLimit() {
+        return !isAskLtLimit();
+    }
+    public boolean isBidGeLimit() {
+        return !isBidLtLimit();
+    }
+
+    public boolean isSpreadWiden() {
+        return pair.getMinSpread() < rate.getSpread();
     }
 }

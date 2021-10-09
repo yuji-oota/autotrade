@@ -95,7 +95,7 @@ public class AutoTraderNineth extends AutoTrader {
                 if (isCalm()) {
                     isReachedThreshold = r -> rateAnalyzer.isReachedBidThresholdWithin(r, Duration.ofMinutes(10));
                 } else {
-                    if (pair.isSpreadWiden(rate.getSpread())
+                    if (snapshot.isSpreadWiden()
                             || lotManager.isLimit(snapshot)) {
                         counterTrading = s -> forceSame(s);
                     }
@@ -118,7 +118,7 @@ public class AutoTraderNineth extends AutoTrader {
                 if (isCalm()) {
                     isReachedThreshold = r -> rateAnalyzer.isReachedAskThresholdWithin(r, Duration.ofMinutes(10));
                 } else {
-                    if (pair.isSpreadWiden(rate.getSpread())
+                    if (snapshot.isSpreadWiden()
                             || lotManager.isLimit(snapshot)) {
                         counterTrading = s -> forceSame(s);
                     }
@@ -134,7 +134,7 @@ public class AutoTraderNineth extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            if (pair.isSpreadWiden(rate.getSpread())
+            if (snapshot.isSpreadWiden()
                     || lotManager.isLimit(snapshot)) {
                 return;
             }

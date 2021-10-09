@@ -148,7 +148,7 @@ public class AutoTraderSixth extends AutoTrader {
                     counterTrading = s -> forceSame(s);
                     fix = s -> fixAsk(s);
                 }
-                if (pair.isSpreadWiden(rate.getSpread())) {
+                if (snapshot.isSpreadWiden()) {
                     counterTrading = s -> forceSame(s);
                     fix = s -> {};
                 }
@@ -181,7 +181,7 @@ public class AutoTraderSixth extends AutoTrader {
                     counterTrading = s -> forceSame(s);
                     fix = s -> fixBid(s);
                 }
-                if (pair.isSpreadWiden(rate.getSpread())) {
+                if (snapshot.isSpreadWiden()) {
                     counterTrading = s -> forceSame(s);
                     fix = s -> {};
                 }
@@ -225,7 +225,7 @@ public class AutoTraderSixth extends AutoTrader {
             if (isCalm()) {
                 return false;
             }
-            if (pair.isSpreadWiden(snapshot.getRate().getSpread())) {
+            if (snapshot.isSpreadWiden()) {
                 return false;
             }
             break;

@@ -47,12 +47,12 @@ public class RecoveryManager {
         isOpen = false;
         resetReachedRecover();
         cutOffDone();
-        log.info("recovery done.");
+//        log.info("recovery done.");
     }
     public void cutOffDone() {
         isCutOffAsk = false;
         isCutOffBid = false;
-        log.info("cut off done.");
+//        log.info("cut off done.");
     }
     public void resetReachedRecover() {
         isReachedRecover = false;
