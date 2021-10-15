@@ -22,6 +22,7 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
@@ -198,7 +199,7 @@ public abstract class AutoTrader {
 
     protected Snapshot buildSnapshot() {
         return Snapshot.builder()
-                .pair(CurrencyPair.valueOf(wrapper.getPair()))
+                .pair(CurrencyPair.valueOf(wrapper.getPair().replace("/", "")))
                 .askLot(AutoTradeUtils.toInt(wrapper.getAskLot()))
                 .bidLot(AutoTradeUtils.toInt(wrapper.getBidLot()))
                 .askAverageRate(AutoTradeUtils.toInt(wrapper.getAskAverageRate()))
@@ -248,6 +249,19 @@ public abstract class AutoTrader {
 
     protected boolean hasPosition() {
         return AutoTradeUtils.toInt(wrapper.getAskLot()) > 0 || AutoTradeUtils.toInt(wrapper.getBidLot()) > 0;
+    }
+
+    protected Rate buildLastDayBeforeRate() {
+        String theDayBeforeDiff = driver.findElement(By.xpath("//*[@id=\"hl-div\"]/span[5]")).getText();
+        Rate lastDayBeforeRate = Rate.builder().ask(0).bid(0).timestamp(LocalDateTime.now()).build();
+        int lastDayBeforeBid = AutoTradeUtils.toInt(theDayBeforeDiff.substring(1));
+        if ("▼".equals(theDayBeforeDiff.substring(0, 1))) {
+            lastDayBeforeBid = lastDayBeforeBid * -1;
+        }
+        Snapshot snapshot = buildSnapshot();
+        lastDayBeforeRate.setBid(snapshot.getRate().getBid() - lastDayBeforeBid);
+        lastDayBeforeRate.setAsk(lastDayBeforeRate.getBid() + pair.getMinSpread());
+        return lastDayBeforeRate;
     }
 
     protected void trade(Snapshot snapshot) {

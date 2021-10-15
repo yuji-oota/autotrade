@@ -25,6 +25,7 @@ public class AutoTrader19th extends AutoTrader {
     private boolean doBid;
     private Duration counterDuration;
     private int dynamicThreshold;
+    private int dynamicThresholdOriginally;
 
     public AutoTrader19th() {
         super();
@@ -46,6 +47,7 @@ public class AutoTrader19th extends AutoTrader {
             if ("y".equals(input.toLowerCase())) {
                 Snapshot snapshot = AutoTradeUtils.localLoad(Paths.get("localSave", "snapshotWhenRecoveryStart"));
                 recoveryManager.open(snapshot);
+                dynamicThresholdOriginally = AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThresholdOriginally"));
                 dynamicThreshold = AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThreshold"));
             }
         }
@@ -56,6 +58,7 @@ public class AutoTrader19th extends AutoTrader {
                 () -> {
                     AutoTradeUtils.localSave(Paths.get("localSave", "snapshotWhenRecoveryStart"),
                             recoveryManager.getSnapshotWhenStart());
+                    AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThresholdOriginally"), dynamicThresholdOriginally);
                     AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThreshold"), dynamicThreshold);
                 }));
     }
@@ -95,7 +98,7 @@ public class AutoTrader19th extends AutoTrader {
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doAsk = false;
-                    updateDynamicThreshold();
+                    resetDynamicThreshold();
                 }
             } else {
                 if (rateAnalyzer.isBidDown()
@@ -104,7 +107,7 @@ public class AutoTrader19th extends AutoTrader {
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doBid = false;
-                    updateDynamicThreshold();
+                    resetDynamicThreshold();
                 }
             }
 
@@ -164,10 +167,39 @@ public class AutoTrader19th extends AutoTrader {
                 && rateAnalyzer.isReachedBidThreshold(rate)) {
             doAsk = true;
         }
+
+        if (snapshot.hasAskOnly()) {
+            dynamicThreshold = rateAnalyzer.minWithin(counterDuration);
+            if (dynamicThreshold > dynamicThresholdOriginally) {
+                dynamicThreshold = dynamicThresholdOriginally;
+                log.info("dynamicThreshold:{}", dynamicThreshold);
+            }
+        }
+        if (snapshot.hasBidOnly()) {
+            dynamicThreshold = rateAnalyzer.maxWithin(counterDuration);
+            if (dynamicThreshold < dynamicThresholdOriginally) {
+                dynamicThreshold = dynamicThresholdOriginally;
+                log.info("dynamicThreshold:{}", dynamicThreshold);
+            }
+        }
     }
 
-    private void updateDynamicThreshold() {
-        dynamicThreshold = rateAnalyzer.middleWithin(counterDuration);
+    private void resetDynamicThreshold() {
+        dynamicThresholdOriginally = rateAnalyzer.middleWithin(counterDuration);
+    }
+
+    private void updateDynamicThreshold(Snapshot snapshot) {
+        Rate lastDayBeforeRate = buildLastDayBeforeRate();
+        int dynamicThreshold = rateAnalyzer.middleWithin(counterDuration);
+        if (snapshot.getRate().isAbobe(lastDayBeforeRate)) {
+            if (dynamicThreshold < dynamicThresholdOriginally) {
+                dynamicThresholdOriginally = dynamicThreshold;
+            }
+        } else {
+            if (dynamicThreshold > dynamicThresholdOriginally) {
+                dynamicThresholdOriginally = dynamicThreshold;
+            }
+        }
     }
     private boolean isAboveDynamicThreshold(Rate rate) {
         return dynamicThreshold < rate.getMiddle();
@@ -215,11 +247,13 @@ public class AutoTrader19th extends AutoTrader {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
                     fixBid(snapshot);
+                    updateDynamicThreshold(snapshot);
                 }
             } else {
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
                     fixAsk(snapshot);
+                    updateDynamicThreshold(snapshot);
                 }
             }
         }

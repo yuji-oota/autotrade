@@ -94,6 +94,13 @@ public class Snapshot implements Serializable {
         return false;
     }
 
+    public boolean hasAskOnly() {
+        return hasAsk() && hasOneSide();
+    }
+    public boolean hasBidOnly() {
+        return hasBid() && hasOneSide();
+    }
+
     public boolean isPositionNone() {
         return getStatus() == PositionStatus.NONE;
     }
