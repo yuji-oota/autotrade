@@ -14,9 +14,8 @@ plugins {
 }
 
 javafx {
-    version = '13'
+    version = '17.0.0.1'
     modules = [ 'javafx.media' ]
-    configuration = 'compile'
 }
 
 repositories {
@@ -28,26 +27,26 @@ repositories {
 dependencies {
 
     // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.676'
+    implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.676'
 
     // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
-    compile group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '3.141.59'
+    implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '3.141.59'
 
     // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-    compile group: 'io.lettuce', name: 'lettuce-core', version: '5.2.1.RELEASE'
+    implementation group: 'io.lettuce', name: 'lettuce-core', version: '5.2.1.RELEASE'
 
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.10.1'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.10.1'
 
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
 
     // https://mvnrepository.com/artifact/org.yaml/snakeyaml
-    compile group: 'org.yaml', name: 'snakeyaml', version: '1.25'
+    implementation group: 'org.yaml', name: 'snakeyaml', version: '1.25'
 
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
 
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.8.1'
@@ -58,7 +57,8 @@ dependencies {
 }
 
 jar {
-    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     manifest {
         attributes('Main-Class': 'autotrade.local.Application')
         baseName "autotrade-local"
