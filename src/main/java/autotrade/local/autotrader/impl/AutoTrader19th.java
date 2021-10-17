@@ -32,7 +32,7 @@ public class AutoTrader19th extends AutoTrader {
 
     public AutoTrader19th() {
         super();
-        log.info("AutoTrader19th started");
+        log.info("AutoTrader19th started.");
         recoveryManager = new RecoveryManager();
         pairAnalyzerMap.values().stream().forEach(analyzer -> {
             analyzer.setThresholdDuration(

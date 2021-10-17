@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.yaml.snakeyaml.Yaml;
@@ -51,21 +50,16 @@ aws:
 @Slf4j
 public class AutoTradeProperties {
 
-    private static AutoTradeProperties instance;
     private static Map<String, Object> properties;
 
-    private AutoTradeProperties() {
+    private AutoTradeProperties() {}
+
+    static {
         try {
             properties = new Yaml().load(Files.newInputStream(Paths.get("application.yml")));
             log.info("properties loaded successfully.");
         } catch (IOException e) {
             throw new ApplicationException(e);
-        }
-    }
-
-    static {
-        if (Objects.isNull(instance)) {
-            instance = new AutoTradeProperties();
         }
     }
 
