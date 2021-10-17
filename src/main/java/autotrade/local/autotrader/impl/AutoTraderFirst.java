@@ -1,7 +1,9 @@
-package autotrade.local.actor;
+package autotrade.local.autotrader.impl;
 
 import java.time.Duration;
 
+import autotrade.local.actor.SameManager;
+import autotrade.local.autotrader.AutoTrader;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import lombok.extern.slf4j.Slf4j;

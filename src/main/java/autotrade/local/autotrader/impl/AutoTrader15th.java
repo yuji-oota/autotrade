@@ -1,14 +1,21 @@
-package autotrade.local.actor;
+package autotrade.local.autotrader.impl;
 
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 
+import org.openqa.selenium.By;
+
+import autotrade.local.actor.MessageListener;
+import autotrade.local.actor.RecoveryManager;
+import autotrade.local.autotrader.AutoTrader;
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
@@ -17,34 +24,26 @@ import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AutoTrader17th extends AutoTrader {
+public class AutoTrader15th extends AutoTrader {
 
     private enum OrderDirection {ASK, BID, NONE}
 
     private RecoveryManager recoveryManager;
-    private Set<CurrencyPair> recommendedPairs;
-    private boolean doAsk;
-    private boolean doBid;
-    private Duration counterLessThanDuration;
-    private Duration counterDuration;
     private OrderDirection orderDirection;
+    private Rate lastDayBeforeRate;
+    private Set<CurrencyPair> recommendedPairs;
 
-    public AutoTrader17th() {
+    public AutoTrader15th() {
         super();
         recoveryManager = new RecoveryManager();
         pairAnalyzerMap.values().stream().forEach(analyzer -> {
             analyzer.setThresholdDuration(
                     Duration.ofSeconds(
-                            AutoTradeProperties.getInt("autoTrader17th.rateAnalizer.threshold.seconds")));
+                            AutoTradeProperties.getInt("autoTrader15th.rateAnalizer.threshold.seconds")));
         });
-        recommendedPairs = AutoTradeProperties.getList("autoTrader17th.autoRecommended.pairs").stream()
+        recommendedPairs = AutoTradeProperties.getList("autoTrader15th.autoRecommended.pairs").stream()
                 .map(CurrencyPair::valueOf)
                 .collect(Collectors.toSet());
-        counterLessThanDuration = Duration.ofSeconds(
-                AutoTradeProperties.getInt("autoTrader17th.counter.lessThanDuration.seconds"));
-        counterDuration = Duration.ofSeconds(
-                AutoTradeProperties.getInt("autoTrader17th.counter.duration.seconds"));
-        orderDirection = OrderDirection.NONE;
 
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
@@ -69,9 +68,22 @@ public class AutoTrader17th extends AutoTrader {
                 && snapshot.isPositionNone();
     }
 
+    private void updateLastDayBeforeRate() {
+        String theDayBeforeDiff = driver.findElement(By.xpath("//*[@id=\"hl-div\"]/span[5]")).getText();
+        lastDayBeforeRate = Rate.builder().ask(0).bid(0).timestamp(LocalDateTime.now()).build();
+        int lastDayBeforeBid = AutoTradeUtils.toInt(theDayBeforeDiff.substring(1));
+        if ("▼".equals(theDayBeforeDiff.substring(0, 1))) {
+            lastDayBeforeBid = lastDayBeforeBid * -1;
+        }
+        Snapshot snapshot = buildSnapshot();
+        lastDayBeforeRate.setBid(snapshot.getRate().getBid() - lastDayBeforeBid);
+        lastDayBeforeRate.setAsk(lastDayBeforeRate.getBid() + pair.getMinSpread());
+    }
+
     @Override
     protected void initialize() {
         super.initialize();
+        updateLastDayBeforeRate();
     }
 
     @Override
@@ -84,6 +96,7 @@ public class AutoTrader17th extends AutoTrader {
         .get()
         .getKey();
         this.changePair(recommended);
+        updateLastDayBeforeRate();
     }
 
     @Override
@@ -91,6 +104,10 @@ public class AutoTrader17th extends AutoTrader {
         boolean isOrderable = super.isOrderable(snapshot);
         if (isOrderable) {
             if (isCalm()) {
+                isOrderable = false;
+            }
+            if (snapshot.isPositionSame()
+                    && Math.abs(lastDayBeforeRate.getBid() - snapshot.getRate().getBid()) < 100) {
                 isOrderable = false;
             }
         }
@@ -107,22 +124,20 @@ public class AutoTrader17th extends AutoTrader {
         case NONE:
             // ポジションがない場合
 
-            if (rateAnalyzer.isUpwardWithin(counterDuration)) {
+            if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
-                    orderAsk(calcLot(initialLot, snapshot.getAskLot(), snapshot.getBidLot()));
+                    orderAsk(calcLot(initialLot, snapshot::getAskLot));
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
-                    doAsk = false;
                     orderDirection = OrderDirection.ASK;
                 }
             } else {
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
-                    orderBid(calcLot(initialLot, snapshot.getBidLot(), snapshot.getAskLot()));
+                    orderBid(calcLot(initialLot, snapshot::getBidLot));
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
-                    doBid = false;
                     orderDirection = OrderDirection.BID;
                 }
             }
@@ -136,54 +151,42 @@ public class AutoTrader17th extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            if (orderDirection == OrderDirection.NONE) {
-                orderDirection = OrderDirection.ASK;
-                if (snapshot.isBidGtAsk()) {
-                    orderDirection = OrderDirection.BID;
-                }
-            }
 
-            if (isUpward(rate)) {
+            if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
                 if (rateAnalyzer.isAskUp()) {
-                    if (doAsk
-                            && snapshot.isAskGeBid()
+                    if (orderDirection == OrderDirection.BID
                             && snapshot.getAskLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedAskThreshold(rate)) {
-                        orderAsk(calcLot(initialLot, snapshot.getAskLot(), snapshot.getBidLot()));
-                        doAsk = false;
-                        return;
+                        orderAsk(calcLot(initialLot, snapshot::getAskLot));
+                        orderDirection = OrderDirection.ASK;
                     }
-                    if (snapshot.isAskLtBid()
-                            && rateAnalyzer.isReachedAskThresholdWithin(rate, counterLessThanDuration)) {
-                        orderAsk(calcLot(initialLot, snapshot.getAskLot(), snapshot.getBidLot()));
-                        return;
+                    if (snapshot.getAskLot() < snapshot.getBidLot()
+                            && rateAnalyzer.isReachedAskThreshold(rate)) {
+                        forceSame(snapshot);
                     }
                 }
             } else {
                 if (rateAnalyzer.isBidDown()) {
-                    if (doBid
-                            && snapshot.isBidGeAsk()
+                    if (orderDirection == OrderDirection.ASK
                             && snapshot.getBidLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedBidThreshold(rate)) {
-                        orderBid(calcLot(initialLot, snapshot.getBidLot(), snapshot.getAskLot()));
-                        doBid = false;
-                        return;
+                        orderBid(calcLot(initialLot, snapshot::getBidLot));
+                        orderDirection = OrderDirection.BID;
                     }
-                    if (snapshot.isBidLtAsk()
-                            && rateAnalyzer.isReachedBidThresholdWithin(rate, counterLessThanDuration)) {
-                        orderBid(calcLot(initialLot, snapshot.getBidLot(), snapshot.getAskLot()));
-                        return;
+                    if (snapshot.getAskLot() > snapshot.getBidLot()
+                            && rateAnalyzer.isReachedBidThreshold(rate)) {
+                        forceSame(snapshot);
                     }
                 }
             }
 
             if (rateAnalyzer.isAskUp()
                     && rateAnalyzer.isReachedAskThreshold(rate)) {
-                doBid = true;
+                orderDirection = OrderDirection.ASK;
             }
             if (rateAnalyzer.isBidDown()
                     && rateAnalyzer.isReachedBidThreshold(rate)) {
-                doAsk = true;
+                orderDirection = OrderDirection.BID;
             }
 
         default:
@@ -191,10 +194,9 @@ public class AutoTrader17th extends AutoTrader {
 
     }
 
-    private static int calcLot(int initialLot, int lot, int counter) {
-        int target = initialLot < counter ? counter + initialLot : initialLot;
-        if (lot < target) {
-            int diff = target - lot;
+    private static int calcLot(int target, IntSupplier lot) {
+        if (lot.getAsInt() < target) {
+            int diff = target - lot.getAsInt();
             if (diff <= 10) {
                 return diff;
             } else {
@@ -204,20 +206,8 @@ public class AutoTrader17th extends AutoTrader {
         return 1;
     }
 
-    private boolean isUpward(Rate rate) {
-        if (rateAnalyzer.isAskUp()
-                && orderDirection == OrderDirection.BID // NOTE:↓の条件のコスト軽減のための条件
-                && rateAnalyzer.isReachedAskThreshold(rate) // NOTE:↓の条件のコスト軽減のための条件
-                && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
-            orderDirection = OrderDirection.ASK;
-        }
-        if (rateAnalyzer.isBidDown()
-                && orderDirection == OrderDirection.ASK // NOTE:↓の条件のコスト軽減のための条件
-                && rateAnalyzer.isReachedBidThreshold(rate) // NOTE:↓の条件のコスト軽減のための条件
-                && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
-            orderDirection = OrderDirection.BID;
-        }
-        return orderDirection == OrderDirection.ASK;
+    private boolean isPlusTheDayBefore(int bid) {
+        return lastDayBeforeRate.getBid() < bid;
     }
 
     @Override
@@ -240,10 +230,9 @@ public class AutoTrader17th extends AutoTrader {
     protected void fix(Snapshot snapshot) {
 
         Rate rate = snapshot.getRate();
-        int targetProfit = snapshot.getMargin() / 10000;
 
         if (recoveryManager.isOpen()
-                && recoveryManager.isRecoveredWithProfit(snapshot, targetProfit)) {
+                && recoveryManager.isRecoveredWithProfit(snapshot, snapshot.getMargin() / 10000)) {
             if (rateAnalyzer.isBidDown()
                     && snapshot.isPositionAskSide()
                     && rateAnalyzer.isReachedBidThreshold(rate)) {
@@ -257,24 +246,19 @@ public class AutoTrader17th extends AutoTrader {
             return;
         }
 
-        if (snapshot.hasBothSide()
-                && rateAnalyzer.isBidDown()
-                && rateAnalyzer.isReachedBidThreshold(rate)) {
-            if (targetProfit <= snapshot.getAskProfit()) {
-                fixAsk(snapshot);
-                return;
-            }
-        }
-        if (snapshot.hasBothSide()
-                && rateAnalyzer.isAskUp()
-                && rateAnalyzer.isReachedAskThreshold(rate)) {
-            if (targetProfit <= snapshot.getBidProfit()) {
-                fixBid(snapshot);
-                return;
-            }
-        }
-    }
+//        if (snapshot.isPositionSame()
+//                && lotManager.isLimit(snapshot)) {
+//            if (rateAnalyzer.isBidDown()
+//                    && lastDayBeforeRate.getBid() - rate.getBid() >= 100) {
+//                fixAsk(snapshot);
+//            }
+//            if (rateAnalyzer.isAskUp()
+//                    && rate.getBid() - lastDayBeforeRate.getBid() >= 100) {
+//                fixBid(snapshot);
+//            }
+//        }
 
+    }
 
     @Override
     protected void fixAll(Snapshot snapshot) {

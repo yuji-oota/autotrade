@@ -1,4 +1,4 @@
-package autotrade.local.actor;
+package autotrade.local.autotrader.impl;
 
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
 
+import autotrade.local.actor.MessageListener;
+import autotrade.local.actor.RecoveryManager;
+import autotrade.local.autotrader.AutoTrader;
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;

@@ -1,9 +1,12 @@
-package autotrade.local.actor;
+package autotrade.local.autotrader.impl;
 
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Scanner;
 
+import autotrade.local.actor.MessageListener;
+import autotrade.local.actor.RecoveryManager;
+import autotrade.local.autotrader.AutoTrader;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.utility.AutoTradeProperties;

@@ -1,7 +1,8 @@
-package autotrade.local.actor;
+package autotrade.local.autotrader.impl;
 
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.Map;
@@ -9,6 +10,11 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.openqa.selenium.By;
+
+import autotrade.local.actor.MessageListener;
+import autotrade.local.actor.RecoveryManager;
+import autotrade.local.autotrader.AutoTrader;
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
@@ -17,29 +23,28 @@ import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AutoTrader19th extends AutoTrader {
+public class AutoTrader18th extends AutoTrader {
 
     private RecoveryManager recoveryManager;
+    private Rate lastDayBeforeRate;
     private Set<CurrencyPair> recommendedPairs;
     private boolean doAsk;
     private boolean doBid;
     private Duration counterDuration;
-    private int dynamicThreshold;
-    private int dynamicThresholdOriginally;
 
-    public AutoTrader19th() {
+    public AutoTrader18th() {
         super();
         recoveryManager = new RecoveryManager();
         pairAnalyzerMap.values().stream().forEach(analyzer -> {
             analyzer.setThresholdDuration(
                     Duration.ofSeconds(
-                            AutoTradeProperties.getInt("autoTrader19th.rateAnalizer.threshold.seconds")));
+                            AutoTradeProperties.getInt("autoTrader18th.rateAnalizer.threshold.seconds")));
         });
-        recommendedPairs = AutoTradeProperties.getList("autoTrader19th.autoRecommended.pairs").stream()
+        recommendedPairs = AutoTradeProperties.getList("autoTrader18th.autoRecommended.pairs").stream()
                 .map(CurrencyPair::valueOf)
                 .collect(Collectors.toSet());
         counterDuration = Duration.ofSeconds(
-                AutoTradeProperties.getInt("autoTrader19th.counter.duration.seconds"));
+                AutoTradeProperties.getInt("autoTrader18th.counter.duration.seconds"));
 
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
@@ -47,8 +52,6 @@ public class AutoTrader19th extends AutoTrader {
             if ("y".equals(input.toLowerCase())) {
                 Snapshot snapshot = AutoTradeUtils.localLoad(Paths.get("localSave", "snapshotWhenRecoveryStart"));
                 recoveryManager.open(snapshot);
-                dynamicThresholdOriginally = AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThresholdOriginally"));
-                dynamicThreshold = AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThreshold"));
             }
         }
         ;
@@ -58,8 +61,6 @@ public class AutoTrader19th extends AutoTrader {
                 () -> {
                     AutoTradeUtils.localSave(Paths.get("localSave", "snapshotWhenRecoveryStart"),
                             recoveryManager.getSnapshotWhenStart());
-                    AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThresholdOriginally"), dynamicThresholdOriginally);
-                    AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThreshold"), dynamicThreshold);
                 }));
     }
 
@@ -67,6 +68,24 @@ public class AutoTrader19th extends AutoTrader {
     protected boolean isSleep(Snapshot snapshot) {
         return isInactiveTime()
                 && snapshot.isPositionNone();
+    }
+
+    private void updateLastDayBeforeRate() {
+        String theDayBeforeDiff = driver.findElement(By.xpath("//*[@id=\"hl-div\"]/span[5]")).getText();
+        lastDayBeforeRate = Rate.builder().ask(0).bid(0).timestamp(LocalDateTime.now()).build();
+        int lastDayBeforeBid = AutoTradeUtils.toInt(theDayBeforeDiff.substring(1));
+        if ("▼".equals(theDayBeforeDiff.substring(0, 1))) {
+            lastDayBeforeBid = lastDayBeforeBid * -1;
+        }
+        Snapshot snapshot = buildSnapshot();
+        lastDayBeforeRate.setBid(snapshot.getRate().getBid() - lastDayBeforeBid);
+        lastDayBeforeRate.setAsk(lastDayBeforeRate.getBid() + pair.getMinSpread());
+    }
+
+    @Override
+    protected void initialize() {
+        super.initialize();
+        updateLastDayBeforeRate();
     }
 
     @Override
@@ -79,7 +98,19 @@ public class AutoTrader19th extends AutoTrader {
                 .get()
                 .getKey();
         this.changePair(recommended);
+        updateLastDayBeforeRate();
     }
+
+//    @Override
+//    protected boolean isOrderable(Snapshot snapshot) {
+//        boolean isOrderable = super.isOrderable(snapshot);
+//        if (isOrderable) {
+//            if (isCalm()) {
+//                isOrderable = false;
+//            }
+//        }
+//        return isOrderable;
+//    }
 
     @Override
     protected void order(Snapshot snapshot) {
@@ -91,14 +122,13 @@ public class AutoTrader19th extends AutoTrader {
         case NONE:
             // ポジションがない場合
 
-            if (rateAnalyzer.isUpwardWithin(counterDuration)) {
+            if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
                     orderAsk(initialLot);
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doAsk = false;
-                    resetDynamicThreshold();
                 }
             } else {
                 if (rateAnalyzer.isBidDown()
@@ -107,7 +137,6 @@ public class AutoTrader19th extends AutoTrader {
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doBid = false;
-                    resetDynamicThreshold();
                 }
             }
 
@@ -119,10 +148,10 @@ public class AutoTrader19th extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            if (isAboveDynamicThreshold(snapshot.getRate())) {
+            if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
                 if (rateAnalyzer.isAskUp()) {
                     if (doAsk
-                            && snapshot.isAskLtLimit()
+                            && snapshot.getAskLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedAskThreshold(rate)) {
                         if (snapshot.isAskLtBid()) {
                             forceSame(snapshot);
@@ -133,10 +162,17 @@ public class AutoTrader19th extends AutoTrader {
                         return;
                     }
                 }
+//                if (rateAnalyzer.isBidDown()) {
+//                    if (snapshot.isBidLtAsk()
+//                            && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
+//                        forceSame(snapshot);
+//                        return;
+//                    }
+//                }
             } else {
                 if (rateAnalyzer.isBidDown()) {
                     if (doBid
-                            && snapshot.isBidLtLimit()
+                            && snapshot.getBidLot() < lotManager.getLimit()
                             && rateAnalyzer.isReachedBidThreshold(rate)) {
                         if (snapshot.isBidLtAsk()) {
                             forceSame(snapshot);
@@ -147,6 +183,13 @@ public class AutoTrader19th extends AutoTrader {
                         return;
                     }
                 }
+//                if (rateAnalyzer.isAskUp()) {
+//                    if (snapshot.isAskLtBid()
+//                            && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
+//                        forceSame(snapshot);
+//                        return;
+//                    }
+//                }
             }
 
             break;
@@ -167,42 +210,10 @@ public class AutoTrader19th extends AutoTrader {
                 && rateAnalyzer.isReachedBidThreshold(rate)) {
             doAsk = true;
         }
-
-        if (snapshot.hasAskOnly()) {
-            dynamicThreshold = rateAnalyzer.minWithin(counterDuration);
-            if (dynamicThreshold > dynamicThresholdOriginally) {
-                dynamicThreshold = dynamicThresholdOriginally;
-                log.info("dynamicThreshold:{}", dynamicThreshold);
-            }
-        }
-        if (snapshot.hasBidOnly()) {
-            dynamicThreshold = rateAnalyzer.maxWithin(counterDuration);
-            if (dynamicThreshold < dynamicThresholdOriginally) {
-                dynamicThreshold = dynamicThresholdOriginally;
-                log.info("dynamicThreshold:{}", dynamicThreshold);
-            }
-        }
     }
 
-    private void resetDynamicThreshold() {
-        dynamicThresholdOriginally = rateAnalyzer.middleWithin(counterDuration);
-    }
-
-    private void updateDynamicThreshold(Snapshot snapshot) {
-        Rate lastDayBeforeRate = buildLastDayBeforeRate();
-        int dynamicThreshold = rateAnalyzer.middleWithin(counterDuration);
-        if (snapshot.getRate().isAbobe(lastDayBeforeRate)) {
-            if (dynamicThreshold < dynamicThresholdOriginally) {
-                dynamicThresholdOriginally = dynamicThreshold;
-            }
-        } else {
-            if (dynamicThreshold > dynamicThresholdOriginally) {
-                dynamicThresholdOriginally = dynamicThreshold;
-            }
-        }
-    }
-    private boolean isAboveDynamicThreshold(Rate rate) {
-        return dynamicThreshold < rate.getMiddle();
+    private boolean isPlusTheDayBefore(int bid) {
+        return lastDayBeforeRate.getBid() < bid;
     }
 
     @Override
@@ -215,7 +226,7 @@ public class AutoTrader19th extends AutoTrader {
         boolean isFixable = super.isFixable(snapshot);
         if (isFixable
                 && snapshot.isPositionSame()
-                && snapshot.isAskGeLimit()) {
+                && lotManager.isLimit(snapshot)) {
             isFixable = false;
         }
         return isFixable;
@@ -243,17 +254,15 @@ public class AutoTrader19th extends AutoTrader {
         }
 
         if (snapshot.hasBothSide()) {
-            if (isAboveDynamicThreshold(snapshot.getRate())) {
+            if (isPlusTheDayBefore(snapshot.getRate().getBid())) {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
                     fixBid(snapshot);
-                    updateDynamicThreshold(snapshot);
                 }
             } else {
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
                     fixAsk(snapshot);
-                    updateDynamicThreshold(snapshot);
                 }
             }
         }

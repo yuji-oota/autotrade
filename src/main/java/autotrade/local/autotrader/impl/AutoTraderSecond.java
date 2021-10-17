@@ -1,7 +1,9 @@
-package autotrade.local.actor;
+package autotrade.local.autotrader.impl;
 
 import java.time.Duration;
 
+import autotrade.local.actor.RecoveryManager;
+import autotrade.local.autotrader.AutoTrader;
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;

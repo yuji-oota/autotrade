@@ -1,4 +1,4 @@
-package autotrade.local.actor;
+package autotrade.local.autotrader;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,7 +26,15 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
+import autotrade.local.actor.IndicatorManager;
+import autotrade.local.actor.LotManager;
+import autotrade.local.actor.MessageListener;
 import autotrade.local.actor.MessageListener.ReservedMessage;
+import autotrade.local.actor.Messenger;
+import autotrade.local.actor.RateAnalyzer;
+import autotrade.local.actor.ReserveManager;
+import autotrade.local.actor.SameManager;
+import autotrade.local.actor.UploadManager;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.AudioPath;
 import autotrade.local.material.CurrencyPair;

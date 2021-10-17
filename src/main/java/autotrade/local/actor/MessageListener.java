@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MessageListener extends RedisPubSubAdapter<String, String> {
 
-    enum ReservedMessage {
+    public enum ReservedMessage {
         NONE,
         UPLOADLOG,
         AUTOTRADELOG,

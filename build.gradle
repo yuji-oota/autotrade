@@ -39,8 +39,8 @@ dependencies {
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.10.1'
 
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
-    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
-    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
 
     // https://mvnrepository.com/artifact/org.yaml/snakeyaml
     implementation group: 'org.yaml', name: 'snakeyaml', version: '1.25'
@@ -51,12 +51,13 @@ dependencies {
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.8.1'
 
-    testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
-    testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.10'
+    testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
+    testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
 
 }
 
 jar {
+    dependsOn clean
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     manifest {
@@ -70,8 +71,9 @@ tasks.withType(JavaCompile) {
 }
 
 task collect(type: Copy) {
+    dependsOn jar
     from 'build/libs'
     into './'
 }
 
-defaultTasks 'clean', 'jar', 'collect'
+defaultTasks 'collect'

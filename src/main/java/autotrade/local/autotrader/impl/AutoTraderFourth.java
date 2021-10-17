@@ -1,4 +1,4 @@
-package autotrade.local.actor;
+package autotrade.local.autotrader.impl;
 
 import java.time.Duration;
 import java.util.Base64;
@@ -6,7 +6,11 @@ import java.util.Scanner;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import autotrade.local.actor.MessageListener;
 import autotrade.local.actor.MessageListener.ReservedMessage;
+import autotrade.local.actor.Messenger;
+import autotrade.local.actor.RecoveryManager;
+import autotrade.local.autotrader.AutoTrader;
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
