@@ -124,4 +124,13 @@ public class AutoTradeUtils {
             throw new ApplicationException(e);
         }
     }
+    
+    @SuppressWarnings("unchecked")
+	public static <T> T newInstance(String fqcn) {
+    	try {
+			return (T) Class.forName(fqcn).getDeclaredConstructor().newInstance();
+		} catch (Exception e) {
+            throw new ApplicationException(e);
+		}
+    }
 }
