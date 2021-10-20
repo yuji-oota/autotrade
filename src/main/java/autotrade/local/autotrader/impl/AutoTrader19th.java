@@ -28,7 +28,6 @@ public class AutoTrader19th extends AutoTrader {
     private boolean doBid;
     private Duration counterDuration;
     private int dynamicThreshold;
-    private int dynamicThresholdOriginally;
 
     public AutoTrader19th() {
         super();
@@ -49,10 +48,12 @@ public class AutoTrader19th extends AutoTrader {
             System.out.print("do you need local load? (y or any) :");
             String input = scanner.next();
             if ("y".equals(input.toLowerCase())) {
-                Snapshot snapshot = AutoTradeUtils.localLoad(Paths.get("localSave", "snapshotWhenRecoveryStart"));
-                recoveryManager.open(snapshot);
-                dynamicThresholdOriginally = AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThresholdOriginally"));
-                dynamicThreshold = AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThreshold"));
+                Snapshot snapshotWhenRecoveryStart = AutoTradeUtils.localLoad(Paths.get("localSave", "snapshotWhenRecoveryStart"));
+                recoveryManager.open(snapshotWhenRecoveryStart);
+                Snapshot counterTradingSnapshot = AutoTradeUtils.localLoad(Paths.get("localSave", "counterTradingSnapshot"));
+                recoveryManager.setCounterTradingSnapshot(counterTradingSnapshot);
+                int threshold = AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThreshold"));
+                setDynamicThreshold(threshold);
             }
         }
         ;
@@ -62,7 +63,8 @@ public class AutoTrader19th extends AutoTrader {
                 () -> {
                     AutoTradeUtils.localSave(Paths.get("localSave", "snapshotWhenRecoveryStart"),
                             recoveryManager.getSnapshotWhenStart());
-                    AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThresholdOriginally"), dynamicThresholdOriginally);
+                    AutoTradeUtils.localSave(Paths.get("localSave", "counterTradingSnapshot"),
+                            recoveryManager.getCounterTradingSnapshot());
                     AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThreshold"), dynamicThreshold);
                 }));
     }
@@ -102,7 +104,7 @@ public class AutoTrader19th extends AutoTrader {
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doAsk = false;
-                    resetDynamicThreshold();
+                    setDynamicThreshold(rateAnalyzer.minWithin(counterDuration));
                 }
             } else {
                 if (rateAnalyzer.isBidDown()
@@ -111,7 +113,7 @@ public class AutoTrader19th extends AutoTrader {
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doBid = false;
-                    resetDynamicThreshold();
+                    setDynamicThreshold(rateAnalyzer.maxWithin(counterDuration));
                 }
             }
 
@@ -130,6 +132,7 @@ public class AutoTrader19th extends AutoTrader {
                             && rateAnalyzer.isReachedAskThreshold(rate)) {
                         if (snapshot.isAskLtBid()) {
                             forceSame(snapshot);
+                            recoveryManager.setCounterTradingSnapshot(snapshot);
                         } else {
                             orderAsk(1);
                         }
@@ -144,6 +147,7 @@ public class AutoTrader19th extends AutoTrader {
                             && rateAnalyzer.isReachedBidThreshold(rate)) {
                         if (snapshot.isBidLtAsk()) {
                             forceSame(snapshot);
+                            recoveryManager.setCounterTradingSnapshot(snapshot);
                         } else {
                             orderBid(1);
                         }
@@ -160,6 +164,11 @@ public class AutoTrader19th extends AutoTrader {
     }
 
     @Override
+    protected void preOrder(Snapshot snapshot) {
+        updateDynamicThreshold(snapshot);
+    }
+
+    @Override
     protected void postOrder(Snapshot snapshot) {
 
         Rate rate = snapshot.getRate();
@@ -172,36 +181,42 @@ public class AutoTrader19th extends AutoTrader {
             doAsk = true;
         }
 
-        if (snapshot.hasAskOnly()) {
-            dynamicThreshold = rateAnalyzer.minWithin(counterDuration);
-            if (dynamicThreshold > dynamicThresholdOriginally) {
-                dynamicThreshold = dynamicThresholdOriginally;
-                log.info("dynamicThreshold:{}", dynamicThreshold);
-            }
-        }
-        if (snapshot.hasBidOnly()) {
-            dynamicThreshold = rateAnalyzer.maxWithin(counterDuration);
-            if (dynamicThreshold < dynamicThresholdOriginally) {
-                dynamicThreshold = dynamicThresholdOriginally;
-                log.info("dynamicThreshold:{}", dynamicThreshold);
-            }
-        }
     }
 
-    private void resetDynamicThreshold() {
-        dynamicThresholdOriginally = rateAnalyzer.middleWithin(counterDuration);
+    private void setDynamicThreshold(int threshold) {
+        dynamicThreshold = threshold;
+        log.info("dynamicThreshold:{}", dynamicThreshold);
     }
 
     private void updateDynamicThreshold(Snapshot snapshot) {
         Rate lastDayBeforeRate = buildLastDayBeforeRate();
-        int dynamicThreshold = rateAnalyzer.middleWithin(counterDuration);
+        int threshold = 0;
+        if (snapshot.hasAskOnly()) {
+            threshold = rateAnalyzer.minWithin(counterDuration);
+        }
+        if (snapshot.hasBidOnly()) {
+            threshold = rateAnalyzer.maxWithin(counterDuration);
+        }
+        if (threshold <= 0) {
+            return;
+        }
+        if (recoveryManager.isOpen() && !recoveryManager.isAfterCounterTrading()) {
+            if (snapshot.hasAskOnly()
+                    && threshold > dynamicThreshold) {
+                setDynamicThreshold(threshold);
+            }
+            if (snapshot.hasBidOnly()
+                    && threshold < dynamicThreshold) {
+                setDynamicThreshold(threshold);
+            }
+        }
         if (snapshot.getRate().isAbobe(lastDayBeforeRate)) {
-            if (dynamicThreshold < dynamicThresholdOriginally) {
-                dynamicThresholdOriginally = dynamicThreshold;
+            if (snapshot.hasBidOnly() && threshold < dynamicThreshold) {
+                setDynamicThreshold(threshold);
             }
         } else {
-            if (dynamicThreshold > dynamicThresholdOriginally) {
-                dynamicThresholdOriginally = dynamicThreshold;
+            if (snapshot.hasAskOnly() && threshold > dynamicThreshold) {
+                setDynamicThreshold(threshold);
             }
         }
     }
@@ -216,13 +231,21 @@ public class AutoTrader19th extends AutoTrader {
 
     @Override
     protected boolean isFixable(Snapshot snapshot) {
-        boolean isFixable = super.isFixable(snapshot);
-        if (isFixable
-                && snapshot.isPositionSame()
-                && snapshot.isAskGeLimit()) {
-            isFixable = false;
+        if (!super.isFixable(snapshot)) {
+            return false;
         }
-        return isFixable;
+        if (snapshot.isPositionSame()) {
+            if (snapshot.isAskGeLimit()) {
+                return false;
+            }
+            if (isNearIndicator()) {
+                return false;
+            }
+            if (snapshot.isSpreadWiden()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -251,13 +274,13 @@ public class AutoTrader19th extends AutoTrader {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, counterDuration)) {
                     fixBid(snapshot);
-                    updateDynamicThreshold(snapshot);
+                    setDynamicThreshold(rateAnalyzer.minWithin(counterDuration));
                 }
             } else {
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, counterDuration)) {
                     fixAsk(snapshot);
-                    updateDynamicThreshold(snapshot);
+                    setDynamicThreshold(rateAnalyzer.maxWithin(counterDuration));
                 }
             }
         }

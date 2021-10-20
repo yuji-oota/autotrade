@@ -383,7 +383,7 @@ public abstract class AutoTrader {
                 // 閾値間隔が狭い場合は注文しない
                 return false;
             }
-            if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(5)) || indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15))) {
+            if (isNearIndicator()) {
                 // 指標が近い場合は注文しない
                 return false;
             }
@@ -408,6 +408,10 @@ public abstract class AutoTrader {
         }
 
         return true;
+    }
+
+    protected boolean isNearIndicator() {
+        return indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(5)) || indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15));
     }
 
     protected void forceSame(Snapshot snapshot) {
