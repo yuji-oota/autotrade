@@ -156,4 +156,11 @@ public class Snapshot implements Serializable {
     public boolean isSpreadWiden() {
         return pair.getMinSpread() < rate.getSpread();
     }
+
+    public int getTargetProfit() {
+        int targetProfitByMargin = margin / 10000;
+        int targetProfitByLot = Math.max(askLot, bidLot) * 10;
+        return targetProfitByLot > targetProfitByMargin ? targetProfitByMargin : targetProfitByLot;
+    }
+
 }

@@ -227,7 +227,7 @@ public class AutoTraderEleventh extends AutoTrader {
         Rate rate = snapshot.getRate();
 
         if (recoveryManager.isOpen()
-                && recoveryManager.isRecoveredWithProfit(snapshot, snapshot.getMargin() / 10000)) {
+                && recoveryManager.isRecoveredWithProfit(snapshot)) {
             fixAll(snapshot);
             return;
         }

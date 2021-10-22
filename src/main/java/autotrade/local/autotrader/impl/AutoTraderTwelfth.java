@@ -209,7 +209,7 @@ public class AutoTraderTwelfth extends AutoTrader {
         case SAME:
             // ポジションが同数の場合
 
-            if (recoveryManager.isRecoveredWithProfit(snapshot, snapshot.getMargin() / 10000)) {
+            if (recoveryManager.isRecoveredWithProfit(snapshot)) {
                 if (rateAnalyzer.isBidDown()
                         && snapshot.isPositionAskSide()
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, Duration.ofSeconds(30))) {

@@ -91,7 +91,6 @@ public class AutoTrader19th extends AutoTrader {
     protected void order(Snapshot snapshot) {
 
         Rate rate = snapshot.getRate();
-        int initialLot = snapshot.getMargin() / 100000;
 
         switch (snapshot.getStatus()) {
         case NONE:
@@ -100,7 +99,7 @@ public class AutoTrader19th extends AutoTrader {
             if (rateAnalyzer.isUpwardWithin(counterDuration)) {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
-                    orderAsk(initialLot);
+                    orderAsk(lotManager.nextLot(snapshot));
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doAsk = false;
@@ -109,7 +108,7 @@ public class AutoTrader19th extends AutoTrader {
             } else {
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
-                    orderBid(initialLot);
+                    orderBid(lotManager.nextLot(snapshot));
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doBid = false;
@@ -134,7 +133,7 @@ public class AutoTrader19th extends AutoTrader {
                             forceSame(snapshot);
                             recoveryManager.setCounterTradingSnapshot(snapshot);
                         } else {
-                            orderAsk(1);
+                            orderAsk(lotManager.nextLot(snapshot));
                         }
                         doAsk = false;
                         return;
@@ -149,7 +148,7 @@ public class AutoTrader19th extends AutoTrader {
                             forceSame(snapshot);
                             recoveryManager.setCounterTradingSnapshot(snapshot);
                         } else {
-                            orderBid(1);
+                            orderBid(lotManager.nextLot(snapshot));
                         }
                         doBid = false;
                         return;
@@ -252,10 +251,9 @@ public class AutoTrader19th extends AutoTrader {
     protected void fix(Snapshot snapshot) {
 
         Rate rate = snapshot.getRate();
-        int targetProfit = snapshot.getMargin() / 10000;
 
         if (recoveryManager.isOpen()
-                && recoveryManager.isRecoveredWithProfit(snapshot, targetProfit)) {
+                && recoveryManager.isRecoveredWithProfit(snapshot)) {
             if (rateAnalyzer.isBidDown()
                     && snapshot.isPositionAskSide()
                     && rateAnalyzer.isReachedBidThreshold(rate)) {

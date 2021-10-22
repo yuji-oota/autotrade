@@ -37,18 +37,19 @@ public class LotManager {
     }
 
     public int nextLot(Snapshot snapshot) {
-        if (snapshot.isPositionNone()) {
-            return getInitial();
+        int lotByMargin = snapshot.getMargin() / 100000;
+        int graterLot = Math.max(snapshot.getAskLot(), snapshot.getBidLot());
+        if (lotByMargin <= graterLot) {
+            return 1;
         }
-        int more = snapshot.getAskLot();
-        int less = snapshot.getBidLot();
-        if (snapshot.isPositionBidSide()) {
-            more = snapshot.getBidLot();
-            less = snapshot.getAskLot();
+        int nextLot = lotByMargin - graterLot;
+        if (nextLot > 5) {
+            nextLot = 5;
         }
-        return more >= limit ?
-                more - less :
-                    countertradingMagnification.multiply(BigDecimal.valueOf(more)).setScale(0, RoundingMode.UP).intValue() - less;
+        if (lotByMargin < nextLot) {
+            nextLot = lotByMargin;
+        }
+        return nextLot;
     }
     public void modePositive() {
         if (isPositive()) {

@@ -273,7 +273,7 @@ public class AutoTrader16th extends AutoTrader {
         int targetProfit = snapshot.getMargin() / 10000;
 
         if (recoveryManager.isOpen()
-                && recoveryManager.isRecoveredWithProfit(snapshot, targetProfit)) {
+                && recoveryManager.isRecoveredWithProfit(snapshot)) {
             if (rateAnalyzer.isBidDown()
                     && snapshot.isPositionAskSide()
                     && rateAnalyzer.isReachedBidThreshold(rate)) {

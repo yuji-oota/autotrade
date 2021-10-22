@@ -2,25 +2,36 @@ package autotrade.local.actor;
 
 import org.junit.jupiter.api.Test;
 
-import autotrade.local.material.CurrencyPair;
+import autotrade.local.material.Snapshot;
 
 public class LotManagerTest {
 
     @Test
     public void test() {
         LotManager lotManager = new LotManager();
-        int margin = 0;
-        margin = 100000;
-        lotManager.changePair(CurrencyPair.EURUSD, margin);
-        System.out.println("margin:" + margin + ", " + lotManager.getInitial() + ", " + lotManager.getLimit());
-        margin = 300000;
-        lotManager.changePair(CurrencyPair.EURUSD, margin);
-        System.out.println("margin:" + margin + ", " + lotManager.getInitial() + ", " + lotManager.getLimit());
-        margin = 350000;
-        lotManager.changePair(CurrencyPair.EURUSD, margin);
-        System.out.println("margin:" + margin + ", " + lotManager.getInitial() + ", " + lotManager.getLimit());
-        margin = 360000;
-        lotManager.changePair(CurrencyPair.EURUSD, margin);
-        System.out.println("margin:" + margin + ", " + lotManager.getInitial() + ", " + lotManager.getLimit());
+        Snapshot snapshot = null;
+        snapshot = Snapshot.builder().margin(300000).bidLot(0).build();
+        System.out.println(lotManager.nextLot(snapshot));
+        snapshot = Snapshot.builder().margin(300000).bidLot(1).build();
+        System.out.println(lotManager.nextLot(snapshot));
+        snapshot = Snapshot.builder().margin(300000).bidLot(2).build();
+        System.out.println(lotManager.nextLot(snapshot));
+        snapshot = Snapshot.builder().margin(300000).bidLot(3).build();
+        System.out.println(lotManager.nextLot(snapshot));
+
+        System.out.println("");
+
+        snapshot = Snapshot.builder().margin(1000000).askLot(1).build();
+        System.out.println(lotManager.nextLot(snapshot));
+        snapshot = Snapshot.builder().margin(1000000).askLot(3).build();
+        System.out.println(lotManager.nextLot(snapshot));
+        snapshot = Snapshot.builder().margin(1000000).askLot(5).build();
+        System.out.println(lotManager.nextLot(snapshot));
+        snapshot = Snapshot.builder().margin(1000000).askLot(7).build();
+        System.out.println(lotManager.nextLot(snapshot));
+        snapshot = Snapshot.builder().margin(1000000).askLot(9).build();
+        System.out.println(lotManager.nextLot(snapshot));
+        snapshot = Snapshot.builder().margin(1000000).askLot(11).build();
+        System.out.println(lotManager.nextLot(snapshot));
     }
 }

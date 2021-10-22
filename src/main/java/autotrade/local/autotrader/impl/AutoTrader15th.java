@@ -232,7 +232,7 @@ public class AutoTrader15th extends AutoTrader {
         Rate rate = snapshot.getRate();
 
         if (recoveryManager.isOpen()
-                && recoveryManager.isRecoveredWithProfit(snapshot, snapshot.getMargin() / 10000)) {
+                && recoveryManager.isRecoveredWithProfit(snapshot)) {
             if (rateAnalyzer.isBidDown()
                     && snapshot.isPositionAskSide()
                     && rateAnalyzer.isReachedBidThreshold(rate)) {
