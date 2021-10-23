@@ -163,4 +163,10 @@ public class Snapshot implements Serializable {
         return targetProfitByLot > targetProfitByMargin ? targetProfitByMargin : targetProfitByLot;
     }
 
+    public int getMoreLot() {
+        return Math.max(askLot, bidLot);
+    }
+    public int getLessLot() {
+        return Math.min(askLot, bidLot);
+    }
 }

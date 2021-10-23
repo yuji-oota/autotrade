@@ -28,6 +28,8 @@ public class AutoTrader19th extends AutoTrader {
     private boolean doBid;
     private Duration counterDuration;
     private int dynamicThreshold;
+    private int lotLtInitial;
+    private int lotGeInitial;
 
     public AutoTrader19th() {
         super();
@@ -43,6 +45,8 @@ public class AutoTrader19th extends AutoTrader {
                 .collect(Collectors.toSet());
         counterDuration = Duration.ofSeconds(
                 AutoTradeProperties.getInt("autoTrader19th.counter.duration.seconds"));
+        lotLtInitial = AutoTradeProperties.getInt("autoTrader19th.order.lot.ltInitial");
+        lotGeInitial = AutoTradeProperties.getInt("autoTrader19th.order.lot.geInitial");
 
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
@@ -87,6 +91,21 @@ public class AutoTrader19th extends AutoTrader {
         this.changePair(recommended);
     }
 
+    private int nextLot(Snapshot snapshot) {
+        int initialLot = snapshot.getMargin() / 100000;
+        if (initialLot <= snapshot.getMoreLot()) {
+            return lotGeInitial;
+        }
+        int nextLot = initialLot - snapshot.getMoreLot();
+        if (nextLot > lotLtInitial) {
+            nextLot = lotLtInitial;
+        }
+        if (initialLot < nextLot) {
+            nextLot = initialLot;
+        }
+        return nextLot;
+    }
+
     @Override
     protected void order(Snapshot snapshot) {
 
@@ -99,7 +118,7 @@ public class AutoTrader19th extends AutoTrader {
             if (rateAnalyzer.isUpwardWithin(counterDuration)) {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
-                    orderAsk(lotManager.nextLot(snapshot));
+                    orderAsk(nextLot(snapshot));
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doAsk = false;
@@ -108,7 +127,7 @@ public class AutoTrader19th extends AutoTrader {
             } else {
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
-                    orderBid(lotManager.nextLot(snapshot));
+                    orderBid(nextLot(snapshot));
                     recoveryManager.close();
                     recoveryManager.open(snapshot);
                     doBid = false;
@@ -133,7 +152,7 @@ public class AutoTrader19th extends AutoTrader {
                             forceSame(snapshot);
                             recoveryManager.setCounterTradingSnapshot(snapshot);
                         } else {
-                            orderAsk(lotManager.nextLot(snapshot));
+                            orderAsk(nextLot(snapshot));
                         }
                         doAsk = false;
                         return;
@@ -148,7 +167,7 @@ public class AutoTrader19th extends AutoTrader {
                             forceSame(snapshot);
                             recoveryManager.setCounterTradingSnapshot(snapshot);
                         } else {
-                            orderBid(lotManager.nextLot(snapshot));
+                            orderBid(nextLot(snapshot));
                         }
                         doBid = false;
                         return;
