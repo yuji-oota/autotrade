@@ -3,6 +3,7 @@ package autotrade.local.actor;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.function.ToIntFunction;
 
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
@@ -21,9 +22,17 @@ public class RecoveryManager {
     private Snapshot snapshotWhenStart;
     private Snapshot shapshotWhenCutOffAsk;
     private Snapshot shapshotWhenCutOffBid;
+    private ToIntFunction<Snapshot> profitCalcurator;
 
     @Setter
     private Snapshot counterTradingSnapshot;
+
+    public RecoveryManager() {
+        profitCalcurator = s -> s.getMargin() / 10000;
+    }
+    public RecoveryManager(ToIntFunction<Snapshot> profitCalcurator) {
+        this.profitCalcurator = profitCalcurator;
+    }
 
     public void open(Snapshot snapshot) {
         if (!isOpen) {
@@ -64,7 +73,7 @@ public class RecoveryManager {
         return isRecovered(snapshotWhenStart.getMargin(), snapshot.getEffectiveMargin());
     }
     public boolean isRecoveredWithProfit(Snapshot snapshot) {
-        return isRecovered(snapshotWhenStart.getMargin() + snapshot.getTargetProfit(), snapshot.getEffectiveMargin());
+        return isRecovered(snapshotWhenStart.getMargin() + profitCalcurator.applyAsInt(snapshot), snapshot.getEffectiveMargin());
     }
     private boolean isRecovered(int startMargin, int effectiveMargin) {
         boolean isRecovered = startMargin <= effectiveMargin;

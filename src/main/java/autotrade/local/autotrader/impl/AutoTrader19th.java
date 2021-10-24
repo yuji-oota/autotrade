@@ -34,7 +34,11 @@ public class AutoTrader19th extends AutoTrader {
     public AutoTrader19th() {
         super();
         log.info("AutoTrader19th started.");
-        recoveryManager = new RecoveryManager();
+        recoveryManager = new RecoveryManager(s -> {
+            int targetProfitByMargin = s.getMargin() / 10000;
+            int targetProfitByLot = Math.max(s.getAskLot(), s.getBidLot()) * 10;
+            return targetProfitByLot > targetProfitByMargin ? targetProfitByMargin : targetProfitByLot;
+        });
         pairAnalyzerMap.values().stream().forEach(analyzer -> {
             analyzer.setThresholdDuration(
                     Duration.ofSeconds(
