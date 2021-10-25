@@ -252,6 +252,16 @@ public class AutoTrader19th extends AutoTrader {
     }
 
     @Override
+    protected boolean isOrderable(Snapshot snapshot) {
+        if (!super.isOrderable(snapshot)) {
+            return false;
+        }
+        if (snapshot.isPositionSame()) {
+            return false;
+        }
+        return true;
+    }
+    @Override
     protected boolean isFixable(Snapshot snapshot) {
         if (!super.isFixable(snapshot)) {
             return false;
@@ -264,6 +274,9 @@ public class AutoTrader19th extends AutoTrader {
                 return false;
             }
             if (snapshot.isSpreadWiden()) {
+                return false;
+            }
+            if (isCalm()) {
                 return false;
             }
         }
