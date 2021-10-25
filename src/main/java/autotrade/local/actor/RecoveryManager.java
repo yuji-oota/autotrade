@@ -110,16 +110,16 @@ public class RecoveryManager {
         return counterTradingSnapshot.getMargin() + counterTradingSnapshot.getPositionProfit() - snapshotWhenStart.getMargin();
     }
     private int getLoss(Snapshot snapshot) {
-        return snapshot.getMargin() + snapshot.getPositionProfit() - snapshotWhenStart.getMargin();
+        return snapshot.getEffectiveMargin() - snapshotWhenStart.getMargin();
     }
     public void printSummary(Snapshot snapshot) {
         log.info("recovery progress is {}%. start:{} end:{}",
                 getRecoveryProgress(snapshot), getLossCounterTradingStart(), getLoss(snapshot));
     }
+    public boolean isBeforeCounterTrading() {
+        return snapshotWhenStart.equals(counterTradingSnapshot);
+    }
     public boolean isAfterCounterTrading() {
-        if (snapshotWhenStart.equals(counterTradingSnapshot)) {
-            return false;
-        }
-        return true;
+        return !isBeforeCounterTrading();
     }
 }

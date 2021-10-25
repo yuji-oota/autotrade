@@ -222,7 +222,7 @@ public class AutoTrader19th extends AutoTrader {
         if (threshold <= 0) {
             return;
         }
-        if (recoveryManager.isOpen() && !recoveryManager.isAfterCounterTrading()) {
+        if (recoveryManager.isOpen() && recoveryManager.isBeforeCounterTrading()) {
             if (snapshot.hasAskOnly()
                     && threshold > dynamicThreshold) {
                 setDynamicThreshold(threshold);
