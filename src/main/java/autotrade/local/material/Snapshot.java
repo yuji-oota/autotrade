@@ -141,10 +141,10 @@ public class Snapshot implements Serializable {
     }
 
     public boolean isAskLtLimit() {
-        return askLot < pair.getLimitLot(effectiveMargin);
+        return askLot < pair.getLimitLot(Math.min(margin, effectiveMargin));
     }
     public boolean isBidLtLimit() {
-        return bidLot < pair.getLimitLot(effectiveMargin);
+        return bidLot < pair.getLimitLot(Math.min(margin, effectiveMargin));
     }
     public boolean isAskGeLimit() {
         return !isAskLtLimit();
