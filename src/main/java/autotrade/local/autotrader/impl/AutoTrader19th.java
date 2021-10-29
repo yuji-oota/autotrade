@@ -279,6 +279,9 @@ public class AutoTrader19th extends AutoTrader {
             if (isCalm()) {
                 return false;
             }
+            if (isInactiveTime()) {
+                return false;
+            }
         }
         return true;
     }
