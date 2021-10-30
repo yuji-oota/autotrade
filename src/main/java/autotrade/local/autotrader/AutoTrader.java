@@ -131,7 +131,10 @@ public abstract class AutoTrader {
 
                 // rateAnalyzerにレート追加
                 pairRateMap.entrySet().stream().forEach(entry -> {
-                    pairAnalyzerMap.get(entry.getKey()).add(entry.getValue());
+                    if (!isIgnoreSpread
+                            && entry.getKey().getMinSpread() >= entry.getValue().getSpread()) {
+                        pairAnalyzerMap.get(entry.getKey()).add(entry.getValue());
+                    }
                 });
 
                 // 取引後処理
@@ -485,7 +488,6 @@ public abstract class AutoTrader {
         while (true) {
             AutoTradeUtils.sleep(Duration.ofMillis(500));
             Snapshot snapshot = buildSnapshot();
-            rateAnalyzer.add(snapshot.getRate());
             if (lot == lotAfterOrder.applyAsInt(snapshot)) {
                 break;
             }
