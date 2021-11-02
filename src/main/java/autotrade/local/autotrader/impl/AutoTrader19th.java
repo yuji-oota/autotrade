@@ -30,6 +30,7 @@ public class AutoTrader19th extends AutoTrader {
     private int dynamicThreshold;
     private int lotLtInitial;
     private int lotGeInitial;
+    private Rate firstOrderRate;
 
     public AutoTrader19th() {
         super();
@@ -61,6 +62,7 @@ public class AutoTrader19th extends AutoTrader {
                 Snapshot counterTradingSnapshot = AutoTradeUtils.localLoad(Paths.get("localSave", "counterTradingSnapshot"));
                 recoveryManager.setCounterTradingSnapshot(counterTradingSnapshot);
                 int threshold = AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThreshold"));
+                firstOrderRate = AutoTradeUtils.localLoad(Paths.get("localSave", "firstOrderRate"));
                 setDynamicThreshold(threshold);
             }
         }
@@ -74,6 +76,7 @@ public class AutoTrader19th extends AutoTrader {
                     AutoTradeUtils.localSave(Paths.get("localSave", "counterTradingSnapshot"),
                             recoveryManager.getCounterTradingSnapshot());
                     AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThreshold"), dynamicThreshold);
+                    AutoTradeUtils.localSave(Paths.get("localSave", "firstOrderRate"), firstOrderRate);
                 }));
     }
 
@@ -127,6 +130,7 @@ public class AutoTrader19th extends AutoTrader {
                     recoveryManager.open(snapshot);
                     doAsk = false;
                     setDynamicThreshold(rateAnalyzer.minWithin(counterDuration));
+                    firstOrderRate = rate;
                 }
             } else {
                 if (rateAnalyzer.isBidDown()
@@ -136,6 +140,7 @@ public class AutoTrader19th extends AutoTrader {
                     recoveryManager.open(snapshot);
                     doBid = false;
                     setDynamicThreshold(rateAnalyzer.maxWithin(counterDuration));
+                    firstOrderRate = rate;
                 }
             }
 
@@ -211,7 +216,6 @@ public class AutoTrader19th extends AutoTrader {
     }
 
     private void updateDynamicThreshold(Snapshot snapshot) {
-        Rate lastDayBeforeRate = buildLastDayBeforeRate();
         int threshold = 0;
         if (snapshot.hasAskOnly()) {
             threshold = rateAnalyzer.minWithin(counterDuration);
@@ -232,7 +236,7 @@ public class AutoTrader19th extends AutoTrader {
                 setDynamicThreshold(threshold);
             }
         }
-        if (snapshot.getRate().isAbobe(lastDayBeforeRate)) {
+        if (snapshot.getRate().isAbobe(firstOrderRate)) {
             if (snapshot.hasBidOnly() && threshold < dynamicThreshold) {
                 setDynamicThreshold(threshold);
             }
