@@ -116,26 +116,11 @@ public abstract class AutoTrader {
                 // 最新情報取得
                 Snapshot snapshot = buildSnapshot();
 
-                // ペア別レート取得
-                Map<CurrencyPair, Rate> pairRateMap = new HashMap<>();
-                pairRateMap.put(pair, snapshot.getRate());
-                if (displayMode == DisplayMode.RATELIST
-                        && LocalDateTime.now().getSecond() % 10 == 0) {
-                    changeablePairs.stream()
-                    .filter(p -> p != pair)
-                    .forEach(p -> pairRateMap.put(p, buildRateFromList(p)));
-                }
+                // 取引前処理
+                tradePreProcess(snapshot);
 
                 // 取引
                 trade(snapshot);
-
-                // rateAnalyzerにレート追加
-                pairRateMap.entrySet().stream().forEach(entry -> {
-                    if (!isIgnoreSpread
-                            && entry.getKey().getMinSpread() >= entry.getValue().getSpread()) {
-                        pairAnalyzerMap.get(entry.getKey()).add(entry.getValue());
-                    }
-                });
 
                 // 取引後処理
                 tradePostProcess(snapshot);
@@ -218,18 +203,8 @@ public abstract class AutoTrader {
                 .margin(AutoTradeUtils.toInt(wrapper.getMargin()))
                 .effectiveMargin(AutoTradeUtils.toInt(wrapper.getEffectiveMargin()))
                 .todaysProfit(AutoTradeUtils.toInt(wrapper.getMargin()) - startMargin)
-                .rate(buildRateWrapper())
+                .rate(buildRate())
                 .build();
-    }
-
-    protected Rate buildRateWrapper() {
-        Rate rate = buildRate();
-        if (pair.getMinSpread() >= rate.getSpread()
-                || indicatorManager.isPrevIndicatorWithin(Duration.ofMinutes(5))) {
-            return rate;
-        }
-        AutoTradeUtils.sleep(Duration.ofSeconds(1));
-        return buildRate();
     }
 
     protected Rate buildRate() {
@@ -245,6 +220,7 @@ public abstract class AutoTrader {
         }
 
         return Rate.builder()
+                .pair(CurrencyPair.valueOf(wrapper.getPair().replace("/", "")))
                 .ask(ask)
                 .bid(bid)
                 .timestamp(LocalDateTime.now())
@@ -252,6 +228,7 @@ public abstract class AutoTrader {
     }
     protected Rate buildRateFromList(CurrencyPair pair) {
         return Rate.builder()
+                .pair(pair)
                 .ask(AutoTradeUtils.toInt(wrapper.getAskRateFromList(pair)))
                 .bid(AutoTradeUtils.toInt(wrapper.getBidRateFromList(pair)))
                 .timestamp(LocalDateTime.now())
@@ -264,7 +241,7 @@ public abstract class AutoTrader {
 
     protected Rate buildLastDayBeforeRate() {
         String theDayBeforeDiff = driver.findElement(By.xpath("//*[@id=\"hl-div\"]/span[5]")).getText();
-        Rate lastDayBeforeRate = Rate.builder().ask(0).bid(0).timestamp(LocalDateTime.now()).build();
+        Rate lastDayBeforeRate = Rate.builder().pair(pair).ask(0).bid(0).timestamp(LocalDateTime.now()).build();
         int lastDayBeforeBid = AutoTradeUtils.toInt(theDayBeforeDiff.substring(1));
         if ("▼".equals(theDayBeforeDiff.substring(0, 1))) {
             lastDayBeforeBid = lastDayBeforeBid * -1;
@@ -297,6 +274,22 @@ public abstract class AutoTrader {
     protected void postOrder(Snapshot snapshot) {}
     protected void preFix(Snapshot snapshot) {}
     protected void postFix(Snapshot snapshot) {}
+
+    protected void tradePreProcess(Snapshot snapshot) {
+        // ペア別レート取得
+        Map<CurrencyPair, Rate> pairRateMap = new HashMap<>();
+        pairRateMap.put(pair, snapshot.getRate());
+        if (displayMode == DisplayMode.RATELIST
+                && LocalDateTime.now().getSecond() % 10 == 0) {
+            changeablePairs.stream()
+            .filter(p -> p != pair)
+            .forEach(p -> pairRateMap.put(p, buildRateFromList(p)));
+        }
+        // rateAnalyzerにレート追加
+        pairRateMap.entrySet().stream().forEach(entry -> {
+            pairAnalyzerMap.get(entry.getKey()).add(entry.getValue());
+        });
+    }
 
     protected void tradePostProcess(Snapshot snapshot) {
 
@@ -370,8 +363,8 @@ public abstract class AutoTrader {
             // 過去Rateがある程度存在しない場合は注文しない
             return false;
         }
-        if (rateAnalyzer.isDoubtful(snapshot.getRate())) {
-            // スプレッドが開きすぎの場合は注文しない
+        if (rateAnalyzer.isDoubtful()) {
+            // 疑わしいRateの場合は注文しない
             return false;
         }
         if (!rateAnalyzer.isMoved()) {

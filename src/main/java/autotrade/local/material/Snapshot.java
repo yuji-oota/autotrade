@@ -154,7 +154,7 @@ public class Snapshot implements Serializable {
     }
 
     public boolean isSpreadWiden() {
-        return pair.getMinSpread() < rate.getSpread();
+        return rate.isSpreadWiden();
     }
 
     public int getMoreLot() {

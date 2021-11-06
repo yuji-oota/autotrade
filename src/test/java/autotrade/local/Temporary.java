@@ -1,7 +1,7 @@
 package autotrade.local;
 
-
 import java.time.Duration;
+import java.util.ArrayDeque;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,9 +13,10 @@ public class Temporary {
 
     @AllArgsConstructor
     private enum OrderTerm {
-         SHORT(Duration.ofSeconds(AutoTradeProperties.getInt("autoTraderEleventh.order.direction.duration.seconds.short")))
-        ,LONG(Duration.ofSeconds(AutoTradeProperties.getInt("autoTraderEleventh.order.direction.duration.seconds.long")))
-        ;
+        SHORT(Duration.ofSeconds(
+                AutoTradeProperties.getInt("autoTraderEleventh.order.direction.duration.seconds.short"))), LONG(
+                        Duration.ofSeconds(AutoTradeProperties
+                                .getInt("autoTraderEleventh.order.direction.duration.seconds.long")));
 
         @Getter
         private Duration duration;
@@ -49,5 +50,31 @@ public class Temporary {
             }
         }
         return 1;
+    }
+
+    @Test
+    public void test03() {
+        ArrayDeque<Integer> queue = new ArrayDeque<>();
+        addQueue(queue, 1);
+        addQueue(queue, 2);
+        addQueue(queue, 3);
+        addQueue(queue, 4);
+        addQueue(queue, 5);
+        queue.stream().forEach(System.out::println);
+        addQueue(queue, 6);
+        queue.stream().forEach(System.out::println);
+        addQueue(queue, 7);
+        queue.stream().forEach(System.out::println);
+    }
+
+    private void addQueue(ArrayDeque<Integer> queue, int i) {
+        queue.add(i);
+        if (queue.size() > 5) {
+            queue.poll();
+        }
+        System.out.println(queue);
+        System.out.println(queue.size());
+        System.out.println(queue.getFirst());
+        System.out.println(queue.getLast());
     }
 }

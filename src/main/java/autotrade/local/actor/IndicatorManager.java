@@ -47,6 +47,9 @@ public class IndicatorManager {
         }
         return false;
     }
+    public boolean isIndicatorAround(Duration duration) {
+        return isNextIndicatorWithin(duration) || isPrevIndicatorWithin(duration);
+    }
 
     public boolean hasIndicator() {
         return !indicators.isEmpty();

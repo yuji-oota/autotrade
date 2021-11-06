@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -20,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class RateAnalyzer {
 
-    private Rate latestRate;
     private List<Rate> rates;
     private int askThreshold;
     private int bidThreshold;
@@ -36,9 +36,9 @@ public class RateAnalyzer {
     private int thresholdMinutes;
     private Duration thresholdDuration;
     private boolean isMoved;
-    private int doubtfulCounter;
-    private boolean isAskUp;
-    private boolean isBidDown;
+    private int noMoveCounter;
+    private ArrayDeque<Rate> latestRateQueue;
+    private ArrayDeque<Rate> diffRateQueue;
 
     public RateAnalyzer() {
         rates = new ArrayList<>();
@@ -49,23 +49,35 @@ public class RateAnalyzer {
         countertradingRatio = AutoTradeProperties.getBigDecimal("autotrade.rateAnalizer.countertrading.ratio");
         thresholdMinutes = AutoTradeProperties.getInt("autotrade.rateAnalizer.threshold.minutes");
         thresholdDuration = Duration.ofMinutes(thresholdMinutes);
-        latestRate = Rate.builder().ask(Integer.MIN_VALUE).bid(Integer.MAX_VALUE).build();
+        latestRateQueue = new ArrayDeque<Rate>();
+        latestRateQueue.add(Rate.builder().ask(Integer.MIN_VALUE).bid(Integer.MAX_VALUE).build());
+        diffRateQueue = new ArrayDeque<Rate>();
+        diffRateQueue.add(Rate.builder().ask(Integer.MIN_VALUE).bid(Integer.MAX_VALUE).build());
     }
 
     public void add(Rate rate) {
+
+        Rate latestRate = latestRateQueue.getLast();
+        latestRateQueue.add(rate);
+        if (latestRateQueue.size() > 5) {
+            latestRateQueue.poll();
+        }
+        diffRateQueue.add(rate);
+        if (diffRateQueue.size() > 2) {
+            diffRateQueue.poll();
+        }
+
         isMoved = false;
-        doubtfulCounter++;
+        noMoveCounter++;
         if (latestRate.getAsk() != rate.getAsk()
                 || latestRate.getBid() != rate.getBid()) {
             isMoved = true;
-            doubtfulCounter = 0;
+            noMoveCounter = 0;
         }
-        if (!isDoubtful(rate)) {
+
+        if (!isDoubtful()) {
             rates.add(rate);
             updateWaterMark(rate);
-            isAskUp = latestRate.getAsk() < rate.getAsk();
-            isBidDown = latestRate.getBid() > rate.getBid();
-            latestRate = rate;
         }
         rates = rates.stream()
                 .filter(r -> r.passed().toMillis() <= Duration.ofMinutes(20).toMillis())
@@ -83,6 +95,7 @@ public class RateAnalyzer {
     public int rangeThreshold() {
         return askThreshold - bidThreshold;
     }
+
     public int rangeWithin(Duration duration) {
         return maxWithin(duration) - minWithin(duration);
     }
@@ -90,12 +103,15 @@ public class RateAnalyzer {
     public int maxWithin(Duration duration) {
         return maxBetween(LocalDateTime.now().minus(duration), LocalDateTime.now());
     }
+
     public int minWithin(Duration duration) {
         return minBetween(LocalDateTime.now().minus(duration), LocalDateTime.now());
     }
+
     public int middleWithin(Duration duration) {
         return (maxWithin(duration) + minWithin(duration)) / 2;
     }
+
     public int maxBetween(Temporal from, Temporal to) {
         return rates.stream()
                 .filter(rateBetweenFilter(from, to))
@@ -103,6 +119,7 @@ public class RateAnalyzer {
                 .max(Comparator.naturalOrder())
                 .orElse(Integer.MAX_VALUE);
     }
+
     public int minBetween(Temporal from, Temporal to) {
         return rates.stream()
                 .filter(rateBetweenFilter(from, to))
@@ -110,9 +127,11 @@ public class RateAnalyzer {
                 .min(Comparator.naturalOrder())
                 .orElse(Integer.MIN_VALUE);
     }
+
     public int averageWithin(Duration duration) {
         return averageBetween(LocalDateTime.now().minus(duration), LocalDateTime.now());
     }
+
     public int averageBetween(Temporal from, Temporal to) {
         return (int) rates.stream()
                 .filter(rateBetweenFilter(from, to))
@@ -133,9 +152,10 @@ public class RateAnalyzer {
             lowWaterMark = rate;
         }
     }
+
     private Predicate<Rate> rateBetweenFilter(Temporal from, Temporal to) {
         return r -> !Duration.between(from, r.getTimestamp()).isNegative()
-                    && !Duration.between(r.getTimestamp(), to).isNegative();
+                && !Duration.between(r.getTimestamp(), to).isNegative();
     }
 
     public boolean isUpwardWithin(Duration duration) {
@@ -151,6 +171,7 @@ public class RateAnalyzer {
                 .orElse(LocalDateTime.now());
         return whenMax.isAfter(whenMin);
     }
+
     public boolean isDownwardWithin(Duration duration) {
         return !isUpwardWithin(duration);
     }
@@ -158,32 +179,41 @@ public class RateAnalyzer {
     public boolean isReachedAskThreshold(Rate rate) {
         return askThreshold <= rate.getAsk();
     }
+
     public boolean isReachedBidThreshold(Rate rate) {
         return rate.getBid() <= bidThreshold;
     }
+
     public boolean isReachedAskThresholdWithin(Rate rate, Duration duration) {
         return maxWithin(duration) <= rate.getAsk();
     }
+
     public boolean isReachedBidThresholdWithin(Rate rate, Duration duration) {
         return rate.getBid() <= minWithin(duration);
     }
+
     public boolean isReachedCountertradingAsk(Rate rate) {
         return countertradingAsk <= rate.getAsk();
     }
+
     public boolean isReachedCountertradingBid(Rate rate) {
         return rate.getBid() <= countertradingBid;
     }
+
     public boolean isReachedAverageAsk(Rate rate) {
         return averageWithin(thresholdDuration) <= rate.getAsk();
     }
+
     public boolean isReachedAverageBid(Rate rate) {
         return averageWithin(thresholdDuration) >= rate.getBid();
     }
+
     public Rate getEarliestRate() {
         return rates.stream()
                 .min(Comparator.comparing(Rate::getTimestamp))
                 .orElse(Rate.builder().timestamp(LocalDateTime.now()).build());
     }
+
     public long passCountWithin(int threshold, int minutes) {
         return IntStream.range(0, minutes).filter(i -> {
             LocalDateTime now = LocalDateTime.now();
@@ -195,6 +225,7 @@ public class RateAnalyzer {
             return false;
         }).count();
     }
+
     public void saveIsSenceOfDirection() {
         // 直近10分の1分間隔にmiddleThresholdが何回通過しているかカウントする
         long count = passCountWithin(middleThreshold, 10);
@@ -206,44 +237,61 @@ public class RateAnalyzer {
         }
         log.info("isSenceOfDirection {}, internal count {}", isSenceOfDirection, count);
     }
+
     public boolean hasDoubtfulRates() {
-        if (doubtfulCounter > 500) {
+        if (noMoveCounter > 500) {
             return true;
         }
         return false;
     }
+
     public void setCountertradingAsk(int ask) {
         countertradingAsk = ask;
     }
+
     public void setCountertradingBid(int bid) {
         countertradingBid = bid;
     }
+
     public void updateCountertrading(int ask, int bid) {
         setCountertradingAsk(ask);
         setCountertradingBid(bid);
     }
+
     public void setThresholdDuration(Duration duration) {
         thresholdDuration = duration;
     }
+
     public void resetCountertrading() {
         countertradingAsk = Integer.MAX_VALUE;
         countertradingBid = Integer.MIN_VALUE;
     }
-    public boolean isDoubtful(Rate rate) {
-        if (rate.getSpread() > 100) {
+
+    public boolean isDoubtful() {
+        Rate latestRate = latestRateQueue.getLast();
+        if (latestRate.getAsk() == 0 || latestRate.getBid() == 0) {
             return true;
         }
-        if (rate.getAsk() == 0 || rate.getBid() == 0) {
+        if (Math.abs(latestRate.getAsk() - diffRateQueue.getFirst().getAsk()) > 500
+                || Math.abs(latestRate.getBid() - diffRateQueue.getFirst().getBid()) > 500) {
             return true;
         }
-        if (latestRate.getAsk() == Integer.MIN_VALUE
-                || latestRate.getBid() == Integer.MAX_VALUE) {
-            return false;
+        if (latestRate.getAsk() < latestRate.getBid()) {
+            return true;
         }
-        if (Math.abs(latestRate.getAsk() - rate.getAsk()) > 500
-                || Math.abs(latestRate.getBid() - rate.getBid()) > 500) {
+        if (latestRate.isSpreadWiden()) {
+            if (latestRateQueue.stream().allMatch(Rate::isSpreadWiden)) {
+                return false;
+            }
             return true;
         }
         return false;
+    }
+
+    public boolean isAskUp() {
+        return diffRateQueue.getFirst().getAsk() < diffRateQueue.getLast().getAsk();
+    }
+    public boolean isBidDown() {
+        return diffRateQueue.getFirst().getBid() > diffRateQueue.getLast().getBid();
     }
 }
