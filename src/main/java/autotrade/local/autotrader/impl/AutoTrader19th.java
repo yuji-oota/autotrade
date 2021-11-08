@@ -83,7 +83,7 @@ public class AutoTrader19th extends AutoTrader {
     @Override
     protected boolean isSleep(Snapshot snapshot) {
         return isInactiveTime()
-                && snapshot.isPositionNone();
+                && (snapshot.isPositionNone() || snapshot.isPositionSame());
     }
 
     @Override
