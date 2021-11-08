@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Deprecated
 public class LotManager {
 
     private int initialPositive;
