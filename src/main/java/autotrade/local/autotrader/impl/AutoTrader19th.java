@@ -31,6 +31,7 @@ public class AutoTrader19th extends AutoTrader {
     private int lotLtInitial;
     private int lotGeInitial;
     private Rate firstOrderRate;
+    private boolean doResetFirstOrderRate;
 
     public AutoTrader19th() {
         super();
@@ -57,9 +58,11 @@ public class AutoTrader19th extends AutoTrader {
             System.out.print("do you need local load? (y or any) :");
             String input = scanner.next();
             if ("y".equals(input.toLowerCase())) {
-                Snapshot snapshotWhenRecoveryStart = AutoTradeUtils.localLoad(Paths.get("localSave", "snapshotWhenRecoveryStart"));
+                Snapshot snapshotWhenRecoveryStart = AutoTradeUtils
+                        .localLoad(Paths.get("localSave", "snapshotWhenRecoveryStart"));
                 recoveryManager.open(snapshotWhenRecoveryStart);
-                Snapshot counterTradingSnapshot = AutoTradeUtils.localLoad(Paths.get("localSave", "counterTradingSnapshot"));
+                Snapshot counterTradingSnapshot = AutoTradeUtils
+                        .localLoad(Paths.get("localSave", "counterTradingSnapshot"));
                 recoveryManager.setCounterTradingSnapshot(counterTradingSnapshot);
                 int threshold = AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThreshold"));
                 firstOrderRate = AutoTradeUtils.localLoad(Paths.get("localSave", "firstOrderRate"));
@@ -78,6 +81,15 @@ public class AutoTrader19th extends AutoTrader {
                     AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThreshold"), dynamicThreshold);
                     AutoTradeUtils.localSave(Paths.get("localSave", "firstOrderRate"), firstOrderRate);
                 }));
+    }
+
+    @Override
+    protected void tradePostProcess(Snapshot snapshot) {
+        if (isInactiveTime()
+                && snapshot.isPositionSame()) {
+            doResetFirstOrderRate = true;
+        }
+        super.tradePostProcess(snapshot);
     }
 
     @Override
@@ -161,6 +173,9 @@ public class AutoTrader19th extends AutoTrader {
                             forceSame(snapshot);
                             recoveryManager.setCounterTradingSnapshot(snapshot);
                         } else {
+                            if (isCalm()) {
+                                return;
+                            }
                             orderAsk(nextLot(snapshot));
                         }
                         doAsk = false;
@@ -176,6 +191,9 @@ public class AutoTrader19th extends AutoTrader {
                             forceSame(snapshot);
                             recoveryManager.setCounterTradingSnapshot(snapshot);
                         } else {
+                            if (isCalm()) {
+                                return;
+                            }
                             orderBid(nextLot(snapshot));
                         }
                         doBid = false;
@@ -208,6 +226,13 @@ public class AutoTrader19th extends AutoTrader {
             doAsk = true;
         }
 
+    }
+
+    private void resetFirstOrderRate(Rate rate) {
+        if (doResetFirstOrderRate) {
+            firstOrderRate = rate;
+            doResetFirstOrderRate = false;
+        }
     }
 
     private void setDynamicThreshold(int threshold) {
@@ -246,6 +271,7 @@ public class AutoTrader19th extends AutoTrader {
             }
         }
     }
+
     private boolean isAboveDynamicThreshold(Rate rate) {
         return dynamicThreshold < rate.getMiddle();
     }
@@ -265,6 +291,7 @@ public class AutoTrader19th extends AutoTrader {
         }
         return true;
     }
+
     @Override
     protected boolean isFixable(Snapshot snapshot) {
         if (!super.isFixable(snapshot)) {
