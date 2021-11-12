@@ -20,7 +20,7 @@ import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AutoTrader19th extends AutoTrader {
+public class AutoTrader20th extends AutoTrader {
 
     private RecoveryManager recoveryManager;
     private Set<CurrencyPair> recommendedPairs;
@@ -33,9 +33,9 @@ public class AutoTrader19th extends AutoTrader {
     private Rate firstOrderRate;
     private boolean doResetFirstOrderRate;
 
-    public AutoTrader19th() {
+    public AutoTrader20th() {
         super();
-        log.info("AutoTrader19th started.");
+        log.info("autoTrader20th started.");
         recoveryManager = new RecoveryManager(s -> {
             int targetProfitByMargin = s.getMargin() / 10000;
             int targetProfitByLot = Math.max(s.getAskLot(), s.getBidLot()) * 10;
@@ -44,15 +44,15 @@ public class AutoTrader19th extends AutoTrader {
         pairAnalyzerMap.values().stream().forEach(analyzer -> {
             analyzer.setThresholdDuration(
                     Duration.ofSeconds(
-                            AutoTradeProperties.getInt("autoTrader19th.rateAnalizer.threshold.seconds")));
+                            AutoTradeProperties.getInt("autoTrader20th.rateAnalizer.threshold.seconds")));
         });
-        recommendedPairs = AutoTradeProperties.getList("autoTrader19th.autoRecommended.pairs").stream()
+        recommendedPairs = AutoTradeProperties.getList("autoTrader20th.autoRecommended.pairs").stream()
                 .map(CurrencyPair::valueOf)
                 .collect(Collectors.toSet());
         counterDuration = Duration.ofSeconds(
-                AutoTradeProperties.getInt("autoTrader19th.counter.duration.seconds"));
-        lotLtInitial = AutoTradeProperties.getInt("autoTrader19th.order.lot.ltInitial");
-        lotGeInitial = AutoTradeProperties.getInt("autoTrader19th.order.lot.geInitial");
+                AutoTradeProperties.getInt("autoTrader20th.counter.duration.seconds"));
+        lotLtInitial = AutoTradeProperties.getInt("autoTrader20th.order.lot.ltInitial");
+        lotGeInitial = AutoTradeProperties.getInt("autoTrader20th.order.lot.geInitial");
 
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
@@ -244,21 +244,31 @@ public class AutoTrader19th extends AutoTrader {
         int threshold = 0;
         if (snapshot.hasAskOnly()) {
             threshold = rateAnalyzer.minWithin(counterDuration);
-            if (threshold > firstOrderRate.getBid()) {
-                threshold = firstOrderRate.getBid();
-            }
         }
         if (snapshot.hasBidOnly()) {
             threshold = rateAnalyzer.maxWithin(counterDuration);
-            if (threshold < firstOrderRate.getAsk()) {
-                threshold = firstOrderRate.getAsk();
-            }
         }
         if (threshold <= 0) {
             return;
         }
-        if (threshold != dynamicThreshold) {
-            setDynamicThreshold(threshold);
+        if (recoveryManager.isOpen() && recoveryManager.isBeforeCounterTrading()) {
+            if (snapshot.hasAskOnly()
+                    && threshold > dynamicThreshold) {
+                setDynamicThreshold(threshold);
+            }
+            if (snapshot.hasBidOnly()
+                    && threshold < dynamicThreshold) {
+                setDynamicThreshold(threshold);
+            }
+        }
+        if (snapshot.getRate().isAbobe(firstOrderRate)) {
+            if (snapshot.hasBidOnly() && threshold < dynamicThreshold) {
+                setDynamicThreshold(threshold);
+            }
+        } else {
+            if (snapshot.hasAskOnly() && threshold > dynamicThreshold) {
+                setDynamicThreshold(threshold);
+            }
         }
     }
 
