@@ -60,10 +60,8 @@ public abstract class AutoTrader {
     protected RateAnalyzer rateAnalyzer;
     protected IndicatorManager indicatorManager;
     protected UploadManager uploadManager;
-    //    protected LotManager lotManager;
     protected ReserveManager reserveManager;
 
-    @SuppressWarnings("unused")
     protected StatefulRedisPubSubConnection<String, String> pubSubConnection;
 
     protected int startMargin;
@@ -95,7 +93,6 @@ public abstract class AutoTrader {
                 .collect(Collectors.toMap(pair -> pair, pair -> new RateAnalyzer()));
         rateAnalyzer = pairAnalyzerMap.get(pair);
         uploadManager = new UploadManager();
-        //        lotManager = new LotManager();
         indicatorManager = new IndicatorManager();
         reserveManager = new ReserveManager();
         pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
@@ -445,16 +442,6 @@ public abstract class AutoTrader {
         return rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25;
     }
 
-    //    protected void orderAsk(Snapshot snapshot) {
-    //        int lot = lotManager.nextLot(snapshot);
-    //        orderAsk(lot);
-    //        AutoTradeUtils.printObject(snapshot);
-    //    }
-    //    protected void orderBid(Snapshot snapshot) {
-    //        int lot = lotManager.nextLot(snapshot);
-    //        orderBid(lot);
-    //        AutoTradeUtils.printObject(snapshot);
-    //    }
     protected void orderAsk(int lot) {
         String rate = wrapper.getAskRate();
         int beforeLot = AutoTradeUtils.toInt(wrapper.getAskLot());
@@ -540,7 +527,6 @@ public abstract class AutoTrader {
         wrapper.changePair(this.pair.getDescription());
         this.changeDisplay(this.displayMode);
         this.rateAnalyzer = this.pairAnalyzerMap.get(this.pair);
-        //        this.lotManager.changePair(pair, AutoTradeUtils.toInt(wrapper.getEffectiveMargin()));
         log.info("currency pair is changed to {}.", this.pair.getDescription());
     }
 
@@ -614,12 +600,6 @@ public abstract class AutoTrader {
                 pairAnalyzerMap.get(currencyPair).getCountertradingAsk(),
                 pairAnalyzerMap.get(currencyPair).getCountertradingBid());
     }
-    //    protected void resetSame() {
-    //        Snapshot snapshot = buildSnapshot();
-    //        fixAll(snapshot);
-    //        orderAsk(lotManager.getLimit());
-    //        orderBid(lotManager.getLimit());
-    //    }
 
     protected MessageListener customizeMessageListener() {
         return new MessageListener()
@@ -650,12 +630,6 @@ public abstract class AutoTrader {
                 .putCommand(ReservedMessage.FIXBID, (args) -> wrapper.fixBid())
                 .putCommand(ReservedMessage.FIXALL, (args) -> wrapper.fixAll())
                 .putCommand(ReservedMessage.FORCESAME, (args) -> this.forceSame(this.buildSnapshot()))
-                //                .putCommand(ReservedMessage.FORCEASK, (args) -> this.orderAsk(this.buildSnapshot()))
-                //                .putCommand(ReservedMessage.FORCEBID, (args) -> this.orderBid(this.buildSnapshot()))
-                //                .putCommand(ReservedMessage.LOTNEGATIVE, (args) -> lotManager.modeNegative())
-                //                .putCommand(ReservedMessage.LOTPOSITIVE, (args) -> lotManager.modePositive())
-                //                .putCommand(ReservedMessage.LOTPOSITIVEINCREMENT, (args) -> lotManager.incrementInitialPositive())
-                //                .putCommand(ReservedMessage.LOTPOSITIVEDECREMENT, (args) -> lotManager.decrementInitialPositive())
                 .putCommand(ReservedMessage.THROUGHORDER, (args) -> {
                     if (args.length > 0) {
                         this.changeThroughOrder(Boolean.valueOf(args[0]));

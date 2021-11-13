@@ -31,7 +31,6 @@ public class AutoTrader19th extends AutoTrader {
     private int lotLtInitial;
     private int lotGeInitial;
     private Rate firstOrderRate;
-    private boolean doResetFirstOrderRate;
 
     public AutoTrader19th() {
         super();
@@ -81,15 +80,6 @@ public class AutoTrader19th extends AutoTrader {
                     AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThreshold"), dynamicThreshold);
                     AutoTradeUtils.localSave(Paths.get("localSave", "firstOrderRate"), firstOrderRate);
                 }));
-    }
-
-    @Override
-    protected void tradePostProcess(Snapshot snapshot) {
-        if (isInactiveTime()
-                && snapshot.isPositionSame()) {
-            doResetFirstOrderRate = true;
-        }
-        super.tradePostProcess(snapshot);
     }
 
     @Override
@@ -226,13 +216,6 @@ public class AutoTrader19th extends AutoTrader {
             doAsk = true;
         }
 
-    }
-
-    private void resetFirstOrderRate(Rate rate) {
-        if (doResetFirstOrderRate) {
-            firstOrderRate = rate;
-            doResetFirstOrderRate = false;
-        }
     }
 
     private void setDynamicThreshold(int threshold) {
