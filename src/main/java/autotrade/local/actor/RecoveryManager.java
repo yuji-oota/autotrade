@@ -1,5 +1,6 @@
 package autotrade.local.actor;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -13,22 +14,21 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class RecoveryManager {
+public class RecoveryManager implements Serializable {
 
     private boolean isOpen;
-    private boolean isCutOffAsk;
-    private boolean isCutOffBid;
     private boolean isReachedRecover;
     private Snapshot snapshotWhenStart;
-    private Snapshot shapshotWhenCutOffAsk;
-    private Snapshot shapshotWhenCutOffBid;
     private ToIntFunction<Snapshot> profitCalcurator;
 
     @Setter
     private Snapshot counterTradingSnapshot;
+    @Setter
+    private Snapshot snapshotWhenStopLoss;
 
+    @SuppressWarnings("unchecked")
     public RecoveryManager() {
-        profitCalcurator = s -> s.getMargin() / 10000;
+        profitCalcurator = (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / 10000;
     }
     public RecoveryManager(ToIntFunction<Snapshot> profitCalcurator) {
         this.profitCalcurator = profitCalcurator;
@@ -42,26 +42,9 @@ public class RecoveryManager {
         }
         isOpen = true;
     }
-    public void cutOffAsk(Snapshot snapshot) {
-        shapshotWhenCutOffAsk = snapshot;
-        isCutOffAsk = true;
-        log.info("cut off ask.");
-    }
-    public void cutOffBid(Snapshot snapshot) {
-        shapshotWhenCutOffBid = snapshot;
-        isCutOffBid = true;
-        log.info("cut off bid.");
-    }
     public void close() {
         isOpen = false;
         resetReachedRecover();
-        cutOffDone();
-//        log.info("recovery done.");
-    }
-    public void cutOffDone() {
-        isCutOffAsk = false;
-        isCutOffBid = false;
-//        log.info("cut off done.");
     }
     public void resetReachedRecover() {
         isReachedRecover = false;
@@ -82,12 +65,6 @@ public class RecoveryManager {
             isReachedRecover = isRecovered;
         }
         return isRecovered;
-    }
-    public boolean isSuccessCutOffAsk(Snapshot snapshot) {
-        return shapshotWhenCutOffAsk.getRate().getBid() >= snapshot.getRate().getAsk();
-    }
-    public boolean isSuccessCutOffBid(Snapshot snapshot) {
-        return shapshotWhenCutOffBid.getRate().getAsk() <= snapshot.getRate().getBid();
     }
     public boolean isSuccessCounterTradingAsk(Rate rate) {
         return counterTradingSnapshot.getRate().getAsk() <= rate.getBid();

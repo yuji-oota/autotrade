@@ -27,9 +27,12 @@ public class Snapshot implements Serializable {
     private int bidAverageRate;
     private int todaysProfit;
 
+    private boolean isFix;
+
     public int getAskPipProfit() {
         return rate.getBid() - askAverageRate;
     }
+
     public int getBidPipProfit() {
         return bidAverageRate - rate.getAsk();
     }
@@ -37,6 +40,7 @@ public class Snapshot implements Serializable {
     public int getAskProfit() {
         return askLot * getAskPipProfit();
     }
+
     public int getBidProfit() {
         return bidLot * getBidPipProfit();
     }
@@ -72,6 +76,7 @@ public class Snapshot implements Serializable {
         }
         return false;
     }
+
     public boolean hasBothSide() {
         if (askLot > 0 && bidLot > 0) {
             return true;
@@ -97,6 +102,7 @@ public class Snapshot implements Serializable {
     public boolean hasAskOnly() {
         return hasAsk() && hasOneSide();
     }
+
     public boolean hasBidOnly() {
         return hasBid() && hasOneSide();
     }
@@ -104,12 +110,15 @@ public class Snapshot implements Serializable {
     public boolean isPositionNone() {
         return getStatus() == PositionStatus.NONE;
     }
+
     public boolean isPositionAskSide() {
         return getStatus() == PositionStatus.ASK_SIDE;
     }
+
     public boolean isPositionBidSide() {
         return getStatus() == PositionStatus.BID_SIDE;
     }
+
     public boolean isPositionSame() {
         return getStatus() == PositionStatus.SAME;
     }
@@ -117,12 +126,15 @@ public class Snapshot implements Serializable {
     public boolean isAskGtBid() {
         return askLot > bidLot;
     }
+
     public boolean isAskGeBid() {
         return askLot >= bidLot;
     }
+
     public boolean isBidGtAsk() {
         return bidLot > askLot;
     }
+
     public boolean isBidGeAsk() {
         return bidLot >= askLot;
     }
@@ -130,12 +142,15 @@ public class Snapshot implements Serializable {
     public boolean isAskLtBid() {
         return isBidGtAsk();
     }
+
     public boolean isAskLeBid() {
         return isBidGeAsk();
     }
+
     public boolean isBidLtAsk() {
         return isAskGtBid();
     }
+
     public boolean isBidLeAsk() {
         return isAskGeBid();
     }
@@ -143,12 +158,15 @@ public class Snapshot implements Serializable {
     public boolean isAskLtLimit() {
         return askLot < pair.getLimitLot(Math.min(margin, effectiveMargin));
     }
+
     public boolean isBidLtLimit() {
         return bidLot < pair.getLimitLot(Math.min(margin, effectiveMargin));
     }
+
     public boolean isAskGeLimit() {
         return !isAskLtLimit();
     }
+
     public boolean isBidGeLimit() {
         return !isBidLtLimit();
     }
@@ -160,6 +178,7 @@ public class Snapshot implements Serializable {
     public int getMoreLot() {
         return Math.max(askLot, bidLot);
     }
+
     public int getLessLot() {
         return Math.min(askLot, bidLot);
     }
