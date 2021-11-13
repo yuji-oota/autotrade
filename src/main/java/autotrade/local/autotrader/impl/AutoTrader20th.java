@@ -82,14 +82,17 @@ public class AutoTrader20th extends AutoTrader {
                 }));
     }
 
-    @Override
-    protected void tradePreProcess(Snapshot snapshot) {
-        Rate rate = snapshot.getRate();
+    private void resetFirstOrderRate(Rate rate) {
         if (doResetFirstOrderRate && rate.isSpreadNarrow()) {
             firstOrderRate = rate;
             doResetFirstOrderRate = false;
             log.info("firstOrderRate is reset:{}", firstOrderRate);
         }
+    }
+
+    @Override
+    protected void tradePreProcess(Snapshot snapshot) {
+        resetFirstOrderRate(snapshot.getRate());
         super.tradePreProcess(snapshot);
     }
 
