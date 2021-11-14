@@ -98,6 +98,11 @@ public class AutoTrader20th extends AutoTrader {
 
     @Override
     protected void tradePostProcess(Snapshot snapshot) {
+        if (recoveryManager.getSnapshotWhenStopLoss().isAskGeLimit()
+                || recoveryManager.getSnapshotWhenStopLoss().isBidGeLimit()) {
+            log.info("unfortunately reached limit and stop loss done.");
+            recoveryManager.close();
+        }
         if (isSleep(snapshot)) {
             doResetFirstOrderRate = true;
         }

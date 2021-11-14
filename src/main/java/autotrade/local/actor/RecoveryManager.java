@@ -35,11 +35,10 @@ public class RecoveryManager implements Serializable {
     }
 
     public void open(Snapshot snapshot) {
-        if (!isOpen) {
-            snapshotWhenStart = snapshot;
-            counterTradingSnapshot = snapshot;
-            log.info("RecoveryManager opened {}.", snapshot);
-        }
+        snapshotWhenStart = snapshot;
+        counterTradingSnapshot = snapshot;
+        snapshotWhenStopLoss = snapshot;
+        log.info("RecoveryManager opened {}.", snapshot);
         isOpen = true;
     }
     public void close() {
