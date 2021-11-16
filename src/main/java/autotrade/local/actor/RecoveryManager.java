@@ -44,6 +44,7 @@ public class RecoveryManager implements Serializable {
     public void close() {
         isOpen = false;
         resetReachedRecover();
+        log.info("RecoveryManager closed.");
     }
     public void resetReachedRecover() {
         isReachedRecover = false;

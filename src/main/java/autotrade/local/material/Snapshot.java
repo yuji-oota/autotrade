@@ -99,6 +99,10 @@ public class Snapshot implements Serializable {
         return false;
     }
 
+    public boolean noPosition() {
+        return !hasPosition();
+    }
+
     public boolean hasAskOnly() {
         return hasAsk() && hasOneSide();
     }
@@ -169,6 +173,10 @@ public class Snapshot implements Serializable {
 
     public boolean isBidGeLimit() {
         return !isBidLtLimit();
+    }
+
+    public boolean isPositionGeLimit() {
+        return isAskGeLimit() || isBidGeLimit();
     }
 
     public boolean isSpreadWiden() {
