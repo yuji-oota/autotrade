@@ -19,12 +19,12 @@ public class RecoveryManager implements Serializable {
     private boolean isOpen;
     private boolean isReachedRecover;
     private Snapshot snapshotWhenStart;
+    private Snapshot snapshotWhenStopLoss;
     private ToIntFunction<Snapshot> profitCalcurator;
+    private int stopLossCount;
 
     @Setter
     private Snapshot counterTradingSnapshot;
-    @Setter
-    private Snapshot snapshotWhenStopLoss;
 
     @SuppressWarnings("unchecked")
     public RecoveryManager() {
@@ -40,6 +40,7 @@ public class RecoveryManager implements Serializable {
         snapshotWhenStopLoss = snapshot;
         log.info("RecoveryManager opened {}.", snapshot);
         isOpen = true;
+        stopLossCount = 0;
     }
     public void close() {
         isOpen = false;
@@ -90,13 +91,17 @@ public class RecoveryManager implements Serializable {
         return snapshot.getEffectiveMargin() - snapshotWhenStart.getMargin();
     }
     public void printSummary(Snapshot snapshot) {
-        log.info("recovery progress is {}%. start:{} end:{}",
-                getRecoveryProgress(snapshot), getLossCounterTradingStart(), getLoss(snapshot));
+        log.info("recovery progress is {}%. start:{} end:{} stopLossCount:{}",
+                getRecoveryProgress(snapshot), getLossCounterTradingStart(), getLoss(snapshot), stopLossCount);
     }
     public boolean isBeforeCounterTrading() {
         return snapshotWhenStart.equals(counterTradingSnapshot);
     }
     public boolean isAfterCounterTrading() {
         return !isBeforeCounterTrading();
+    }
+    public void setSnapshotWhenStopLoss(Snapshot snapshotWhenStopLoss) {
+        this.snapshotWhenStopLoss = snapshotWhenStopLoss;
+        stopLossCount++;
     }
 }
