@@ -6,7 +6,6 @@ import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.function.ToIntFunction;
@@ -37,8 +36,8 @@ public class AutoTrader20th extends AutoTrader {
     private int dynamicThreshold;
     private int lotLtInitial;
     private int lotGeInitial;
-    private Rate firstOrderRate;
-    private boolean doResetFirstOrderRate;
+    private int firstOrderThreshold;
+    private boolean doResetFirstOrderThreshold;
 
     @SuppressWarnings("unchecked")
     public AutoTrader20th() {
@@ -71,8 +70,8 @@ public class AutoTrader20th extends AutoTrader {
                 log.info("snapshotWhenStopLoss:{}", recoveryManager.getSnapshotWhenStopLoss());
                 int threshold = AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThreshold"));
                 setDynamicThreshold(threshold);
-                firstOrderRate = AutoTradeUtils.localLoad(Paths.get("localSave", "firstOrderRate"));
-                log.info("firstOrderRate:{}", firstOrderRate);
+                firstOrderThreshold = AutoTradeUtils.localLoad(Paths.get("localSave", "firstOrderThreshold"));
+                log.info("firstOrderRate:{}", firstOrderThreshold);
 
             }
         }
@@ -83,21 +82,21 @@ public class AutoTrader20th extends AutoTrader {
                 () -> {
                     AutoTradeUtils.localSave(Paths.get("localSave", "recoveryManager"), recoveryManager);
                     AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThreshold"), dynamicThreshold);
-                    AutoTradeUtils.localSave(Paths.get("localSave", "firstOrderRate"), firstOrderRate);
+                    AutoTradeUtils.localSave(Paths.get("localSave", "firstOrderThreshold"), firstOrderThreshold);
                 }));
     }
 
-    private void resetFirstOrderRate(Rate rate) {
-        if (doResetFirstOrderRate && rate.isSpreadNarrow()) {
-            firstOrderRate = rate;
-            doResetFirstOrderRate = false;
-            log.info("firstOrderRate is reset:{}", firstOrderRate);
+    private void resetFirstOrderThreshold(Rate rate) {
+        if (doResetFirstOrderThreshold && rate.isSpreadNarrow()) {
+            firstOrderThreshold = rate.getMiddle();
+            doResetFirstOrderThreshold = false;
+            log.info("firstOrderThreshold is reset:{}", firstOrderThreshold);
         }
     }
 
     @Override
     protected void tradePreProcess(Snapshot snapshot) {
-        resetFirstOrderRate(snapshot.getRate());
+        resetFirstOrderThreshold(snapshot.getRate());
         super.tradePreProcess(snapshot);
     }
 
@@ -109,7 +108,7 @@ public class AutoTrader20th extends AutoTrader {
             recoveryManager.close();
         }
         if (isSleep(snapshot)) {
-            doResetFirstOrderRate = true;
+            doResetFirstOrderThreshold = true;
         }
         super.tradePostProcess(snapshot);
     }
@@ -162,7 +161,7 @@ public class AutoTrader20th extends AutoTrader {
                     if (recoveryManager.isClose()) {
                         orderAsk(nextLot(snapshot));
                         recoveryManager.open(snapshot);
-                        firstOrderRate = rate;
+                        firstOrderThreshold = rateAnalyzer.minWithin(counterDuration);
                     } else {
                         orderAsk(recoveryManager.getSnapshotWhenStopLoss().getMoreLot());
                         recoveryManager.setCounterTradingSnapshot(snapshot);
@@ -176,7 +175,7 @@ public class AutoTrader20th extends AutoTrader {
                     if (recoveryManager.isClose()) {
                         orderBid(nextLot(snapshot));
                         recoveryManager.open(snapshot);
-                        firstOrderRate = rate;
+                        firstOrderThreshold = rateAnalyzer.maxWithin(counterDuration);
                     } else {
                         orderBid(recoveryManager.getSnapshotWhenStopLoss().getMoreLot());
                         recoveryManager.setCounterTradingSnapshot(snapshot);
@@ -254,7 +253,7 @@ public class AutoTrader20th extends AutoTrader {
     }
 
     private void updateDynamicThreshold(Snapshot snapshot) {
-        if (Objects.isNull(firstOrderRate)) {
+        if (firstOrderThreshold == 0) {
             return;
         }
         if (snapshot.noPosition()) {
@@ -263,26 +262,26 @@ public class AutoTrader20th extends AutoTrader {
         int threshold = 0;
         if (snapshot.hasAskOnly()) {
             threshold = rateAnalyzer.minWithin(counterDuration);
-            if (dynamicThreshold == firstOrderRate.getBid()) {
+            if (dynamicThreshold == firstOrderThreshold) {
                 return;
             }
             if (threshold < dynamicThreshold) {
                 return;
             }
-            if (threshold > firstOrderRate.getBid()) {
-                threshold = firstOrderRate.getBid();
+            if (threshold > firstOrderThreshold) {
+                threshold = firstOrderThreshold;
             }
         }
         if (snapshot.hasBidOnly()) {
             threshold = rateAnalyzer.maxWithin(counterDuration);
-            if (dynamicThreshold == firstOrderRate.getAsk()) {
+            if (dynamicThreshold == firstOrderThreshold) {
                 return;
             }
             if (threshold > dynamicThreshold) {
                 return;
             }
-            if (threshold < firstOrderRate.getAsk()) {
-                threshold = firstOrderRate.getAsk();
+            if (threshold < firstOrderThreshold) {
+                threshold = firstOrderThreshold;
             }
         }
         if (threshold <= 0) {
