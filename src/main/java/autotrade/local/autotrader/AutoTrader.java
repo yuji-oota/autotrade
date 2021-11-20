@@ -208,28 +208,34 @@ public abstract class AutoTrader {
     protected Rate buildRate() {
         CompletableFuture<String> futureAsk = CompletableFuture.supplyAsync(() -> wrapper.getAskRate());
         CompletableFuture<String> futureBid = CompletableFuture.supplyAsync(() -> wrapper.getBidRate());
-        int ask = 0;
-        int bid = 0;
+        String rawAsk = null;
+        String rawBid = null;
         try {
-            ask = AutoTradeUtils.toInt(futureAsk.get());
-            bid = AutoTradeUtils.toInt(futureBid.get());
+            rawAsk = futureAsk.get();
+            rawBid = futureBid.get();
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
         return Rate.builder()
                 .pair(CurrencyPair.valueOf(wrapper.getPair().replace("/", "")))
-                .ask(ask)
-                .bid(bid)
+                .rawAsk(rawAsk)
+                .rawBid(rawBid)
+                .ask(AutoTradeUtils.toInt(rawAsk))
+                .bid(AutoTradeUtils.toInt(rawBid))
                 .timestamp(LocalDateTime.now())
                 .build();
     }
 
     protected Rate buildRateFromList(CurrencyPair pair) {
+        String rawAsk = wrapper.getAskRateFromList(pair);
+        String rawBid = wrapper.getBidRateFromList(pair);
         return Rate.builder()
                 .pair(pair)
-                .ask(AutoTradeUtils.toInt(wrapper.getAskRateFromList(pair)))
-                .bid(AutoTradeUtils.toInt(wrapper.getBidRateFromList(pair)))
+                .rawAsk(rawAsk)
+                .rawBid(rawBid)
+                .ask(AutoTradeUtils.toInt(rawAsk))
+                .bid(AutoTradeUtils.toInt(rawBid))
                 .timestamp(LocalDateTime.now())
                 .build();
     }

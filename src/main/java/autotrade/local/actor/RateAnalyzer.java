@@ -264,8 +264,8 @@ public class RateAnalyzer {
         if (latestRate.getAsk() == 0 || latestRate.getBid() == 0) {
             return true;
         }
-        if (Math.abs(latestRate.getAsk() - diffRateQueue.getFirst().getAsk()) > 500
-                || Math.abs(latestRate.getBid() - diffRateQueue.getFirst().getBid()) > 500) {
+        if (latestRate.getAsk() - latestRate.getBid() > 1000
+                && latestRate.isNearDecimalPartZero()) {
             return true;
         }
         if (latestRate.getAsk() < latestRate.getBid()) {
