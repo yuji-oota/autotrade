@@ -10,11 +10,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -50,7 +48,6 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AutoTrader {
 
     protected CurrencyPair pair;
-    protected CurrencyPair priorityPair;
     protected Set<CurrencyPair> changeablePairs;
     protected DisplayMode displayMode;
 
@@ -74,7 +71,7 @@ public abstract class AutoTrader {
     protected boolean isThroughOrder;
     protected boolean isThroughFix;
     protected boolean isIgnoreSpread;
-    protected boolean isAutoRecommended;
+//    protected boolean isAutoRecommended;
     protected boolean isForceException;
 
     public AutoTrader() {
@@ -96,11 +93,6 @@ public abstract class AutoTrader {
         indicatorManager = new IndicatorManager();
         reserveManager = new ReserveManager();
         pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
-
-        isAutoRecommended = AutoTradeProperties.getBoolean("autotrade.autoRecommended.flag");
-        if (CurrencyPair.getNames().contains(AutoTradeProperties.get("autotrade.autoRecommended.priorityPair"))) {
-            priorityPair = CurrencyPair.valueOf(AutoTradeProperties.get("autotrade.autoRecommended.priorityPair"));
-        }
     }
 
     public void operation() {
@@ -112,17 +104,20 @@ public abstract class AutoTrader {
             // 繰り返し実行
             while (true) {
 
+                // 通貨ペア設定
+                changePair(selectPair());
+                
                 // 最新情報取得
                 Snapshot snapshot = buildSnapshot();
 
                 // 取引前処理
-                tradePreProcess(snapshot);
+                preTrade(snapshot);
 
                 // 取引
                 trade(snapshot);
 
                 // 取引後処理
-                tradePostProcess(snapshot);
+                postTrade(snapshot);
 
                 // メッセージダイアログクローズ
                 wrapper.cancelMessage();
@@ -142,10 +137,16 @@ public abstract class AutoTrader {
 
     }
 
+    abstract protected CurrencyPair selectPair();
+    
     abstract protected void order(Snapshot snapshot);
 
     abstract protected void fix(Snapshot snapshot);
 
+    abstract protected void saveLocal();
+    
+    abstract protected void loadLocal();
+    
     protected void initialize() {
         // WebDriver初期化
         driver = new ChromeDriver();
@@ -182,11 +183,8 @@ public abstract class AutoTrader {
             startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
         }
 
-        // 通貨ペア変更
+        // 通貨ペア定義
         wrapper.pairSettings();
-        wrapper.displayRateList();
-        Stream.of(CurrencyPair.values()).forEach(this::changePair);
-        changePair(CurrencyPair.valueOf(AutoTradeProperties.get("autotrade.order.pair")));
 
         // 表示変更
         changeDisplay(displayMode);
@@ -283,7 +281,7 @@ public abstract class AutoTrader {
     protected void postFix(Snapshot snapshot) {
     }
 
-    protected void tradePreProcess(Snapshot snapshot) {
+    protected void preTrade(Snapshot snapshot) {
         // ペア別レート取得
         Map<CurrencyPair, Rate> pairRateMap = new HashMap<>();
         pairRateMap.put(pair, snapshot.getRate());
@@ -299,7 +297,7 @@ public abstract class AutoTrader {
         });
     }
 
-    protected void tradePostProcess(Snapshot snapshot) {
+    protected void postTrade(Snapshot snapshot) {
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -319,33 +317,10 @@ public abstract class AutoTrader {
             AutoTradeUtils.sleep(durationToActive);
         }
 
-        // 推奨通貨ペア自動選択
-        if (isAutoRecommended && !snapshot.hasPosition()) {
-            changeDisplay(DisplayMode.RATELIST);
-
-            if (Objects.nonNull(priorityPair)
-                    && pairAnalyzerMap.get(priorityPair).rangeWithin(Duration.ofMinutes(10)) >= 50) {
-                // 優先通貨ペアが設定されている場合
-                // 且つ閾値間隔が広い場合
-                changePair(priorityPair);
-            } else {
-                changeRecommended();
-            }
-        }
-
         // お知らせ対策
         if (!isThroughOrder
                 && rateAnalyzer.hasDoubtfulRates()) {
             throw new ApplicationException("RateAnalyzer has doubtful rates.");
-        }
-
-        // 5:00時点でクラウドセーブ
-        if (snapshot.hasPosition()
-                && now.getHour() == 5
-                && now.getMinute() == 0
-                && now.getSecond() < 1) {
-            cloudSave();
-            AutoTradeUtils.sleep(Duration.ofSeconds(1));
         }
 
     }
@@ -530,19 +505,6 @@ public abstract class AutoTrader {
         log.info("currency pair is changed to {}.", this.pair.getDescription());
     }
 
-    protected void changeRecommended() {
-        if (this.displayMode != DisplayMode.RATELIST) {
-            log.info("change recommended is executable when display mode RATELIST.");
-            return;
-        }
-        CurrencyPair recommended = this.pairAnalyzerMap.entrySet().stream()
-                .filter(entry -> this.changeablePairs.contains(entry.getKey()))
-                .max(Comparator.comparingInt(entry -> entry.getValue().rangeWithin(Duration.ofMinutes(10))))
-                .get()
-                .getKey();
-        this.changePair(recommended);
-    }
-
     protected void changeThroughOrder(boolean flag) {
         this.isThroughOrder = flag;
         log.info("through order setting is set {}.", this.isThroughOrder);
@@ -556,11 +518,6 @@ public abstract class AutoTrader {
     protected void changeIgnoreSpread(boolean flag) {
         this.isIgnoreSpread = flag;
         log.info("ignore spread setting is set {}.", this.isIgnoreSpread);
-    }
-
-    protected void changeAutoRecommended(boolean flag) {
-        this.isAutoRecommended = flag;
-        log.info("auto recommended setting is set {}.", this.isAutoRecommended);
     }
 
     protected void addChangeablePair(CurrencyPair pair) {
@@ -577,28 +534,6 @@ public abstract class AutoTrader {
         SameManager.setSnapshot(
                 AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenSamed"))));
         log.info("loaded Snapshot when samed to SameManager.");
-    }
-
-    protected void cloudSave() {
-        Messenger.set("currencyPair", pair.name());
-        log.info("saved currency pair {}.", pair.name());
-
-        Messenger.set("countertradingAsk", String.valueOf(rateAnalyzer.getCountertradingAsk()));
-        Messenger.set("countertradingBid", String.valueOf(rateAnalyzer.getCountertradingBid()));
-        log.info("saved countertrading threshold ask {} bid {}.", rateAnalyzer.getCountertradingAsk(),
-                rateAnalyzer.getCountertradingBid());
-    }
-
-    protected void cloudLoad() {
-        CurrencyPair currencyPair = CurrencyPair.valueOf(Messenger.get("currencyPair"));
-        log.info("loaded currency pair {}.", currencyPair);
-
-        pairAnalyzerMap.get(currencyPair).updateCountertrading(
-                Integer.parseInt(Messenger.get("countertradingAsk")),
-                Integer.parseInt(Messenger.get("countertradingBid")));
-        log.info("loaded countertrading threshold ask {} bid {} to RateAnalyzer.",
-                pairAnalyzerMap.get(currencyPair).getCountertradingAsk(),
-                pairAnalyzerMap.get(currencyPair).getCountertradingBid());
     }
 
     protected MessageListener customizeMessageListener() {
@@ -645,11 +580,6 @@ public abstract class AutoTrader {
                         this.changeIgnoreSpread(Boolean.valueOf(args[0]));
                     }
                 })
-                .putCommand(ReservedMessage.AUTORECOMMENDED, (args) -> {
-                    if (args.length > 0) {
-                        this.changeAutoRecommended(Boolean.valueOf(args[0]));
-                    }
-                })
                 .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD,
                         (args) -> rateAnalyzer.updateCountertrading(rateAnalyzer.getAskThreshold(),
                                 rateAnalyzer.getBidThreshold()))
@@ -658,7 +588,6 @@ public abstract class AutoTrader {
                         this.changePair(CurrencyPair.valueOf(args[0]));
                     }
                 })
-                .putCommand(ReservedMessage.CHANGERECOMMENDED, (args) -> this.changeRecommended())
                 .putCommand(ReservedMessage.DISPLAYCHART, (args) -> this.changeDisplay(DisplayMode.CHART))
                 .putCommand(ReservedMessage.DISPLAYRATELIST, (args) -> this.changeDisplay(DisplayMode.RATELIST))
                 .putCommand(ReservedMessage.FORCEEXCEPTION, (args) -> this.isForceException = true)
@@ -701,9 +630,6 @@ public abstract class AutoTrader {
                         }
                     }
                 })
-                .putCommand(ReservedMessage.CLOUDSAVE, (args) -> this.cloudSave())
-                .putCommand(ReservedMessage.CLOUDLOAD, (args) -> this.cloudLoad())
-        //                .putCommand(ReservedMessage.RESETSAME, (args) -> this.resetSame())
         ;
     }
 
