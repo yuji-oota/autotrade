@@ -105,7 +105,7 @@ public abstract class AutoTrader {
 
                 // 通貨ペア設定
                 changePair(selectPair());
-                
+
                 // 最新情報取得
                 Snapshot snapshot = buildSnapshot();
 
@@ -137,15 +137,15 @@ public abstract class AutoTrader {
     }
 
     abstract protected CurrencyPair selectPair();
-    
+
     abstract protected void order(Snapshot snapshot);
 
     abstract protected void fix(Snapshot snapshot);
 
     abstract protected void saveLocal();
-    
+
     abstract protected void loadLocal();
-    
+
     protected void initialize() {
         // WebDriver初期化
         driver = new ChromeDriver();
@@ -304,8 +304,6 @@ public abstract class AutoTrader {
 
     protected void postTrade(Snapshot snapshot) {
 
-        LocalDateTime now = LocalDateTime.now();
-
         // 指標アラート
         if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
                 && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(59))) {
@@ -316,8 +314,12 @@ public abstract class AutoTrader {
         // 非活性時間処理
         if (isSleep(snapshot)) {
 
+            // サマリ出力
+            printSummary(snapshot);
+
             // 非活性時間の終了までスリープする
-            Duration durationToActive = Duration.between(now, LocalDateTime.of(LocalDate.now(), inactiveEnd));
+            Duration durationToActive = Duration.between(LocalDateTime.now(),
+                    LocalDateTime.of(LocalDate.now(), inactiveEnd));
             log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
             AutoTradeUtils.sleep(durationToActive);
         }
@@ -328,6 +330,11 @@ public abstract class AutoTrader {
             throw new ApplicationException("RateAnalyzer has doubtful rates.");
         }
 
+    }
+
+    protected void printSummary(Snapshot snapshot) {
+        log.info("below is a summary.");
+        AutoTradeUtils.printObject(snapshot);
     }
 
     protected boolean isSleep(Snapshot snapshot) {
@@ -505,7 +512,6 @@ public abstract class AutoTrader {
         this.pair = pair;
         wrapper.displayRateList();
         wrapper.changePair(this.pair.getDescription());
-        this.changeDisplay(this.displayMode);
         this.rateAnalyzer = this.pairAnalyzerMap.get(this.pair);
         log.info("currency pair is changed to {}.", this.pair.getDescription());
     }
@@ -634,8 +640,7 @@ public abstract class AutoTrader {
                             reserveManager.reserveStopFixBid(Integer.parseInt(args[0]));
                         }
                     }
-                })
-        ;
+                });
     }
 
 }

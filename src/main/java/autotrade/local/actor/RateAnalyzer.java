@@ -229,7 +229,7 @@ public class RateAnalyzer {
     }
 
     public boolean hasDoubtfulRates() {
-        if (noMoveCounter > 500) {
+        if (noMoveCounter > 1000) {
             return true;
         }
         return false;

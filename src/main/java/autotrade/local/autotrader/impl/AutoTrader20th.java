@@ -94,10 +94,11 @@ public class AutoTrader20th extends AutoTrader {
         }
 
         // 推奨通貨ペア選択
-        return orderablePairs.stream().map(pair -> {
-            return new AbstractMap.SimpleEntry<CurrencyPair, Integer>(
-                    pair, Math.abs(AutoTradeUtils.toInt(wrapper.getRateDiffFromList(pair))));
-        })
+        return orderablePairs.stream()
+                .map(pair -> {
+                    return new AbstractMap.SimpleEntry<CurrencyPair, Integer>(
+                            pair, Math.abs(AutoTradeUtils.toInt(wrapper.getRateDiffFromList(pair))));
+                })
                 .max(Comparator.comparingInt(Map.Entry::getValue))
                 .get()
                 .getKey();
