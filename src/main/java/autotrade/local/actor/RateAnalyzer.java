@@ -29,7 +29,6 @@ public class RateAnalyzer {
     private int countertradingAsk;
     private int countertradingBid;
     private boolean isSenceOfDirection;
-    private int thresholdMinutes;
     private Duration thresholdDuration;
     private boolean isMoved;
     private int noMoveCounter;
@@ -42,8 +41,7 @@ public class RateAnalyzer {
         bidThreshold = Integer.MIN_VALUE;
         highWaterMark = Rate.builder().ask(Integer.MIN_VALUE).build();
         lowWaterMark = Rate.builder().bid(Integer.MAX_VALUE).build();
-        thresholdMinutes = AutoTradeProperties.getInt("autotrade.rateAnalizer.threshold.minutes");
-        thresholdDuration = Duration.ofMinutes(thresholdMinutes);
+        thresholdDuration = Duration.ofSeconds(AutoTradeProperties.getInt("autotrade.rateAnalizer.threshold.seconds"));
         latestRateQueue = new ArrayDeque<Rate>();
         latestRateQueue.add(Rate.builder().ask(Integer.MIN_VALUE).bid(Integer.MAX_VALUE).build());
         diffRateQueue = new ArrayDeque<Rate>();

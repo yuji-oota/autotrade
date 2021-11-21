@@ -71,7 +71,6 @@ public abstract class AutoTrader {
     protected boolean isThroughOrder;
     protected boolean isThroughFix;
     protected boolean isIgnoreSpread;
-//    protected boolean isAutoRecommended;
     protected boolean isForceException;
 
     public AutoTrader() {

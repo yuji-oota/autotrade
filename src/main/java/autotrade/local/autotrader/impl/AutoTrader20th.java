@@ -48,11 +48,6 @@ public class AutoTrader20th extends AutoTrader {
             int targetProfitByLot = Math.max(s.getAskLot(), s.getBidLot()) * 10;
             return targetProfitByLot > targetProfitByMargin ? targetProfitByMargin : targetProfitByLot;
         });
-        pairAnalyzerMap.values().stream().forEach(analyzer -> {
-            analyzer.setThresholdDuration(
-                    Duration.ofSeconds(
-                            AutoTradeProperties.getInt("autoTrader20th.rateAnalizer.threshold.seconds")));
-        });
         orderablePairs = AutoTradeProperties.getList("autoTrader20th.order.pairs").stream()
                 .map(CurrencyPair::valueOf)
                 .collect(Collectors.toSet());
