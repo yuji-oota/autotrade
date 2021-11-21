@@ -153,12 +153,8 @@ public abstract class AutoTrader {
 
         // 指標を確認する
         if (!indicatorManager.hasIndicator()) {
-            // 本日分
-            indicatorManager.addIndicators(wrapper.getIndicators(LocalDate.now()));
-            // 翌日分
-            indicatorManager.addIndicators(wrapper.getIndicators(LocalDate.now().plusDays(1)));
-            log.info("indicators is got.");
-            AutoTradeUtils.printObject(indicatorManager.getIndicators());
+            indicatorManager.addIndicators(wrapper.getIndicators());
+            indicatorManager.printIndicators();
         }
 
         // ログイン
