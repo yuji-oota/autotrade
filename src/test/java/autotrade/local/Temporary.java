@@ -1,6 +1,9 @@
 package autotrade.local;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.util.ArrayDeque;
 
 import org.junit.jupiter.api.Test;
@@ -29,8 +32,9 @@ public class Temporary {
 
     @Test
     public void test() {
-        System.out.println(OrderTerm.SHORT.change());
-        System.out.println(OrderTerm.LONG.change());
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME.withResolverStyle(ResolverStyle.LENIENT);
+        System.out.println( LocalDateTime.parse("2001-11-12T23:10", formatter));
+        System.out.println( LocalDateTime.parse("2001-11-12T25:10", formatter));
     }
 
     @Test

@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import autotrade.local.material.CurrencyPair;
+import autotrade.local.material.Indicator;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -38,6 +40,37 @@ public class WebDriverWrapper {
                     return LocalDateTime.of(targetDate, LocalTime.from(DateTimeFormatter.ISO_TIME.parse(time)));
                 })
                 .collect(Collectors.toList());
+    }
+    public List<Indicator> getIndicators() {
+        driver.get("https://hirose-fx.co.jp/hrsphpapl/mnavi/mnavi_keizaishihyo.php?stdate=");
+        WebElement iframe = driver.findElement(By.name("SUBSCREEN"));
+        driver.switchTo().frame(iframe);
+
+        WebElement rootElement = driver.findElement(By.xpath("/html/body/table/tbody"));
+        List<WebElement> trs = rootElement.findElements(By.tagName("tr"));
+        List<Indicator> indicators = trs.stream()
+                .map(tr -> {
+                    List<WebElement> tds = tr.findElements(By.tagName("td"));
+                    Indicator indicator = new Indicator();
+                    indicator.setRawDate(tds.get(0).getText().replace("\n", ""));
+                    indicator.setRawTime(tds.get(1).getText());
+                    indicator.setCountryName(tds.get(2).findElements(By.tagName("img")).get(0).getAttribute("title"));
+                    indicator.setIndicatorName(tds.get(3).getText());
+                    return indicator;
+                }).collect(Collectors.toList());
+
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME.withResolverStyle(ResolverStyle.LENIENT);
+        String isoDate = null;
+        for (Indicator indicator : indicators) {
+            if (!indicator.getRawDate().isEmpty()) {
+                isoDate = LocalDate.now().getYear() + "-" + indicator.getRawDate().replaceAll("\\(.*", "").replace("/", "-");
+            }
+            if ("*".equals(indicator.getRawTime())) {
+                continue;
+            }
+            indicator.setDatetime(LocalDateTime.parse(isoDate + "T" + indicator.getRawTime(), formatter));
+        }
+        return indicators.stream().filter(ind -> LocalDateTime.now().isBefore(ind.getDatetime())).toList();
     }
     public void login() {
 
