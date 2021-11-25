@@ -190,4 +190,8 @@ public class Snapshot implements Serializable {
     public int getLessLot() {
         return Math.min(askLot, bidLot);
     }
+
+    public boolean isProfitPlus() {
+        return getPositionProfit() > 0;
+    }
 }

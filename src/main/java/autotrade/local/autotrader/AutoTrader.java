@@ -108,6 +108,7 @@ public abstract class AutoTrader {
 
                 // 最新情報取得
                 Snapshot snapshot = buildSnapshot();
+                this.pair = snapshot.getPair();
 
                 // 取引前処理
                 preTrade(snapshot);

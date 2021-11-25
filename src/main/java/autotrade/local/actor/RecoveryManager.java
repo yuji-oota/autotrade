@@ -26,6 +26,9 @@ public class RecoveryManager implements Serializable {
     @Setter
     private Snapshot counterTradingSnapshot;
 
+    @Setter
+    private boolean isFixWithSomeProfit;
+
     @SuppressWarnings("unchecked")
     public RecoveryManager() {
         profitCalcurator = (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / 10000;

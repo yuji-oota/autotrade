@@ -263,7 +263,7 @@ public class RateAnalyzer {
             return true;
         }
         if (latestRate.getAsk() - latestRate.getBid() > 1000
-                && latestRate.isNearDecimalPartZero()) {
+                && latestRate.isNearThousand()) {
             return true;
         }
         if (latestRate.getAsk() < latestRate.getBid()) {
