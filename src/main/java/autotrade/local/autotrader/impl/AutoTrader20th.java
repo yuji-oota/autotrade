@@ -199,7 +199,7 @@ public class AutoTrader20th extends AutoTrader {
                     if (doAsk
                             && snapshot.isAskLtLimit()
                             && rateAnalyzer.isReachedAskThreshold(rate)) {
-                        if (isCalm()) {
+                        if (rateAnalyzer.isCalm()) {
                             return;
                         }
                         orderAsk(nextLot(snapshot));
@@ -212,7 +212,7 @@ public class AutoTrader20th extends AutoTrader {
                     if (doBid
                             && snapshot.isBidLtLimit()
                             && rateAnalyzer.isReachedBidThreshold(rate)) {
-                        if (isCalm()) {
+                        if (rateAnalyzer.isCalm()) {
                             return;
                         }
                         orderBid(nextLot(snapshot));
@@ -250,11 +250,6 @@ public class AutoTrader20th extends AutoTrader {
 
     private boolean isAboveDynamicThreshold(Rate rate) {
         return dynamicThreshold < rate.getMiddle();
-    }
-
-    @Override
-    protected boolean isCalm() {
-        return rateAnalyzer.rangeWithin(Duration.ofSeconds(150)) < 25;
     }
 
     @Override

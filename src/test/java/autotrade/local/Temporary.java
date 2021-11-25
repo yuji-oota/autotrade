@@ -24,10 +24,6 @@ public class Temporary {
         @Getter
         private Duration duration;
 
-        public OrderTerm change() {
-            return this == SHORT ? LONG : SHORT;
-        }
-
     }
 
     @Test

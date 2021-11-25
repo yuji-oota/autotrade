@@ -34,6 +34,8 @@ public class RateAnalyzer {
     private int noMoveCounter;
     private ArrayDeque<Rate> latestRateQueue;
     private ArrayDeque<Rate> diffRateQueue;
+    private Duration calmDration;
+    private int calmRange;
 
     public RateAnalyzer() {
         rates = new ArrayList<>();
@@ -46,6 +48,8 @@ public class RateAnalyzer {
         latestRateQueue.add(Rate.builder().ask(Integer.MIN_VALUE).bid(Integer.MAX_VALUE).build());
         diffRateQueue = new ArrayDeque<Rate>();
         diffRateQueue.add(Rate.builder().ask(Integer.MIN_VALUE).bid(Integer.MAX_VALUE).build());
+        calmDration = Duration.ofSeconds(AutoTradeProperties.getInt("autotrade.rateAnalizer.calm.seconds"));
+        calmRange = AutoTradeProperties.getInt("autotrade.rateAnalizer.calm.range");
     }
 
     public void add(Rate rate) {
@@ -281,7 +285,12 @@ public class RateAnalyzer {
     public boolean isAskUp() {
         return diffRateQueue.getFirst().getAsk() < diffRateQueue.getLast().getAsk();
     }
+
     public boolean isBidDown() {
         return diffRateQueue.getFirst().getBid() > diffRateQueue.getLast().getBid();
+    }
+
+    public boolean isCalm() {
+        return rangeWithin(calmDration) < calmRange;
     }
 }

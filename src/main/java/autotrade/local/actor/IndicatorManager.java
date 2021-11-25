@@ -62,7 +62,7 @@ public class IndicatorManager {
     public void addIndicators(List<Indicator> indicators) {
         this.indicators = indicators;
         this.indicatorDateTimes.addAll(
-                indicators.stream()
+                this.indicators.stream()
                         .map(Indicator::getDatetime)
                         .distinct()
                         .sorted()

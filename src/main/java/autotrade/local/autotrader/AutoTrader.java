@@ -371,7 +371,7 @@ public abstract class AutoTrader {
         switch (snapshot.getStatus()) {
         case NONE:
         case SAME:
-            if (isCalm()) {
+            if (rateAnalyzer.isCalm()) {
                 // 閾値間隔が狭い場合は注文しない
                 return false;
             }
@@ -420,10 +420,6 @@ public abstract class AutoTrader {
 
     protected boolean isInactiveTime() {
         return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
-    }
-
-    protected boolean isCalm() {
-        return rateAnalyzer.rangeWithin(Duration.ofMinutes(5)) < 25;
     }
 
     protected void orderAsk(int lot) {
