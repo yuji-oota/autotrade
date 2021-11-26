@@ -10,7 +10,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -284,19 +283,19 @@ public abstract class AutoTrader {
     }
 
     protected void preTrade(Snapshot snapshot) {
-        // ペア別レート取得
-        Map<CurrencyPair, Rate> pairRateMap = new HashMap<>();
-        pairRateMap.put(pair, snapshot.getRate());
+
+        // SnapshotのレートをRateAnalyzerに追加
+        pairAnalyzerMap.get(snapshot.getPair()).add(snapshot.getRate());
+
+        // レートリストから他通貨ペアのレートをRateAnalyzerに追加
         if (displayMode == DisplayMode.RATELIST
                 && LocalDateTime.now().getSecond() % 10 == 0) {
             changeablePairs.stream()
                     .filter(p -> p != pair)
-                    .forEach(p -> pairRateMap.put(p, buildRateFromList(p)));
+                    .forEach(p -> {
+                        pairAnalyzerMap.get(p).add(buildRateFromList(p));
+                    });
         }
-        // rateAnalyzerにレート追加
-        pairRateMap.entrySet().stream().forEach(entry -> {
-            pairAnalyzerMap.get(entry.getKey()).add(entry.getValue());
-        });
     }
 
     protected void postTrade(Snapshot snapshot) {
