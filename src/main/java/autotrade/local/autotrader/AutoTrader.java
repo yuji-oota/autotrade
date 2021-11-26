@@ -344,6 +344,10 @@ public abstract class AutoTrader {
         if (isThroughFix) {
             return false;
         }
+        if (rateAnalyzer.isDoubtful()) {
+            // 疑わしいRateの場合は決済しない
+            return false;
+        }
         return true;
     }
 

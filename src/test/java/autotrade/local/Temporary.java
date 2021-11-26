@@ -1,10 +1,12 @@
 package autotrade.local;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
-import java.util.ArrayDeque;
 
 import org.junit.jupiter.api.Test;
 
@@ -35,46 +37,20 @@ public class Temporary {
 
     @Test
     public void test02() {
-        System.out.println(calcLot(12, 0, 18));
-        System.out.println(calcLot(12, 10, 18));
-    }
-
-    private static int calcLot(int initialLot, int lot, int counter) {
-        int target = initialLot < counter ? counter : initialLot;
-        if (lot < target) {
-            int diff = target - lot;
-            if (diff <= 10) {
-                return diff;
-            } else {
-                return 10;
-            }
-        }
-        return 1;
+        System.out.println(BigDecimal.ONE
+                .subtract(BigDecimal.valueOf(1000).divide(BigDecimal.valueOf(-10000),
+                        new MathContext(2, RoundingMode.HALF_UP)))
+                .multiply(BigDecimal.valueOf(100))
+                .intValue());
     }
 
     @Test
     public void test03() {
-        ArrayDeque<Integer> queue = new ArrayDeque<>();
-        addQueue(queue, 1);
-        addQueue(queue, 2);
-        addQueue(queue, 3);
-        addQueue(queue, 4);
-        addQueue(queue, 5);
-        queue.stream().forEach(System.out::println);
-        addQueue(queue, 6);
-        queue.stream().forEach(System.out::println);
-        addQueue(queue, 7);
-        queue.stream().forEach(System.out::println);
+        System.out.println("123.456".matches(".*99."));
+        System.out.println("123.996".matches(".*99."));
+        System.out.println("123.9961".matches(".*99."));
+        System.out.println("123.006".matches(".*00."));
+        System.out.println("123.0061".matches(".*00."));
     }
 
-    private void addQueue(ArrayDeque<Integer> queue, int i) {
-        queue.add(i);
-        if (queue.size() > 5) {
-            queue.poll();
-        }
-        System.out.println(queue);
-        System.out.println(queue.size());
-        System.out.println(queue.getFirst());
-        System.out.println(queue.getLast());
-    }
 }

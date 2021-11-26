@@ -266,8 +266,7 @@ public class RateAnalyzer {
         if (latestRate.getAsk() == 0 || latestRate.getBid() == 0) {
             return true;
         }
-        if (latestRate.getAsk() - latestRate.getBid() > 1000
-                && latestRate.isNearThousand()) {
+        if (latestRate.anyMatch(".*00.", ".*99.")) {
             return true;
         }
         if (latestRate.getAsk() < latestRate.getBid()) {

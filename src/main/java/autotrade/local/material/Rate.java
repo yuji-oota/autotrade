@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import lombok.Builder;
 import lombok.Data;
@@ -46,25 +47,9 @@ public class Rate implements Serializable {
         return !isSpreadWiden();
     }
 
-    public boolean isNearThousand() {
-        return isNearThousand(rawAsk)
-                || isNearThousand(rawBid);
-    }
-
-    private static boolean isNearThousand(String decimal) {
-        if ("0".equals(getHundredPart(decimal))) {
-            return true;
-        }
-        ;
-        if ("9".equals(getHundredPart(decimal))) {
-            return true;
-        }
-        ;
-        return false;
-    }
-
-    private static String getHundredPart(String decimal) {
-        String noPeriod = decimal.replace(".", "");
-        return noPeriod.substring(noPeriod.length() - 3).substring(0, 1);
+    public boolean anyMatch(String... regexs) {
+        return Stream.of(regexs).anyMatch(regex -> {
+            return rawAsk.matches(regex) || rawBid.matches(regex);
+        });
     }
 }
