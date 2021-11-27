@@ -9,8 +9,6 @@ import lombok.Data;
 @Builder
 public class Snapshot implements Serializable {
 
-    private CurrencyPair pair;
-
     // Tostring用
     @SuppressWarnings("unused")
     private int positionProfit;
@@ -28,6 +26,10 @@ public class Snapshot implements Serializable {
     private int todaysProfit;
 
     private boolean isFix;
+
+    public CurrencyPair getPair() {
+        return rate.getPair();
+    }
 
     public int getAskPipProfit() {
         return rate.getBid() - askAverageRate;
@@ -55,18 +57,18 @@ public class Snapshot implements Serializable {
 
     public PositionStatus getStatus() {
 
-        if (askLot + bidLot == 0) {
-            return PositionStatus.NONE;
+        if (hasNoPosition()) {
+            return PositionStatus.NO_POSITION;
         }
 
-        if (askLot > bidLot) {
-            return PositionStatus.ASK_SIDE;
+        if (isBidLtAsk()) {
+            return PositionStatus.BID_LT_ASK;
         }
-        if (askLot < bidLot) {
-            return PositionStatus.BID_SIDE;
+        if (isBidGtAsk()) {
+            return PositionStatus.BID_GT_ASK;
         }
 
-        return PositionStatus.SAME;
+        return PositionStatus.BID_EQ_ASK;
     }
 
     public boolean hasOneSide() {
@@ -99,7 +101,7 @@ public class Snapshot implements Serializable {
         return false;
     }
 
-    public boolean noPosition() {
+    public boolean hasNoPosition() {
         return !hasPosition();
     }
 
@@ -111,28 +113,12 @@ public class Snapshot implements Serializable {
         return hasBid() && hasOneSide();
     }
 
-    public boolean isPositionNone() {
-        return getStatus() == PositionStatus.NONE;
+    public boolean isBidLtAsk() {
+        return bidLot < askLot;
     }
 
-    public boolean isPositionAskSide() {
-        return getStatus() == PositionStatus.ASK_SIDE;
-    }
-
-    public boolean isPositionBidSide() {
-        return getStatus() == PositionStatus.BID_SIDE;
-    }
-
-    public boolean isPositionSame() {
-        return getStatus() == PositionStatus.SAME;
-    }
-
-    public boolean isAskGtBid() {
-        return askLot > bidLot;
-    }
-
-    public boolean isAskGeBid() {
-        return askLot >= bidLot;
+    public boolean isBidLeAsk() {
+        return bidLot <= askLot;
     }
 
     public boolean isBidGtAsk() {
@@ -143,28 +129,12 @@ public class Snapshot implements Serializable {
         return bidLot >= askLot;
     }
 
-    public boolean isAskLtBid() {
-        return isBidGtAsk();
-    }
-
-    public boolean isAskLeBid() {
-        return isBidGeAsk();
-    }
-
-    public boolean isBidLtAsk() {
-        return isAskGtBid();
-    }
-
-    public boolean isBidLeAsk() {
-        return isAskGeBid();
-    }
-
     public boolean isAskLtLimit() {
-        return askLot < pair.getLimitLot(Math.min(margin, effectiveMargin));
+        return askLot < rate.getPair().getLimitLot(Math.min(margin, effectiveMargin));
     }
 
     public boolean isBidLtLimit() {
-        return bidLot < pair.getLimitLot(Math.min(margin, effectiveMargin));
+        return bidLot < rate.getPair().getLimitLot(Math.min(margin, effectiveMargin));
     }
 
     public boolean isAskGeLimit() {
@@ -191,7 +161,7 @@ public class Snapshot implements Serializable {
         return Math.min(askLot, bidLot);
     }
 
-    public boolean isProfitPlus() {
+    public boolean hasProfit() {
         return getPositionProfit() > 0;
     }
 }

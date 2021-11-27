@@ -8,7 +8,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
@@ -61,8 +60,11 @@ public class WebDriverWrapper {
                     indicator.setCountryName(tds.get(2).findElements(By.tagName("img")).get(0).getAttribute("title"));
                     indicator.setIndicatorName(tds.get(3).getText());
                     return indicator;
-                }).collect(Collectors.toList());
+                })
+                .filter(ind -> !"*".equals(ind.getRawTime()))
+                .collect(Collectors.toList());
 
+        // Indicator.dateTimeを補完
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME.withResolverStyle(ResolverStyle.LENIENT);
         String isoDate = null;
         for (Indicator indicator : indicators) {
@@ -70,14 +72,11 @@ public class WebDriverWrapper {
                 isoDate = LocalDate.now().getYear() + "-"
                         + indicator.getRawDate().replaceAll("\\(.*", "").replace("/", "-");
             }
-            if ("*".equals(indicator.getRawTime())) {
-                continue;
-            }
-            indicator.setDatetime(LocalDateTime.parse(isoDate + "T" + indicator.getRawTime(), formatter));
+            indicator.setDateTime(LocalDateTime.parse(isoDate + "T" + indicator.getRawTime(), formatter));
         }
         return indicators.stream()
-                .filter(ind -> Objects.nonNull(ind.getDatetime()))
-                .filter(ind -> LocalDateTime.now().isBefore(ind.getDatetime())).toList();
+                .filter(ind -> LocalDateTime.now().isBefore(ind.getDateTime()))
+                .toList();
     }
 
     public void login() {

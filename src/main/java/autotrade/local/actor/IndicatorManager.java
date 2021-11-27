@@ -2,57 +2,56 @@ package autotrade.local.actor;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
 import autotrade.local.material.Indicator;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class IndicatorManager {
 
-    private LocalDateTime nextIndicator;
-    private LocalDateTime prevIndicator;
+    private LocalDateTime nextDateTime;
+    private LocalDateTime prevDateTime;
     private List<Indicator> indicators;
-
-    @Getter
     private List<LocalDateTime> indicatorDateTimes;
 
     public IndicatorManager() {
         this.indicatorDateTimes = new ArrayList<>();
-        this.nextIndicator = LocalDateTime.now();
-        this.prevIndicator = LocalDateTime.now();
+        this.nextDateTime = LocalDateTime.now();
+        this.prevDateTime = LocalDateTime.now();
     }
 
-    private LocalDateTime getNextIndicate() {
-        if (LocalDateTime.now().isAfter(nextIndicator)) {
-            prevIndicator = nextIndicator;
-            nextIndicator = indicatorDateTimes.stream()
+    private LocalDateTime getNextIndicator() {
+        if (LocalDateTime.now().isAfter(nextDateTime)) {
+            prevDateTime = nextDateTime;
+            nextDateTime = indicatorDateTimes.stream()
                     .filter(LocalDateTime.now()::isBefore)
                     .min(LocalDateTime::compareTo)
                     .orElse(LocalDateTime.now().plusDays(2));
-            log.info("next indicator will come at {}", nextIndicator);
+            log.info("next indicator will come at {}", nextDateTime);
         }
-        return nextIndicator;
+        return nextDateTime;
     }
 
     public boolean isNextIndicatorWithin(Duration duration) {
-        if (Duration.between(LocalDateTime.now(), getNextIndicate()).toMillis() < duration.toMillis()) {
-            return true;
-        }
-        return false;
+        return LocalDateTime.now().plus(duration).isAfter(getNextIndicator());
     }
 
     public boolean isPrevIndicatorWithin(Duration duration) {
-        if (Duration.between(prevIndicator, LocalDateTime.now()).toMillis() < duration.toMillis()) {
-            return true;
-        }
-        return false;
+        return prevDateTime.plus(duration).isAfter(LocalDateTime.now());
     }
 
-    public boolean isIndicatorAround(Duration duration) {
-        return isNextIndicatorWithin(duration) || isPrevIndicatorWithin(duration);
+    public boolean isIndicatorAround(Duration before, Duration after) {
+        return isNextIndicatorWithin(before) || isPrevIndicatorWithin(after);
+    }
+
+    public boolean isIndicatorBefore(Duration duration) {
+        return LocalDateTime.now()
+                .plus(duration)
+                .truncatedTo(ChronoUnit.SECONDS)
+                .isEqual(getNextIndicator());
     }
 
     public boolean hasIndicator() {
@@ -63,13 +62,22 @@ public class IndicatorManager {
         this.indicators = indicators;
         this.indicatorDateTimes.addAll(
                 this.indicators.stream()
-                        .map(Indicator::getDatetime)
+                        .map(Indicator::getDateTime)
                         .distinct()
                         .sorted()
                         .toList());
     }
 
-    public void printIndicators() {
+    public void printIndicatorDateTimes() {
         log.info("indicator datetime list:{}", indicatorDateTimes);
+    }
+
+    public void printNextIndicator() {
+        log.info("next indicator is below");
+        indicators.stream()
+                .filter(ind -> ind.getDateTime().isEqual(getNextIndicator()))
+                .forEach(ind -> {
+                    log.info("{} {} {}", ind.getDateTime(), ind.getCountryName(), ind.getIndicatorName());
+                });
     }
 }

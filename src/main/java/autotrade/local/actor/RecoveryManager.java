@@ -6,6 +6,7 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.function.ToIntFunction;
 
+import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import lombok.Getter;
@@ -27,7 +28,7 @@ public class RecoveryManager implements Serializable {
     private Snapshot counterTradingSnapshot;
 
     @Setter
-    private boolean isFixWithSomeProfit;
+    private boolean isFixWithProfit;
 
     @SuppressWarnings("unchecked")
     public RecoveryManager() {
@@ -111,7 +112,8 @@ public class RecoveryManager implements Serializable {
     }
 
     public void printSummary(Snapshot snapshot) {
-        log.info("recovery summary. start profit:{} end profit:{} stopLossCount:{}",
+        log.info("recovery summary. {} lot:{} start profit:{} end profit:{} stopLossCount:{}",
+                snapshot.getPair(), snapshot.getMoreLot(),
                 getLossCounterTradingStart(), getLoss(snapshot), stopLossCount);
     }
 
@@ -127,5 +129,9 @@ public class RecoveryManager implements Serializable {
         this.snapshotWhenStopLoss = snapshotWhenStopLoss;
         stopLossCount++;
         resetReachedRecover();
+    }
+
+    public CurrencyPair getHandlePair() {
+        return snapshotWhenStart.getPair();
     }
 }

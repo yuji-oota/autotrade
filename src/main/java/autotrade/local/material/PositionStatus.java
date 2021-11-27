@@ -2,8 +2,8 @@ package autotrade.local.material;
 
 public enum PositionStatus {
 
-    NONE,
-    ASK_SIDE,
-    BID_SIDE,
-    SAME,
+    NO_POSITION,
+    BID_LT_ASK,
+    BID_GT_ASK,
+    BID_EQ_ASK,
 }

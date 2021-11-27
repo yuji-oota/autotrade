@@ -9,10 +9,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.ToIntFunction;
@@ -28,8 +26,6 @@ import autotrade.local.actor.MessageListener;
 import autotrade.local.actor.MessageListener.ReservedMessage;
 import autotrade.local.actor.Messenger;
 import autotrade.local.actor.RateAnalyzer;
-import autotrade.local.actor.ReserveManager;
-import autotrade.local.actor.SameManager;
 import autotrade.local.actor.UploadManager;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.AudioPath;
@@ -47,8 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AutoTrader {
 
     protected CurrencyPair pair;
-    protected Set<CurrencyPair> changeablePairs;
-    protected DisplayMode displayMode;
+    protected List<CurrencyPair> orderablePairs;
 
     protected WebDriver driver;
     protected WebDriverWrapper wrapper;
@@ -56,7 +51,6 @@ public abstract class AutoTrader {
     protected RateAnalyzer rateAnalyzer;
     protected IndicatorManager indicatorManager;
     protected UploadManager uploadManager;
-    protected ReserveManager reserveManager;
 
     protected StatefulRedisPubSubConnection<String, String> pubSubConnection;
 
@@ -65,8 +59,6 @@ public abstract class AutoTrader {
     protected LocalTime inactiveStart;
     protected LocalTime inactiveEnd;
 
-    protected long lastFixed;
-
     protected boolean isThroughOrder;
     protected boolean isThroughFix;
     protected boolean isIgnoreSpread;
@@ -74,11 +66,9 @@ public abstract class AutoTrader {
 
     public AutoTrader() {
         pair = CurrencyPair.USDJPY;
-        changeablePairs = AutoTradeProperties.getList("autotrade.order.pairs").stream()
+        orderablePairs = AutoTradeProperties.getList("autotrade.order.pairs").stream()
                 .map(CurrencyPair::valueOf)
-                .collect(Collectors.toSet());
-        displayMode = DisplayMode.CHART;
-
+                .toList();
         inactiveStart = LocalTime
                 .from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime
@@ -89,7 +79,6 @@ public abstract class AutoTrader {
         rateAnalyzer = pairAnalyzerMap.get(pair);
         uploadManager = new UploadManager();
         indicatorManager = new IndicatorManager();
-        reserveManager = new ReserveManager();
         pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
     }
 
@@ -113,7 +102,9 @@ public abstract class AutoTrader {
                 preTrade(snapshot);
 
                 // 取引
-                trade(snapshot);
+                if (isTradable(snapshot)) {
+                    trade(snapshot);
+                }
 
                 // 取引後処理
                 postTrade(snapshot);
@@ -136,12 +127,6 @@ public abstract class AutoTrader {
 
     }
 
-    abstract protected CurrencyPair selectPair();
-
-    abstract protected void order(Snapshot snapshot);
-
-    abstract protected void fix(Snapshot snapshot);
-
     abstract protected void saveLocal();
 
     abstract protected void loadLocal();
@@ -154,7 +139,7 @@ public abstract class AutoTrader {
         // 指標を確認する
         if (!indicatorManager.hasIndicator()) {
             indicatorManager.addIndicators(wrapper.getIndicators());
-            indicatorManager.printIndicators();
+            indicatorManager.printIndicatorDateTimes();
         }
 
         // ログイン
@@ -180,15 +165,10 @@ public abstract class AutoTrader {
 
         // 通貨ペア定義
         wrapper.pairSettings();
-
-        // 表示変更
-        changeDisplay(displayMode);
-
     }
 
     protected Snapshot buildSnapshot() {
         return Snapshot.builder()
-                .pair(CurrencyPair.valueOf(wrapper.getPair().replace("/", "")))
                 .askLot(AutoTradeUtils.toInt(wrapper.getAskLot()))
                 .bidLot(AutoTradeUtils.toInt(wrapper.getBidLot()))
                 .askAverageRate(AutoTradeUtils.toInt(wrapper.getAskAverageRate()))
@@ -235,10 +215,6 @@ public abstract class AutoTrader {
                 .build();
     }
 
-    protected boolean hasPosition() {
-        return AutoTradeUtils.toInt(wrapper.getAskLot()) > 0 || AutoTradeUtils.toInt(wrapper.getBidLot()) > 0;
-    }
-
     protected Rate buildLastDayBeforeRate() {
         String theDayBeforeDiff = driver.findElement(By.xpath("//*[@id=\"hl-div\"]/span[5]")).getText();
         Rate lastDayBeforeRate = Rate.builder().pair(pair).ask(0).bid(0).timestamp(LocalDateTime.now()).build();
@@ -250,6 +226,48 @@ public abstract class AutoTrader {
         lastDayBeforeRate.setBid(snapshot.getRate().getBid() - lastDayBeforeBid);
         lastDayBeforeRate.setAsk(lastDayBeforeRate.getBid() + pair.getMinSpread());
         return lastDayBeforeRate;
+    }
+
+    abstract protected CurrencyPair selectPair();
+
+    protected void preTrade(Snapshot snapshot) {
+
+        // SnapshotのレートをRateAnalyzerに追加
+        pairAnalyzerMap.get(snapshot.getPair()).add(snapshot.getRate());
+
+        if (orderablePairs.size() > 1) {
+
+            changeDisplay(DisplayMode.RATELIST);
+            // レートリストから他通貨ペアのレートをRateAnalyzerに追加
+            if (LocalDateTime.now().getSecond() % 10 == 0) {
+                orderablePairs.stream()
+                        .filter(p -> p != snapshot.getPair())
+                        .forEach(p -> {
+                            pairAnalyzerMap.get(p).add(buildRateFromList(p));
+                        });
+            }
+        }
+
+        // 非活性時間処理
+        if (isSleep(snapshot)) {
+
+            // サマリ出力
+            printSummary(snapshot);
+
+            // 非活性時間の終了までスリープする
+            Duration durationToActive = Duration.between(LocalDateTime.now(),
+                    LocalDateTime.of(LocalDate.now(), inactiveEnd));
+            log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
+            AutoTradeUtils.sleep(durationToActive);
+        }
+
+    }
+
+    protected boolean isTradable(Snapshot snapshot) {
+        if (rateAnalyzer.isDoubtful()) {
+            return false;
+        }
+        return true;
     }
 
     protected void trade(Snapshot snapshot) {
@@ -270,54 +288,89 @@ public abstract class AutoTrader {
 
     }
 
-    protected void preOrder(Snapshot snapshot) {
-    }
-
-    protected void postOrder(Snapshot snapshot) {
-    }
-
     protected void preFix(Snapshot snapshot) {
     }
+
+    protected boolean isFixable(Snapshot snapshot) {
+        if (isThroughFix) {
+            return false;
+        }
+        if (snapshot.hasNoPosition()) {
+            return false;
+        }
+        return true;
+    }
+
+    abstract protected void fix(Snapshot snapshot);
 
     protected void postFix(Snapshot snapshot) {
     }
 
-    protected void preTrade(Snapshot snapshot) {
+    protected void preOrder(Snapshot snapshot) {
+    }
 
-        // SnapshotのレートをRateAnalyzerに追加
-        pairAnalyzerMap.get(snapshot.getPair()).add(snapshot.getRate());
-
-        // レートリストから他通貨ペアのレートをRateAnalyzerに追加
-        if (displayMode == DisplayMode.RATELIST
-                && LocalDateTime.now().getSecond() % 10 == 0) {
-            changeablePairs.stream()
-                    .filter(p -> p != pair)
-                    .forEach(p -> {
-                        pairAnalyzerMap.get(p).add(buildRateFromList(p));
-                    });
+    protected boolean isOrderable(Snapshot snapshot) {
+        if (snapshot.isFix()) {
+            return false;
         }
+        if (isThroughOrder) {
+            return false;
+        }
+        if (Duration.between(rateAnalyzer.getEarliestRate().getTimestamp(), LocalDateTime.now()).toMinutes() < 1) {
+            // 過去Rateがある程度存在しない場合は注文しない
+            return false;
+        }
+        if (!rateAnalyzer.isMoved()) {
+            // レートが動いていない場合は注文しない
+            return false;
+        }
+
+        switch (snapshot.getStatus()) {
+        case NO_POSITION:
+        case BID_EQ_ASK:
+            if (rateAnalyzer.isCalm()) {
+                // 閾値間隔が狭い場合は注文しない
+                return false;
+            }
+            if (indicatorManager.isIndicatorAround(Duration.ofMinutes(5), Duration.ofSeconds(15))) {
+                // 指標が近い場合は注文しない
+                return false;
+            }
+            if (!isIgnoreSpread && snapshot.isSpreadWiden()) {
+                // スプレッドを無視しない
+                // 且つスプレッドが開いている場合は注文しない
+                return false;
+            }
+            break;
+        case BID_LT_ASK:
+        case BID_GT_ASK:
+            break;
+        default:
+        }
+
+        int verifyAskLot = AutoTradeUtils.toInt(wrapper.getAskLot());
+        int verifyBidLot = AutoTradeUtils.toInt(wrapper.getBidLot());
+        if (snapshot.getAskLot() != verifyAskLot
+                || snapshot.getBidLot() != verifyBidLot) {
+            // Fixされている場合は注文しない
+            return false;
+        }
+
+        return true;
+    }
+
+    abstract protected void order(Snapshot snapshot);
+
+    protected void postOrder(Snapshot snapshot) {
     }
 
     protected void postTrade(Snapshot snapshot) {
 
         // 指標アラート
-        if (indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(1))
-                && !indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(59))) {
+        if (indicatorManager.isIndicatorBefore(Duration.ofMinutes(1))) {
+            indicatorManager.printNextIndicator();
             AutoTradeUtils.playAudioRandom(AudioPath.Alert);
             AutoTradeUtils.sleep(Duration.ofSeconds(1));
-        }
-
-        // 非活性時間処理
-        if (isSleep(snapshot)) {
-
-            // サマリ出力
-            printSummary(snapshot);
-
-            // 非活性時間の終了までスリープする
-            Duration durationToActive = Duration.between(LocalDateTime.now(),
-                    LocalDateTime.of(LocalDate.now(), inactiveEnd));
-            log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
-            AutoTradeUtils.sleep(durationToActive);
         }
 
         // お知らせ対策
@@ -335,89 +388,18 @@ public abstract class AutoTrader {
 
     protected boolean isSleep(Snapshot snapshot) {
         return isInactiveTime()
-                && snapshot.isPositionNone()
+                && snapshot.hasNoPosition()
                 && snapshot.isSpreadWiden();
-    }
-
-    protected boolean isFixable(Snapshot snapshot) {
-        if (isThroughFix) {
-            return false;
-        }
-        if (rateAnalyzer.isDoubtful()) {
-            // 疑わしいRateの場合は決済しない
-            return false;
-        }
-        return true;
-    }
-
-    protected boolean isOrderable(Snapshot snapshot) {
-        if (snapshot.isFix()) {
-            return false;
-        }
-
-        if (isThroughOrder) {
-            return false;
-        }
-        if (Duration.between(rateAnalyzer.getEarliestRate().getTimestamp(), LocalDateTime.now()).toMinutes() < 1) {
-            // 過去Rateがある程度存在しない場合は注文しない
-            return false;
-        }
-        if (rateAnalyzer.isDoubtful()) {
-            // 疑わしいRateの場合は注文しない
-            return false;
-        }
-        if (!rateAnalyzer.isMoved()) {
-            // レートが動いていない場合は注文しない
-            return false;
-        }
-
-        switch (snapshot.getStatus()) {
-        case NONE:
-        case SAME:
-            if (rateAnalyzer.isCalm()) {
-                // 閾値間隔が狭い場合は注文しない
-                return false;
-            }
-            if (isNearIndicator()) {
-                // 指標が近い場合は注文しない
-                return false;
-            }
-            if (!isIgnoreSpread && snapshot.isSpreadWiden()) {
-                // スプレッドを無視しない
-                // 且つスプレッドが開いている場合は注文しない
-                return false;
-            }
-            break;
-        case ASK_SIDE:
-        case BID_SIDE:
-            break;
-        default:
-        }
-
-        int verifyAskLot = AutoTradeUtils.toInt(wrapper.getAskLot());
-        int verifyBidLot = AutoTradeUtils.toInt(wrapper.getBidLot());
-        if (snapshot.getAskLot() != verifyAskLot
-                || snapshot.getBidLot() != verifyBidLot) {
-            // Fixされている場合は注文しない
-            return false;
-        }
-
-        return true;
-    }
-
-    protected boolean isNearIndicator() {
-        return indicatorManager.isNextIndicatorWithin(Duration.ofMinutes(5))
-                || indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15));
     }
 
     protected void forceSame(Snapshot snapshot) {
         int askLot = snapshot.getAskLot();
         int bidLot = snapshot.getBidLot();
         if (bidLot < askLot) {
-            orderBid(askLot - bidLot);
+            orderBid(askLot - bidLot, snapshot);
         }
         if (askLot < bidLot) {
-            orderAsk(bidLot - askLot);
+            orderAsk(bidLot - askLot, snapshot);
         }
     }
 
@@ -425,22 +407,22 @@ public abstract class AutoTrader {
         return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
     }
 
-    protected void orderAsk(int lot) {
-        String rate = wrapper.getAskRate();
-        int beforeLot = AutoTradeUtils.toInt(wrapper.getAskLot());
-        wrapper.setLot(lot);
+    protected void orderAsk(int orderLot, Snapshot snapshot) {
+        int afterLot = orderLot + snapshot.getAskLot();
+        wrapper.setLot(orderLot);
         wrapper.orderAsk();
-        verifyOrder(beforeLot + lot, Snapshot::getAskLot);
-        log.info("order ask. lot {}, rate {}", lot, rate);
+        verifyOrder(afterLot, Snapshot::getAskLot);
+        log.info("{} order ask. lot:{} total lot:{} rate:{}",
+                snapshot.getPair(), orderLot, afterLot, snapshot.getRate().getRawAsk());
     }
 
-    protected void orderBid(int lot) {
-        String rate = wrapper.getBidRate();
-        int beforeLot = AutoTradeUtils.toInt(wrapper.getBidLot());
-        wrapper.setLot(lot);
+    protected void orderBid(int orderLot, Snapshot snapshot) {
+        int afterLot = orderLot + snapshot.getBidLot();
+        wrapper.setLot(orderLot);
         wrapper.orderBid();
-        verifyOrder(beforeLot + lot, Snapshot::getBidLot);
-        log.info("order bid. lot {}, rate {}", lot, rate);
+        verifyOrder(afterLot, Snapshot::getBidLot);
+        log.info("{} order bid. lot:{} total lot:{} rate:{}",
+                snapshot.getPair(), orderLot, afterLot, snapshot.getRate().getRawBid());
     }
 
     protected void fixAll(Snapshot snapshot) {
@@ -448,7 +430,6 @@ public abstract class AutoTrader {
         AutoTradeUtils.playAudioRandom(AudioPath.FixSoundEffect);
         verifyOrder(0, Snapshot::getAskLot);
         verifyOrder(0, Snapshot::getBidLot);
-        lastFixed = System.currentTimeMillis();
         log.info("fix all position.");
         AutoTradeUtils.printObject(snapshot);
     }
@@ -482,7 +463,6 @@ public abstract class AutoTrader {
     }
 
     protected void changeDisplay(DisplayMode displayMode) {
-        this.displayMode = displayMode;
         switch (displayMode) {
         case CHART:
             wrapper.displayChart();
@@ -495,14 +475,6 @@ public abstract class AutoTrader {
 
     protected void changePair(CurrencyPair pair) {
         if (this.pair == pair) {
-            return;
-        }
-        if (!this.changeablePairs.contains(pair)) {
-            log.info("currency pair {} is not changeable.", pair.name());
-            return;
-        }
-        if (this.hasPosition()) {
-            log.info("currency pair {} is not changed because of position exists.", pair.name());
             return;
         }
         this.pair = pair;
@@ -525,22 +497,6 @@ public abstract class AutoTrader {
     protected void changeIgnoreSpread(boolean flag) {
         this.isIgnoreSpread = flag;
         log.info("ignore spread setting is set {}.", this.isIgnoreSpread);
-    }
-
-    protected void addChangeablePair(CurrencyPair pair) {
-        changeablePairs.add(pair);
-        log.info("{} ia added to changeable pair.", pair.getDescription());
-    }
-
-    protected void removeChangeablePair(CurrencyPair pair) {
-        changeablePairs.remove(pair);
-        log.info("{} ia removed from changeable pair.", pair.getDescription());
-    }
-
-    protected void loadSameSnapshot() {
-        SameManager.setSnapshot(
-                AutoTradeUtils.deserialize(Base64.getDecoder().decode(Messenger.get("snapshotWhenSamed"))));
-        log.info("loaded Snapshot when samed to SameManager.");
     }
 
     protected MessageListener customizeMessageListener() {
@@ -590,53 +546,7 @@ public abstract class AutoTrader {
                 .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD,
                         (args) -> rateAnalyzer.updateCountertrading(rateAnalyzer.getAskThreshold(),
                                 rateAnalyzer.getBidThreshold()))
-                .putCommand(ReservedMessage.CHANGEPAIR, (args) -> {
-                    if (args.length > 0) {
-                        this.changePair(CurrencyPair.valueOf(args[0]));
-                    }
-                })
-                .putCommand(ReservedMessage.DISPLAYCHART, (args) -> this.changeDisplay(DisplayMode.CHART))
-                .putCommand(ReservedMessage.DISPLAYRATELIST, (args) -> this.changeDisplay(DisplayMode.RATELIST))
-                .putCommand(ReservedMessage.FORCEEXCEPTION, (args) -> this.isForceException = true)
-                .putCommand(ReservedMessage.CHANGEABLEPAIRADD, (args) -> {
-                    if (args.length > 0) {
-                        this.addChangeablePair(CurrencyPair.valueOf(args[0]));
-                    }
-                })
-                .putCommand(ReservedMessage.CHANGEABLEPAIRREMOVE, (args) -> {
-                    if (args.length > 0) {
-                        this.removeChangeablePair(CurrencyPair.valueOf(args[0]));
-                    }
-                })
-                .putCommand(ReservedMessage.LOADSAMESNAPSHOT, (args) -> this.loadSameSnapshot())
-                .putCommand(ReservedMessage.RESERVELIMITFIXASK, (args) -> {
-                    if (args.length > 0) {
-                        if (AutoTradeUtils.isInt(args[0])) {
-                            reserveManager.reserveLimitFixAsk(Integer.parseInt(args[0]));
-                        }
-                    }
-                })
-                .putCommand(ReservedMessage.RESERVELIMITFIXBID, (args) -> {
-                    if (args.length > 0) {
-                        if (AutoTradeUtils.isInt(args[0])) {
-                            reserveManager.reserveLimitFixBid(Integer.parseInt(args[0]));
-                        }
-                    }
-                })
-                .putCommand(ReservedMessage.RESERVESTOPFIXASK, (args) -> {
-                    if (args.length > 0) {
-                        if (AutoTradeUtils.isInt(args[0])) {
-                            reserveManager.reserveStopFixAsk(Integer.parseInt(args[0]));
-                        }
-                    }
-                })
-                .putCommand(ReservedMessage.RESERVESTOPFIXBID, (args) -> {
-                    if (args.length > 0) {
-                        if (AutoTradeUtils.isInt(args[0])) {
-                            reserveManager.reserveStopFixBid(Integer.parseInt(args[0]));
-                        }
-                    }
-                });
+                .putCommand(ReservedMessage.FORCEEXCEPTION, (args) -> this.isForceException = true);
     }
 
 }

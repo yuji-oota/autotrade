@@ -30,7 +30,6 @@ public class RateAnalyzer {
     private int countertradingBid;
     private boolean isSenceOfDirection;
     private Duration thresholdDuration;
-    private boolean isMoved;
     private int noMoveCounter;
     private ArrayDeque<Rate> latestRateQueue;
     private ArrayDeque<Rate> diffRateQueue;
@@ -54,7 +53,6 @@ public class RateAnalyzer {
 
     public void add(Rate rate) {
 
-        Rate latestRate = latestRateQueue.getLast();
         latestRateQueue.add(rate);
         if (latestRateQueue.size() > 5) {
             latestRateQueue.poll();
@@ -64,11 +62,8 @@ public class RateAnalyzer {
             diffRateQueue.poll();
         }
 
-        isMoved = false;
         noMoveCounter++;
-        if (latestRate.getAsk() != rate.getAsk()
-                || latestRate.getBid() != rate.getBid()) {
-            isMoved = true;
+        if (isMoved()) {
             noMoveCounter = 0;
         }
 
@@ -291,5 +286,10 @@ public class RateAnalyzer {
 
     public boolean isCalm() {
         return rangeWithin(calmDration) < calmRange;
+    }
+
+    public boolean isMoved() {
+        return diffRateQueue.getFirst().getAsk() != diffRateQueue.getLast().getAsk()
+                || diffRateQueue.getFirst().getBid() != diffRateQueue.getLast().getBid();
     }
 }

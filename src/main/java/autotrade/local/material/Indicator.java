@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 public class Indicator {
-    LocalDateTime datetime;
+    LocalDateTime dateTime;
     String rawDate;
     String rawTime;
     String countryName;
