@@ -321,7 +321,7 @@ public abstract class AutoTrader {
                 // 閾値間隔が狭い場合は注文しない
                 return false;
             }
-            if (indicatorManager.isIndicatorAround(Duration.ofMinutes(5), Duration.ofSeconds(15))) {
+            if (indicatorManager.isIndicatorAround(Duration.ofSeconds(90), Duration.ofSeconds(15))) {
                 // 指標が近い場合は注文しない
                 return false;
             }
