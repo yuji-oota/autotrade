@@ -75,5 +75,4 @@ task collect(type: Copy) {
     into './'
 }
 
-//defaultTasks 'collect'
 defaultTasks 'clean', 'collect'

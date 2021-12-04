@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.function.ToIntFunction;
 
-import autotrade.local.actor.MessageListener;
 import autotrade.local.actor.RecoveryManager;
 import autotrade.local.autotrader.AutoTrader;
 import autotrade.local.material.CurrencyPair;
@@ -352,12 +351,6 @@ public class AutoTrader20th extends AutoTrader {
         snapshot.setFix(true);
         recoveryManager.printSummary(snapshot);
         recoveryManager.close();
-    }
-
-    @Override
-    protected MessageListener customizeMessageListener() {
-        MessageListener messageListener = super.customizeMessageListener();
-        return messageListener;
     }
 
 }

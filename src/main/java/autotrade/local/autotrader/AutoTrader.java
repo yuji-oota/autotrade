@@ -1,14 +1,10 @@
 package autotrade.local.autotrader;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -22,9 +18,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import autotrade.local.actor.IndicatorManager;
-import autotrade.local.actor.MessageListener;
-import autotrade.local.actor.MessageListener.ReservedMessage;
-import autotrade.local.actor.Messenger;
 import autotrade.local.actor.RateAnalyzer;
 import autotrade.local.actor.UploadManager;
 import autotrade.local.exception.ApplicationException;
@@ -36,7 +29,6 @@ import autotrade.local.material.Snapshot;
 import autotrade.local.utility.AutoTradeProperties;
 import autotrade.local.utility.AutoTradeUtils;
 import autotrade.local.utility.WebDriverWrapper;
-import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -51,8 +43,6 @@ public abstract class AutoTrader {
     protected RateAnalyzer rateAnalyzer;
     protected IndicatorManager indicatorManager;
     protected UploadManager uploadManager;
-
-    protected StatefulRedisPubSubConnection<String, String> pubSubConnection;
 
     protected int startMargin;
 
@@ -79,7 +69,6 @@ public abstract class AutoTrader {
         rateAnalyzer = pairAnalyzerMap.get(pair);
         uploadManager = new UploadManager();
         indicatorManager = new IndicatorManager();
-        pubSubConnection = Messenger.createPubSubConnection(customizeMessageListener());
     }
 
     public void operation() {
@@ -497,56 +486,6 @@ public abstract class AutoTrader {
     protected void changeIgnoreSpread(boolean flag) {
         this.isIgnoreSpread = flag;
         log.info("ignore spread setting is set {}.", this.isIgnoreSpread);
-    }
-
-    protected MessageListener customizeMessageListener() {
-        return new MessageListener()
-                .putCommand(ReservedMessage.SNAPSHOT,
-                        (args) -> Messenger.set(ReservedMessage.SNAPSHOT.name(),
-                                AutoTradeUtils.toJson(buildSnapshot())))
-                .putCommand(ReservedMessage.UPLOADLOG,
-                        (args) -> uploadManager.upload(Paths.get("log", "autotrade-local.log")))
-                .putCommand(ReservedMessage.AUTOTRADELOG, (args) -> {
-                    int logRows = 30;
-                    if (args.length > 0) {
-                        logRows = Integer.parseInt(args[0]);
-                    }
-                    List<String> lines = new ArrayList<>();
-                    try {
-                        lines = Files.readAllLines(Paths.get("log", "autotrade-local.log"));
-                    } catch (IOException e) {
-                        throw new ApplicationException(e);
-                    }
-                    if (args.length > 1) {
-                        lines = lines.stream().filter(s -> s.contains(args[1])).collect(Collectors.toList());
-                    }
-                    Messenger.set(ReservedMessage.AUTOTRADELOG.name(),
-                            lines.subList(Math.max(0, lines.size() - logRows), lines.size()).stream()
-                                    .collect(Collectors.joining("\n")));
-                })
-                .putCommand(ReservedMessage.FIXASK, (args) -> wrapper.fixAsk())
-                .putCommand(ReservedMessage.FIXBID, (args) -> wrapper.fixBid())
-                .putCommand(ReservedMessage.FIXALL, (args) -> wrapper.fixAll())
-                .putCommand(ReservedMessage.FORCESAME, (args) -> this.forceSame(this.buildSnapshot()))
-                .putCommand(ReservedMessage.THROUGHORDER, (args) -> {
-                    if (args.length > 0) {
-                        this.changeThroughOrder(Boolean.valueOf(args[0]));
-                    }
-                })
-                .putCommand(ReservedMessage.THROUGHFIX, (args) -> {
-                    if (args.length > 0) {
-                        this.changeThroughFix(Boolean.valueOf(args[0]));
-                    }
-                })
-                .putCommand(ReservedMessage.IGNORESPREAD, (args) -> {
-                    if (args.length > 0) {
-                        this.changeIgnoreSpread(Boolean.valueOf(args[0]));
-                    }
-                })
-                .putCommand(ReservedMessage.SAVECOUNTERTRADINGTHRESHOLD,
-                        (args) -> rateAnalyzer.updateCountertrading(rateAnalyzer.getAskThreshold(),
-                                rateAnalyzer.getBidThreshold()))
-                .putCommand(ReservedMessage.FORCEEXCEPTION, (args) -> this.isForceException = true);
     }
 
 }
