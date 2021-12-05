@@ -6,7 +6,6 @@ import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.function.ToIntFunction;
 
 import autotrade.local.actor.RecoveryManager;
@@ -51,26 +50,19 @@ public class AutoTrader20th extends AutoTrader {
         lotLtInitial = AutoTradeProperties.getInt("autoTrader20th.order.lot.ltInitial");
         lotGeInitial = AutoTradeProperties.getInt("autoTrader20th.order.lot.geInitial");
 
-        try (Scanner scanner = new Scanner(System.in)) {
-            System.out.print("do you need local load? (y or any) :");
-            String input = scanner.next();
-            if ("y".equals(input.toLowerCase())) {
-                loadLocal();
-            }
-        }
-
-        //シャットダウンフックでローカルセーブ
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> saveLocal()));
+        postConstruct();
     }
 
     @Override
     protected void saveLocal() {
+        super.saveLocal();
         AutoTradeUtils.localSave(Paths.get("localSave", "recoveryManager"), recoveryManager);
         AutoTradeUtils.localSave(Paths.get("localSave", "dynamicThreshold"), dynamicThreshold);
     }
 
     @Override
     protected void loadLocal() {
+        super.loadLocal();
         recoveryManager = AutoTradeUtils.localLoad(Paths.get("localSave", "recoveryManager"));
         log.info("snapshotWhenStart:{}", recoveryManager.getSnapshotWhenStart());
         log.info("snapshotWhenStopLoss:{}", recoveryManager.getSnapshotWhenStopLoss());

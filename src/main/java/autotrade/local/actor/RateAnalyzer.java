@@ -1,5 +1,6 @@
 package autotrade.local.actor;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
@@ -18,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class RateAnalyzer {
+public class RateAnalyzer implements Serializable {
 
     private List<Rate> rates;
     private int askThreshold;

@@ -1,5 +1,6 @@
 package autotrade.local.autotrader;
 
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -7,6 +8,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.ToIntFunction;
@@ -71,6 +73,29 @@ public abstract class AutoTrader {
         indicatorManager = new IndicatorManager();
     }
 
+    protected void postConstruct() {
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.print("do you need local load? (y or any) :");
+            String input = scanner.next();
+            if ("y".equals(input.toLowerCase())) {
+                loadLocal();
+            }
+        }
+
+        // シャットダウンフックでローカルセーブ
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> saveLocal()));
+    }
+
+    protected void saveLocal() {
+        AutoTradeUtils.localSave(Paths.get("localSave", "pairAnalyzerMap"), pairAnalyzerMap);
+    };
+
+    protected void loadLocal() {
+        pairAnalyzerMap = AutoTradeUtils.localLoad(Paths.get("localSave", "pairAnalyzerMap"));
+        rateAnalyzer = pairAnalyzerMap.get(pair);
+        log.info("rateAnalyzer.rate.size {}", rateAnalyzer.getRates().size());
+    };
+
     public void operation() {
 
         try {
@@ -115,10 +140,6 @@ public abstract class AutoTrader {
         }
 
     }
-
-    abstract protected void saveLocal();
-
-    abstract protected void loadLocal();
 
     protected void initialize() {
         // WebDriver初期化
