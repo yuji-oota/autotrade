@@ -13,7 +13,6 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
@@ -28,6 +27,7 @@ import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.utility.AutoTradeProperties;
 import autotrade.local.utility.AutoTradeUtils;
+import autotrade.local.utility.WebDriverHirose;
 import autotrade.local.utility.WebDriverWrapper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -123,7 +123,7 @@ public abstract class AutoTrader {
     protected void initialize() {
         // WebDriver初期化
         driver = new ChromeDriver();
-        wrapper = new WebDriverWrapper(driver);
+        wrapper = new WebDriverHirose(driver);
 
         // 指標を確認する
         if (!indicatorManager.hasIndicator()) {
@@ -204,19 +204,6 @@ public abstract class AutoTrader {
                 .build();
     }
 
-    protected Rate buildLastDayBeforeRate() {
-        String theDayBeforeDiff = driver.findElement(By.xpath("//*[@id=\"hl-div\"]/span[5]")).getText();
-        Rate lastDayBeforeRate = Rate.builder().pair(pair).ask(0).bid(0).timestamp(LocalDateTime.now()).build();
-        int lastDayBeforeBid = AutoTradeUtils.toInt(theDayBeforeDiff.substring(1));
-        if ("▼".equals(theDayBeforeDiff.substring(0, 1))) {
-            lastDayBeforeBid = lastDayBeforeBid * -1;
-        }
-        Snapshot snapshot = buildSnapshot();
-        lastDayBeforeRate.setBid(snapshot.getRate().getBid() - lastDayBeforeBid);
-        lastDayBeforeRate.setAsk(lastDayBeforeRate.getBid() + pair.getMinSpread());
-        return lastDayBeforeRate;
-    }
-
     abstract protected CurrencyPair selectPair();
 
     protected void preTrade(Snapshot snapshot) {
@@ -228,7 +215,8 @@ public abstract class AutoTrader {
 
             changeDisplay(DisplayMode.RATELIST);
             // レートリストから他通貨ペアのレートをRateAnalyzerに追加
-            if (LocalDateTime.now().getSecond() % 10 == 0) {
+            if (snapshot.hasNoPosition()
+                    || LocalDateTime.now().getSecond() % 10 == 0) {
                 orderablePairs.stream()
                         .filter(p -> p != snapshot.getPair())
                         .forEach(p -> {
@@ -438,14 +426,14 @@ public abstract class AutoTrader {
     }
 
     protected void verifyOrder(int lot, ToIntFunction<Snapshot> lotAfterOrder) {
-        long verifyStarted = System.currentTimeMillis();
+        LocalDateTime verifyStarted = LocalDateTime.now();
         while (true) {
             AutoTradeUtils.sleep(Duration.ofMillis(500));
             Snapshot snapshot = buildSnapshot();
             if (lot == lotAfterOrder.applyAsInt(snapshot)) {
                 break;
             }
-            if (System.currentTimeMillis() - verifyStarted > Duration.ofSeconds(10).toMillis()) {
+            if (verifyStarted.plus(Duration.ofSeconds(10)).isBefore(LocalDateTime.now())) {
                 throw new ApplicationException("verify is failed.");
             }
         }

@@ -93,7 +93,7 @@ public class AutoTrader20th extends AutoTrader {
         return orderablePairs.stream()
                 .map(pair -> {
                     return new AbstractMap.SimpleEntry<CurrencyPair, Integer>(
-                            pair, pairAnalyzerMap.get(pair).rangeWithin(stopLossDurationShort));
+                            pair, pairAnalyzerMap.get(pair).rangeWithin(stopLossDurationShort) - pair.getMinSpread());
                 })
                 .max(Comparator.comparingInt(Map.Entry::getValue))
                 .get()
@@ -103,7 +103,7 @@ public class AutoTrader20th extends AutoTrader {
     @Override
     protected boolean isSleep(Snapshot snapshot) {
         return isInactiveTime()
-                && (snapshot.hasNoPosition());
+                && snapshot.hasNoPosition();
     }
 
     private int nextLot(Snapshot snapshot) {

@@ -5,7 +5,7 @@ import java.text.MessageFormat;
 import org.junit.jupiter.api.Test;
 
 
-public class WebDriverWrapperTest {
+public class WebDriverHiroseTest {
 
     @Test
     public void test() {
