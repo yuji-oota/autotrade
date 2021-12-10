@@ -28,7 +28,7 @@ public class RecoveryManager implements Serializable {
     private Snapshot counterTradingSnapshot;
 
     @Setter
-    private boolean isFixWithProfit;
+    private int counterTradingStartLot;
 
     @SuppressWarnings("unchecked")
     public RecoveryManager() {

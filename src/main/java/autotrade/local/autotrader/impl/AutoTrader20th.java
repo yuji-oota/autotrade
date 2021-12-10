@@ -33,6 +33,7 @@ public class AutoTrader20th extends AutoTrader {
     private int dynamicThreshold;
     private int lotLtInitial;
     private int lotGeInitial;
+    private ToIntFunction<Snapshot> toInitialLot;
 
     @SuppressWarnings("unchecked")
     public AutoTrader20th() {
@@ -49,6 +50,7 @@ public class AutoTrader20th extends AutoTrader {
                 AutoTradeProperties.getInt("autoTrader20th.stopLoss.duration.long.seconds"));
         lotLtInitial = AutoTradeProperties.getInt("autoTrader20th.order.lot.ltInitial");
         lotGeInitial = AutoTradeProperties.getInt("autoTrader20th.order.lot.geInitial");
+        toInitialLot = s -> s.getMargin() / 100000;
 
         postConstruct();
     }
@@ -99,7 +101,7 @@ public class AutoTrader20th extends AutoTrader {
     }
 
     private int nextLot(Snapshot snapshot) {
-        int initialLot = snapshot.getMargin() / 100000;
+        int initialLot = toInitialLot.applyAsInt(snapshot);
         if (initialLot <= snapshot.getMoreLot()) {
             return lotGeInitial;
         }
@@ -197,11 +199,7 @@ public class AutoTrader20th extends AutoTrader {
                         recoveryManager.open(snapshot);
                         setDynamicThreshold(rateAnalyzer.minWithin(stopLossDurationShort));
                     } else {
-                        if (recoveryManager.isFixWithProfit()) {
-                            orderAsk(nextLot(snapshot), snapshot);
-                        } else {
-                            orderAsk(recoveryManager.getSnapshotWhenStopLoss().getMoreLot(), snapshot);
-                        }
+                        orderAsk(recoveryManager.getCounterTradingStartLot(), snapshot);
                         recoveryManager.setCounterTradingSnapshot(snapshot);
                         setDynamicThreshold(rateAnalyzer.minWithin(stopLossDurationLong));
                     }
@@ -215,11 +213,7 @@ public class AutoTrader20th extends AutoTrader {
                         recoveryManager.open(snapshot);
                         setDynamicThreshold(rateAnalyzer.maxWithin(stopLossDurationShort));
                     } else {
-                        if (recoveryManager.isFixWithProfit()) {
-                            orderBid(nextLot(snapshot), snapshot);
-                        } else {
-                            orderBid(recoveryManager.getSnapshotWhenStopLoss().getMoreLot(), snapshot);
-                        }
+                        orderBid(recoveryManager.getCounterTradingStartLot(), snapshot);
                         recoveryManager.setCounterTradingSnapshot(snapshot);
                         setDynamicThreshold(rateAnalyzer.maxWithin(stopLossDurationLong));
                     }
@@ -305,7 +299,15 @@ public class AutoTrader20th extends AutoTrader {
     private void stopLossProcess(Snapshot snapshot) {
         recoveryManager.printSummary(snapshot);
         recoveryManager.setSnapshotWhenStopLoss(snapshot);
-        recoveryManager.setFixWithProfit(snapshot.hasProfit());
+
+        int nextLot = snapshot.getMoreLot();
+        if (snapshot.hasProfit()) {
+            int percentage = 100 - recoveryManager.getRecoveryProgress(snapshot);
+            nextLot = Math.max(snapshot.getMoreLot() * percentage / 100,
+                    toInitialLot.applyAsInt(snapshot));
+        }
+        recoveryManager.setCounterTradingStartLot(nextLot);
+
         snapshot.setFix(true);
     }
 
