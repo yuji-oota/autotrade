@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
@@ -46,7 +47,6 @@ public class WebDriverHirose implements WebDriverWrapper {
                     indicator.setIndicatorName(tds.get(3).getText());
                     return indicator;
                 })
-                .filter(ind -> !"*".equals(ind.getRawTime()))
                 .collect(Collectors.toList());
 
         // Indicator.dateTimeを補完
@@ -57,10 +57,15 @@ public class WebDriverHirose implements WebDriverWrapper {
                 isoDate = LocalDate.now().getYear() + "-"
                         + indicator.getRawDate().replaceAll("\\(.*", "").replace("/", "-");
             }
+            if ("*".equals(indicator.getRawTime())) {
+                continue;
+            }
             indicator.setDateTime(LocalDateTime.parse(isoDate + "T" + indicator.getRawTime(), formatter));
         }
         return indicators.stream()
+                .filter(ind -> Objects.nonNull(ind.getDateTime()))
                 .filter(ind -> LocalDateTime.now().isBefore(ind.getDateTime()))
+                .filter(ind -> !"*".equals(ind.getRawTime()))
                 .toList();
     }
 

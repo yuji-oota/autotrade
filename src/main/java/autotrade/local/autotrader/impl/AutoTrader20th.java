@@ -117,7 +117,7 @@ public class AutoTrader20th extends AutoTrader {
     protected void preFix(Snapshot snapshot) {
         if (recoveryManager.isOpen()
                 && (recoveryManager.isBeforeCounterTrading()
-                        || recoveryManager.isReachedRecover())) {
+                        || recoveryManager.getRecoveryProgress(snapshot) >= 50)) {
             if (snapshot.hasAskOnly()) {
                 int threshold = rateAnalyzer.minWithin(stopLossDurationShort);
                 if (dynamicThreshold < threshold) {
@@ -161,34 +161,6 @@ public class AutoTrader20th extends AutoTrader {
                 if (rateAnalyzer.isBidDown()
                         && snapshot.hasAsk()
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
-                    fixAsk(snapshot);
-                    stopLossProcess(snapshot);
-                }
-            }
-            if (recoveryManager.getRecoveryProgress(snapshot) >= 50) {
-                if (rateAnalyzer.isAskUp()
-                        && snapshot.hasBid()
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, stopLossDurationShort)) {
-                    fixBid(snapshot);
-                    stopLossProcess(snapshot);
-                }
-                if (rateAnalyzer.isBidDown()
-                        && snapshot.hasAsk()
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, stopLossDurationShort)) {
-                    fixAsk(snapshot);
-                    stopLossProcess(snapshot);
-                }
-            }
-            if (snapshot.hasProfit()) {
-                if (rateAnalyzer.isAskUp()
-                        && snapshot.hasBid()
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, stopLossDurationLong)) {
-                    fixBid(snapshot);
-                    stopLossProcess(snapshot);
-                }
-                if (rateAnalyzer.isBidDown()
-                        && snapshot.hasAsk()
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, stopLossDurationLong)) {
                     fixAsk(snapshot);
                     stopLossProcess(snapshot);
                 }
