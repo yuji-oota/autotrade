@@ -20,7 +20,6 @@ public class RecoveryManager implements Serializable {
     private boolean isOpen;
     private boolean isReachedRecover;
     private Snapshot snapshotWhenStart;
-    private Snapshot snapshotWhenStopLoss;
     private ToIntFunction<Snapshot> profitCalcurator;
     private int stopLossCount;
 
@@ -42,8 +41,7 @@ public class RecoveryManager implements Serializable {
     public void open(Snapshot snapshot) {
         snapshotWhenStart = snapshot;
         counterTradingSnapshot = snapshot;
-        snapshotWhenStopLoss = snapshot;
-        log.info("RecoveryManager opened {}.", snapshot);
+        log.info("RecoveryManager opened.");
         isOpen = true;
         stopLossCount = 0;
     }
@@ -89,32 +87,33 @@ public class RecoveryManager implements Serializable {
     }
 
     public int getRecoveryProgress(Snapshot snapshot) {
-        int lossCounterTradingStart = getLossCounterTradingStart();
-        int loss = getLoss(snapshot);
-        if (lossCounterTradingStart == 0) {
+        int startProfit = getStartProfit();
+        int profit = getProfit(snapshot);
+        if (startProfit == 0) {
             return 0;
         }
         return BigDecimal.ONE
-                .subtract(BigDecimal.valueOf(loss).divide(BigDecimal.valueOf(lossCounterTradingStart),
+                .subtract(BigDecimal.valueOf(profit).divide(BigDecimal.valueOf(startProfit),
                         new MathContext(2, RoundingMode.HALF_UP)))
                 .multiply(BigDecimal.valueOf(100))
                 .intValue();
     }
 
-    private int getLossCounterTradingStart() {
+    private int getStartProfit() {
         return counterTradingSnapshot.getMargin()
                 + counterTradingSnapshot.getPositionProfit()
                 - snapshotWhenStart.getMargin();
     }
 
-    private int getLoss(Snapshot snapshot) {
+    private int getProfit(Snapshot snapshot) {
         return snapshot.getEffectiveMargin() - snapshotWhenStart.getMargin();
     }
 
     public void printSummary(Snapshot snapshot) {
-        log.info("recovery summary. {} lot:{} start profit:{} end profit:{} stopLossCount:{}",
+        log.info("recovery summary. {} lot:{} start profit:{} end profit:{} total profit:{} stopLossCount:{}",
                 snapshot.getPair(), snapshot.getMoreLot(),
-                getLossCounterTradingStart(), getLoss(snapshot), stopLossCount);
+                getStartProfit(), getProfit(snapshot),
+                snapshot.getTotalProfit(), stopLossCount);
     }
 
     public boolean isBeforeCounterTrading() {
@@ -125,8 +124,13 @@ public class RecoveryManager implements Serializable {
         return !isBeforeCounterTrading();
     }
 
-    public void setSnapshotWhenStopLoss(Snapshot snapshotWhenStopLoss) {
-        this.snapshotWhenStopLoss = snapshotWhenStopLoss;
+    public void stopLossProcess(Snapshot snapshot) {
+        printSummary(snapshot);
+        counterTradingStartLot = snapshot.getMoreLot();
+        if (snapshot.hasProfit()) {
+            int percentage = 100 - getRecoveryProgress(snapshot);
+            counterTradingStartLot = snapshot.getMoreLot() * percentage / 100;
+        }
         stopLossCount++;
         resetReachedRecover();
     }

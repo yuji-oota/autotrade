@@ -67,7 +67,6 @@ public class AutoTrader20th extends AutoTrader {
         super.loadLocal();
         recoveryManager = AutoTradeUtils.localLoad(Paths.get("localSave", "recoveryManager"));
         log.info("snapshotWhenStart:{}", recoveryManager.getSnapshotWhenStart());
-        log.info("snapshotWhenStopLoss:{}", recoveryManager.getSnapshotWhenStopLoss());
         setDynamicThreshold(AutoTradeUtils.localLoad(Paths.get("localSave", "dynamicThreshold")));
     }
 
@@ -199,7 +198,9 @@ public class AutoTrader20th extends AutoTrader {
                         recoveryManager.open(snapshot);
                         setDynamicThreshold(rateAnalyzer.minWithin(stopLossDurationShort));
                     } else {
-                        orderAsk(recoveryManager.getCounterTradingStartLot(), snapshot);
+                        int lot = Math.max(toInitialLot.applyAsInt(snapshot),
+                                recoveryManager.getCounterTradingStartLot());
+                        orderAsk(lot, snapshot);
                         recoveryManager.setCounterTradingSnapshot(snapshot);
                         setDynamicThreshold(rateAnalyzer.minWithin(stopLossDurationLong));
                     }
@@ -213,7 +214,9 @@ public class AutoTrader20th extends AutoTrader {
                         recoveryManager.open(snapshot);
                         setDynamicThreshold(rateAnalyzer.maxWithin(stopLossDurationShort));
                     } else {
-                        orderBid(recoveryManager.getCounterTradingStartLot(), snapshot);
+                        int lot = Math.max(toInitialLot.applyAsInt(snapshot),
+                                recoveryManager.getCounterTradingStartLot());
+                        orderBid(lot, snapshot);
                         recoveryManager.setCounterTradingSnapshot(snapshot);
                         setDynamicThreshold(rateAnalyzer.maxWithin(stopLossDurationLong));
                     }
@@ -297,17 +300,7 @@ public class AutoTrader20th extends AutoTrader {
     }
 
     private void stopLossProcess(Snapshot snapshot) {
-        recoveryManager.printSummary(snapshot);
-        recoveryManager.setSnapshotWhenStopLoss(snapshot);
-
-        int nextLot = snapshot.getMoreLot();
-        if (snapshot.hasProfit()) {
-            int percentage = 100 - recoveryManager.getRecoveryProgress(snapshot);
-            nextLot = Math.max(snapshot.getMoreLot() * percentage / 100,
-                    toInitialLot.applyAsInt(snapshot));
-        }
-        recoveryManager.setCounterTradingStartLot(nextLot);
-
+        recoveryManager.stopLossProcess(snapshot);
         snapshot.setFix(true);
     }
 

@@ -20,7 +20,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 
 import autotrade.local.actor.IndicatorManager;
 import autotrade.local.actor.RateAnalyzer;
-import autotrade.local.actor.UploadManager;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.AudioPath;
 import autotrade.local.material.CurrencyPair;
@@ -44,7 +43,6 @@ public abstract class AutoTrader {
     protected Map<CurrencyPair, RateAnalyzer> pairAnalyzerMap;
     protected RateAnalyzer rateAnalyzer;
     protected IndicatorManager indicatorManager;
-    protected UploadManager uploadManager;
 
     protected int startMargin;
 
@@ -69,7 +67,6 @@ public abstract class AutoTrader {
         pairAnalyzerMap = Stream.of(CurrencyPair.values())
                 .collect(Collectors.toMap(pair -> pair, pair -> new RateAnalyzer()));
         rateAnalyzer = pairAnalyzerMap.get(pair);
-        uploadManager = new UploadManager();
         indicatorManager = new IndicatorManager();
     }
 
@@ -92,8 +89,8 @@ public abstract class AutoTrader {
 
     protected void loadLocal() {
         pairAnalyzerMap = AutoTradeUtils.localLoad(Paths.get("localSave", "pairAnalyzerMap"));
+        log.info("pairAnalyzerMap loaded.");
         rateAnalyzer = pairAnalyzerMap.get(pair);
-        log.info("rateAnalyzer.rate.size {}", rateAnalyzer.getRates().size());
     };
 
     public void operation() {
@@ -429,21 +426,18 @@ public abstract class AutoTrader {
         verifyOrder(0, Snapshot::getAskLot);
         verifyOrder(0, Snapshot::getBidLot);
         log.info("fix all position.");
-        AutoTradeUtils.printObject(snapshot);
     }
 
     protected void fixAsk(Snapshot snapshot) {
         wrapper.fixAsk();
         verifyOrder(0, Snapshot::getAskLot);
         log.info("fix ask position.");
-        AutoTradeUtils.printObject(snapshot);
     }
 
     protected void fixBid(Snapshot snapshot) {
         wrapper.fixBid();
         verifyOrder(0, Snapshot::getBidLot);
         log.info("fix bid position.");
-        AutoTradeUtils.printObject(snapshot);
     }
 
     protected void verifyOrder(int lot, ToIntFunction<Snapshot> lotAfterOrder) {
