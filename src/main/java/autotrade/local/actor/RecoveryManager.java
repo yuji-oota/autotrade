@@ -22,6 +22,7 @@ public class RecoveryManager implements Serializable {
     private Snapshot snapshotWhenStart;
     private ToIntFunction<Snapshot> profitCalcurator;
     private int stopLossCount;
+    private int openCount;
 
     @Setter
     private Snapshot counterTradingSnapshot;
@@ -44,6 +45,7 @@ public class RecoveryManager implements Serializable {
         log.info("RecoveryManager opened.");
         isOpen = true;
         stopLossCount = 0;
+        openCount++;
     }
 
     public void close() {

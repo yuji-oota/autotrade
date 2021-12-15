@@ -157,6 +157,7 @@ public class AutoTrader20th extends AutoTrader {
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
                     fixBid(snapshot);
                     stopLossProcess(snapshot);
+                    return;
                 }
             } else {
                 if (rateAnalyzer.isBidDown()
@@ -164,7 +165,26 @@ public class AutoTrader20th extends AutoTrader {
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
                     fixAsk(snapshot);
                     stopLossProcess(snapshot);
+                    return;
                 }
+            }
+        }
+        if (!snapshot.hasProfit()) {
+            if (rateAnalyzer.isAskUp()
+                    && snapshot.hasBid()
+                    && rateAnalyzer.isReachedAskThresholdWithin(rate, stopLossDurationLong)) {
+                log.info("stop loss by seconds:{}", stopLossDurationLong.toSeconds());
+                fixBid(snapshot);
+                stopLossProcess(snapshot);
+                return;
+            }
+            if (rateAnalyzer.isBidDown()
+                    && snapshot.hasAsk()
+                    && rateAnalyzer.isReachedBidThresholdWithin(rate, stopLossDurationLong)) {
+                log.info("stop loss by seconds:{}", stopLossDurationLong.toSeconds());
+                fixAsk(snapshot);
+                stopLossProcess(snapshot);
+                return;
             }
         }
     }
@@ -194,15 +214,15 @@ public class AutoTrader20th extends AutoTrader {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
                     if (recoveryManager.isClose()) {
-                        orderAsk(nextLot(snapshot), snapshot);
-                        recoveryManager.open(snapshot);
                         setDynamicThreshold(rateAnalyzer.minWithin(stopLossDurationShort));
+                        recoveryManager.open(snapshot);
+                        orderAsk(nextLot(snapshot), snapshot);
                     } else {
+                        setDynamicThreshold(rateAnalyzer.minWithin(stopLossDurationLong));
                         int lot = Math.max(toInitialLot.applyAsInt(snapshot),
                                 recoveryManager.getCounterTradingStartLot());
-                        orderAsk(lot, snapshot);
                         recoveryManager.setCounterTradingSnapshot(snapshot);
-                        setDynamicThreshold(rateAnalyzer.minWithin(stopLossDurationLong));
+                        orderAsk(lot, snapshot);
                     }
                     doAsk = false;
                 }
@@ -210,15 +230,15 @@ public class AutoTrader20th extends AutoTrader {
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
                     if (recoveryManager.isClose()) {
-                        orderBid(nextLot(snapshot), snapshot);
-                        recoveryManager.open(snapshot);
                         setDynamicThreshold(rateAnalyzer.maxWithin(stopLossDurationShort));
+                        recoveryManager.open(snapshot);
+                        orderBid(nextLot(snapshot), snapshot);
                     } else {
+                        setDynamicThreshold(rateAnalyzer.maxWithin(stopLossDurationLong));
                         int lot = Math.max(toInitialLot.applyAsInt(snapshot),
                                 recoveryManager.getCounterTradingStartLot());
-                        orderBid(lot, snapshot);
                         recoveryManager.setCounterTradingSnapshot(snapshot);
-                        setDynamicThreshold(rateAnalyzer.maxWithin(stopLossDurationLong));
+                        orderBid(lot, snapshot);
                     }
                     doBid = false;
                 }
