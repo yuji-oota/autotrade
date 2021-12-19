@@ -8,8 +8,7 @@ class CurrencyPairTest {
     void test() {
         System.out.println(CurrencyPair.AUDUSD.getMinSpread());
         System.out.println(CurrencyPair.AUDUSD.getMarginRequirement());
-        System.out.println(CurrencyPair.AUDJPY.getMinSpread());
-        System.out.println(CurrencyPair.AUDJPY.getMarginRequirement());
+        System.out.println(CurrencyPair.AUDUSD.getHandleMarket());
     }
 
 }

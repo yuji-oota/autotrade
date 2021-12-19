@@ -12,6 +12,7 @@ import autotrade.local.actor.RecoveryManager;
 import autotrade.local.autotrader.AutoTrader;
 import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.DisplayMode;
+import autotrade.local.material.Market;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import autotrade.local.utility.AutoTradeProperties;
@@ -77,13 +78,11 @@ public class AutoTrader20th extends AutoTrader {
             return recoveryManager.getHandlePair();
         }
 
-        if (orderablePairs.size() == 1) {
-            return orderablePairs.get(0);
-        }
-
         changeDisplay(DisplayMode.RATELIST);
+        Market market = Market.now();
         // 推奨通貨ペア選択
-        return orderablePairs.stream()
+        return CurrencyPair.getPairs().stream()
+                .filter(pair -> pair.getHandleMarket().contains(market.name()))
                 .map(pair -> {
                     return new AbstractMap.SimpleEntry<CurrencyPair, Integer>(
                             pair, pairAnalyzerMap.get(pair).rangeWithin(stopLossDurationShort) - pair.getMinSpread());

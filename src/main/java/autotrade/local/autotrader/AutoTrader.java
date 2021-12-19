@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
@@ -36,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AutoTrader {
 
     protected CurrencyPair pair;
-    protected List<CurrencyPair> orderablePairs;
 
     protected WebDriver driver;
     protected WebDriverWrapper wrapper;
@@ -56,9 +54,6 @@ public abstract class AutoTrader {
 
     public AutoTrader() {
         pair = CurrencyPair.USDJPY;
-        orderablePairs = AutoTradeProperties.getList("autotrade.order.pairs").stream()
-                .map(CurrencyPair::valueOf)
-                .toList();
         inactiveStart = LocalTime
                 .from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
         inactiveEnd = LocalTime
@@ -229,18 +224,15 @@ public abstract class AutoTrader {
         // SnapshotのレートをRateAnalyzerに追加
         pairAnalyzerMap.get(snapshot.getPair()).add(snapshot.getRate());
 
-        if (orderablePairs.size() > 1) {
-
-            changeDisplay(DisplayMode.RATELIST);
-            // レートリストから他通貨ペアのレートをRateAnalyzerに追加
-            if (snapshot.hasNoPosition()
-                    || LocalDateTime.now().getSecond() % 10 == 0) {
-                orderablePairs.stream()
-                        .filter(p -> p != snapshot.getPair())
-                        .forEach(p -> {
-                            pairAnalyzerMap.get(p).add(buildRateFromList(p));
-                        });
-            }
+        changeDisplay(DisplayMode.RATELIST);
+        // レートリストから他通貨ペアのレートをRateAnalyzerに追加
+        if (snapshot.hasNoPosition()
+                || LocalDateTime.now().getSecond() % 10 == 0) {
+            CurrencyPair.getPairs().stream()
+                    .filter(p -> p != snapshot.getPair())
+                    .forEach(p -> {
+                        pairAnalyzerMap.get(p).add(buildRateFromList(p));
+                    });
         }
 
         // 非活性時間処理
