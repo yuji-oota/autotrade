@@ -1,6 +1,7 @@
 package autotrade.local.autotrader.impl;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.AbstractMap;
@@ -117,7 +118,7 @@ public class AutoTrader20th extends AutoTrader {
     protected void preFix(Snapshot snapshot) {
         if (recoveryManager.isOpen()
                 && (recoveryManager.isBeforeCounterTrading()
-                        || recoveryManager.getRecoveryProgress(snapshot) >= 50)) {
+                        || recoveryManager.getRecoveryProgress(snapshot) >= 25)) {
             if (snapshot.hasAskOnly()) {
                 int minRate = rateAnalyzer.minWithin(stopLossDurationShort);
                 if (stopLossRate < minRate) {
@@ -214,8 +215,16 @@ public class AutoTrader20th extends AutoTrader {
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
                     if (recoveryManager.isClose()) {
                         setStopLossRate(rateAnalyzer.minWithin(stopLossDurationShort));
-                        recoveryManager.open(snapshot);
-                        orderAsk(nextLot(snapshot), snapshot);
+                        int lot = nextLot(snapshot);
+                        if (recoveryManager.getOpenCount() == 0) {
+                            int handicap = getHandicap(snapshot);
+                            recoveryManager.open(snapshot.toBuilder().margin(snapshot.getMargin() + handicap).build());
+                            recoveryManager.setCounterTradingSnapshot(snapshot);
+                            lot = handicap / 100;
+                        } else {
+                            recoveryManager.open(snapshot);
+                        }
+                        orderAsk(lot, snapshot);
                     } else {
                         setStopLossRate(rateAnalyzer.minWithin(stopLossDurationLong));
                         int lot = Math.max(toInitialLot.applyAsInt(snapshot),
@@ -230,8 +239,16 @@ public class AutoTrader20th extends AutoTrader {
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
                     if (recoveryManager.isClose()) {
                         setStopLossRate(rateAnalyzer.maxWithin(stopLossDurationShort));
-                        recoveryManager.open(snapshot);
-                        orderBid(nextLot(snapshot), snapshot);
+                        int lot = nextLot(snapshot);
+                        if (recoveryManager.getOpenCount() == 0) {
+                            int handicap = getHandicap(snapshot);
+                            recoveryManager.open(snapshot.toBuilder().margin(snapshot.getMargin() + handicap).build());
+                            recoveryManager.setCounterTradingSnapshot(snapshot);
+                            lot = handicap / 100;
+                        } else {
+                            recoveryManager.open(snapshot);
+                        }
+                        orderBid(lot, snapshot);
                     } else {
                         setStopLossRate(rateAnalyzer.maxWithin(stopLossDurationLong));
                         int lot = Math.max(toInitialLot.applyAsInt(snapshot),
@@ -307,6 +324,10 @@ public class AutoTrader20th extends AutoTrader {
             saveLocal();
         }
         super.postTrade(snapshot);
+    }
+
+    private int getHandicap(Snapshot snapshot) {
+        return new BigDecimal(snapshot.getMargin()).multiply(new BigDecimal("0.005")).intValue();
     }
 
     private void setStopLossRate(int rate) {

@@ -6,13 +6,10 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
-public class Snapshot implements Serializable {
+@Builder(toBuilder = true)
+public class Snapshot implements Serializable, Cloneable {
 
-    // Tostring用
-    @SuppressWarnings("unused")
     private int positionProfit;
-    @SuppressWarnings("unused")
     private int totalProfit;
 
     private int margin;

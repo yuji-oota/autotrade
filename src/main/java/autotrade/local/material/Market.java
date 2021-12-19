@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 public enum Market {
     TOKYO(LocalTime.parse("08:00"), LocalTime.parse("15:00")),
     LONDON(LocalTime.parse("15:00"), LocalTime.parse("02:00")),
-    OTHER(LocalTime.parse("00:00"), LocalTime.parse("00:00")),
+    OTHER(LocalTime.parse("02:00"), LocalTime.parse("08:00")),
     ;
     
     private LocalTime start;

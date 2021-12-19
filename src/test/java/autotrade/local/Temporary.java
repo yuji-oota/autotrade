@@ -31,8 +31,8 @@ public class Temporary {
     @Test
     public void test() {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME.withResolverStyle(ResolverStyle.LENIENT);
-        System.out.println( LocalDateTime.parse("2001-11-12T23:10", formatter));
-        System.out.println( LocalDateTime.parse("2001-11-12T25:10", formatter));
+        System.out.println(LocalDateTime.parse("2001-11-12T23:10", formatter));
+        System.out.println(LocalDateTime.parse("2001-11-12T25:10", formatter));
     }
 
     @Test
@@ -51,6 +51,11 @@ public class Temporary {
         System.out.println("123.9961".matches(".*99."));
         System.out.println("123.006".matches(".*00."));
         System.out.println("123.0061".matches(".*00."));
+    }
+
+    @Test
+    public void test04() {
+        System.out.println(new BigDecimal(300000).multiply(new BigDecimal("0.005")).intValue());
     }
 
 }

@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 import autotrade.local.utility.AutoTradeProperties;
 
 public enum CurrencyPair {
-    USDJPY, EURUSD, AUDUSD,
+    USDJPY, EURUSD, GBPUSD, AUDUSD,
     ;
 
     private final static List<Map<String, Object>> listMap = AutoTradeProperties.getListMap("autotrade.pairs");
