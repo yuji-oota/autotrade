@@ -119,7 +119,7 @@ public class RecoveryManager implements Serializable {
     }
 
     public boolean isBeforeCounterTrading() {
-        return snapshotWhenStart.equals(counterTradingSnapshot);
+        return stopLossCount == 0;
     }
 
     public boolean isAfterCounterTrading() {

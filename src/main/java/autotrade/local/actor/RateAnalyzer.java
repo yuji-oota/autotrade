@@ -263,7 +263,18 @@ public class RateAnalyzer implements Serializable {
             return true;
         }
         if (latestRate.anyMatch(".*00.", ".*99.")) {
-            return true;
+            int averageNear000 = (int) rates.stream()
+                    .filter(r -> r.anyMatch(".*0..", ".*9.."))
+                    .mapToInt(Rate::getMiddle)
+                    .average()
+                    .orElse(0.0);
+            if (averageNear000 == 0) {
+                return true;
+            }
+            if (Math.abs(averageNear000 - latestRate.getAsk()) > 250
+                    || Math.abs(averageNear000 - latestRate.getBid()) > 250) {
+                return true;
+            }
         }
         if (latestRate.getAsk() < latestRate.getBid()) {
             return true;

@@ -58,4 +58,19 @@ public class Temporary {
         System.out.println(new BigDecimal(300000).multiply(new BigDecimal("0.005")).intValue());
     }
 
+    @Test
+    public void test05() {
+        int i = 123001 / 1000 * 1000;
+        System.out.println(i);
+        System.out.println(123456 % 1000);
+        System.out.println(123001 / 1000 * 1000);
+        System.out.println(123000 / 1000 * 1000);
+        System.out.println(123999 / 1000 * 1000);
+        System.out.println(123998 / 1000 * 1000);
+        System.out.println(122001 / 1000 * 1000);
+        System.out.println(122000 / 1000 * 1000);
+        System.out.println(122999 / 1000 * 1000);
+        System.out.println(122998 / 1000 * 1000);
+    }
+
 }

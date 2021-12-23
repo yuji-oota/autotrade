@@ -297,6 +297,7 @@ public abstract class AutoTrader {
     }
 
     protected boolean isOrderable(Snapshot snapshot) {
+
         if (snapshot.isFix()) {
             return false;
         }
