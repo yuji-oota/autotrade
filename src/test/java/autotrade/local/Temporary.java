@@ -38,7 +38,7 @@ public class Temporary {
     @Test
     public void test02() {
         System.out.println(BigDecimal.ONE
-                .subtract(BigDecimal.valueOf(1000).divide(BigDecimal.valueOf(-10000),
+                .subtract(BigDecimal.valueOf(300).divide(BigDecimal.valueOf(-1200),
                         new MathContext(2, RoundingMode.HALF_UP)))
                 .multiply(BigDecimal.valueOf(100))
                 .intValue());

@@ -67,7 +67,11 @@ public class RecoveryManager implements Serializable {
     }
 
     public boolean isRecoveredWithProfit(Snapshot snapshot) {
-        return isRecovered(snapshotWhenStart.getMargin() + profitCalcurator.applyAsInt(snapshot),
+        return isRecoveredWithProfit(snapshot, profitCalcurator);
+    }
+
+    public boolean isRecoveredWithProfit(Snapshot snapshot, ToIntFunction<Snapshot> toProfit) {
+        return isRecovered(snapshotWhenStart.getMargin() + toProfit.applyAsInt(snapshot),
                 snapshot.getEffectiveMargin());
     }
 
@@ -89,8 +93,8 @@ public class RecoveryManager implements Serializable {
     }
 
     public int getRecoveryProgress(Snapshot snapshot) {
-        int startProfit = getStartProfit();
-        int profit = getProfit(snapshot);
+        int startProfit = getStartProfit() - profitCalcurator.applyAsInt(snapshot);
+        int profit = getProfit(snapshot) - profitCalcurator.applyAsInt(snapshot);
         if (startProfit == 0) {
             return 0;
         }
