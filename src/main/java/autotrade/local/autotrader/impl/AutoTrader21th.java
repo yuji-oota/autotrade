@@ -66,7 +66,7 @@ public class AutoTrader21th extends AutoTrader {
     protected void loadLocal() {
         super.loadLocal();
         recoveryManager = AutoTradeUtils.localLoad(Paths.get("localSave", "recoveryManager"));
-        log.info("snapshotWhenStart:{}", recoveryManager.getSnapshotWhenStart());
+        log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
         setStopLossRate(AutoTradeUtils.localLoad(Paths.get("localSave", "stopLossRate")));
     }
 

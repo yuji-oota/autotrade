@@ -19,7 +19,7 @@ public class RecoveryManager implements Serializable {
 
     private boolean isOpen;
     private boolean isReachedRecover;
-    private Snapshot snapshotWhenStart;
+    private Snapshot openSnapshot;
     private ToIntFunction<Snapshot> profitCalcurator;
     private int stopLossCount;
     private int openCount;
@@ -40,7 +40,7 @@ public class RecoveryManager implements Serializable {
     }
 
     public void open(Snapshot snapshot) {
-        snapshotWhenStart = snapshot;
+        openSnapshot = snapshot;
         counterTradingSnapshot = snapshot;
         log.info("RecoveryManager opened.");
         isOpen = true;
@@ -63,7 +63,7 @@ public class RecoveryManager implements Serializable {
     }
 
     public boolean isRecovered(Snapshot snapshot) {
-        return isRecovered(snapshotWhenStart.getMargin(), snapshot.getEffectiveMargin());
+        return isRecovered(openSnapshot.getMargin(), snapshot.getEffectiveMargin());
     }
 
     public boolean isRecoveredWithProfit(Snapshot snapshot) {
@@ -71,7 +71,7 @@ public class RecoveryManager implements Serializable {
     }
 
     public boolean isRecoveredWithProfit(Snapshot snapshot, ToIntFunction<Snapshot> toProfit) {
-        return isRecovered(snapshotWhenStart.getMargin() + toProfit.applyAsInt(snapshot),
+        return isRecovered(openSnapshot.getMargin() + toProfit.applyAsInt(snapshot),
                 snapshot.getEffectiveMargin());
     }
 
@@ -108,11 +108,11 @@ public class RecoveryManager implements Serializable {
     private int getStartProfit() {
         return counterTradingSnapshot.getMargin()
                 + counterTradingSnapshot.getPositionProfit()
-                - snapshotWhenStart.getMargin();
+                - openSnapshot.getMargin();
     }
 
     private int getProfit(Snapshot snapshot) {
-        return snapshot.getEffectiveMargin() - snapshotWhenStart.getMargin();
+        return snapshot.getEffectiveMargin() - openSnapshot.getMargin();
     }
 
     public void printSummary(Snapshot snapshot) {
@@ -142,6 +142,6 @@ public class RecoveryManager implements Serializable {
     }
 
     public CurrencyPair getHandlePair() {
-        return snapshotWhenStart.getPair();
+        return openSnapshot.getPair();
     }
 }

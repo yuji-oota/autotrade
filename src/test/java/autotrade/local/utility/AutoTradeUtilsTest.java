@@ -36,7 +36,7 @@ public class AutoTradeUtilsTest {
         RecoveryManager recoveryManager = AutoTradeUtils.localLoad(Paths.get("localSave", "recoveryManager"));
         AutoTradeUtils.printObject(recoveryManager);
         AutoTradeUtils.printObject(recoveryManager.isOpen());
-        AutoTradeUtils.printObject(recoveryManager.getSnapshotWhenStart());
+        AutoTradeUtils.printObject(recoveryManager.getOpenSnapshot());
         Snapshot snapshot = Snapshot.builder().effectiveMargin(-1).rate(Rate.builder().ask(101).bid(-101).build()).askLot(50).bidLot(-50).build();
         AutoTradeUtils.printObject(recoveryManager.isRecoveredWithProfit(snapshot));
     }
