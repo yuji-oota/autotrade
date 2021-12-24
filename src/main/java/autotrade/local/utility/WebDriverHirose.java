@@ -45,6 +45,7 @@ public class WebDriverHirose implements WebDriverWrapper {
                     indicator.setRawTime(tds.get(1).getText());
                     indicator.setCountryName(tds.get(2).findElements(By.tagName("img")).get(0).getAttribute("title"));
                     indicator.setIndicatorName(tds.get(3).getText());
+                    indicator.setImportant(!tr.findElements(By.className("r1")).isEmpty());
                     return indicator;
                 })
                 .collect(Collectors.toList());

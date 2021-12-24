@@ -1,6 +1,9 @@
 package autotrade.local.material;
 
-import java.util.Collections;
+import java.math.BigDecimal;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -13,13 +16,15 @@ public enum CurrencyPair {
     USDJPY, EURUSD, GBPUSD, AUDUSD,
     ;
 
+    private final static DateTimeFormatter timeFormatter = DateTimeFormatter.ISO_TIME
+            .withResolverStyle(ResolverStyle.LENIENT);
+
     private final static List<Map<String, Object>> listMap = AutoTradeProperties.getListMap("autotrade.pairs");
     private final static Map<String, Map<String, Object>> pairProperties = listMap.stream()
             .collect(Collectors.toMap(m -> m.get("name").toString(), Function.identity()));
-    private final static List<String> descriptions = Collections.unmodifiableList(
-            Stream.of(CurrencyPair.values()).map(CurrencyPair::getDescription).collect(Collectors.toList()));
-    private final static List<String> names = Collections.unmodifiableList(
-            Stream.of(CurrencyPair.values()).map(CurrencyPair::name).collect(Collectors.toList()));
+    private final static List<String> descriptions = Stream.of(CurrencyPair.values()).map(CurrencyPair::getDescription)
+            .toList();
+    private final static List<String> names = Stream.of(CurrencyPair.values()).map(CurrencyPair::name).toList();
     private final static List<CurrencyPair> pairs = List.of(CurrencyPair.values());
 
     private Map<String, Object> getPairPropertie() {
@@ -34,9 +39,26 @@ public enum CurrencyPair {
         return (int) getPairPropertie().get("marginRequirement");
     }
 
-    @SuppressWarnings("unchecked")
-    public List<String> getHandleMarket() {
-        return (List<String>) getPairPropertie().get("handleMarket");
+    public boolean isHandleable(LocalTime time) {
+        String rawStartTime = getPairPropertie().get("handleStart").toString();
+        String rawEndTime = getPairPropertie().get("handleEnd").toString();
+        LocalTime startTime = LocalTime.parse(rawStartTime, timeFormatter);
+        LocalTime endTime = LocalTime.parse(rawEndTime, timeFormatter);
+
+        if (startTime.equals(endTime)) {
+            return true;
+        }
+        if (startTime.equals(time)) {
+            return true;
+        }
+        if (startTime.isBefore(endTime)) {
+            return startTime.isBefore(time) && time.isBefore(endTime);
+        }
+        if (LocalTime.MIN.equals(time)) {
+            return true;
+        }
+        return (startTime.isBefore(time) && time.isBefore(LocalTime.MAX))
+                || (LocalTime.MIN.isBefore(time) && time.isBefore(endTime));
     }
 
     public int getLimitLot(int margin) {
@@ -45,6 +67,10 @@ public enum CurrencyPair {
 
     public String getDescription() {
         return new StringBuilder(this.name()).insert(3, "/").toString();
+    }
+
+    public BigDecimal getProfitMagnification() {
+        return new BigDecimal(getPairPropertie().get("profitMagnification").toString());
     }
 
     public static List<String> getDescriptions() {

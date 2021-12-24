@@ -5,6 +5,7 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 
@@ -33,6 +34,8 @@ public class Temporary {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME.withResolverStyle(ResolverStyle.LENIENT);
         System.out.println(LocalDateTime.parse("2001-11-12T23:10", formatter));
         System.out.println(LocalDateTime.parse("2001-11-12T25:10", formatter));
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ISO_TIME.withResolverStyle(ResolverStyle.LENIENT);
+        System.out.println(LocalTime.parse("25:10", timeFormatter));
     }
 
     @Test

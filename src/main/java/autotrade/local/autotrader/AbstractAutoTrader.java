@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
@@ -32,7 +33,7 @@ import autotrade.local.utility.WebDriverWrapper;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class AutoTrader {
+public abstract class AbstractAutoTrader {
 
     protected CurrencyPair pair;
 
@@ -44,20 +45,20 @@ public abstract class AutoTrader {
 
     protected int startMargin;
 
-    protected LocalTime inactiveStart;
-    protected LocalTime inactiveEnd;
+    private final static DateTimeFormatter timeFormatter = DateTimeFormatter.ISO_TIME
+            .withResolverStyle(ResolverStyle.LENIENT);
+    protected LocalTime activeStart;
+    protected LocalTime activeEnd;
 
     protected boolean isThroughOrder;
     protected boolean isThroughFix;
     protected boolean isIgnoreSpread;
     protected boolean isForceException;
 
-    public AutoTrader() {
+    public AbstractAutoTrader() {
         pair = CurrencyPair.USDJPY;
-        inactiveStart = LocalTime
-                .from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.start")));
-        inactiveEnd = LocalTime
-                .from(DateTimeFormatter.ISO_LOCAL_TIME.parse(AutoTradeProperties.get("autotrade.inactive.end")));
+        activeStart = LocalTime.parse(AutoTradeProperties.get("autotrade.active.start"), timeFormatter);
+        activeEnd = LocalTime.parse(AutoTradeProperties.get("autotrade.active.end"), timeFormatter);
 
         pairAnalyzerMap = Stream.of(CurrencyPair.values())
                 .collect(Collectors.toMap(pair -> pair, pair -> new RateAnalyzer()));
@@ -79,10 +80,12 @@ public abstract class AutoTrader {
     }
 
     protected void saveLocal() {
+        AutoTradeUtils.localSave(Paths.get("localSave", "startMargin"), startMargin);
         AutoTradeUtils.localSave(Paths.get("localSave", "pairAnalyzerMap"), pairAnalyzerMap);
     };
 
     protected void loadLocal() {
+        startMargin = AutoTradeUtils.localLoad(Paths.get("localSave", "startMargin"));
         pairAnalyzerMap = AutoTradeUtils.localLoad(Paths.get("localSave", "pairAnalyzerMap"));
         log.info("pairAnalyzerMap loaded.");
         rateAnalyzer = pairAnalyzerMap.get(pair);
@@ -141,7 +144,8 @@ public abstract class AutoTrader {
         // 指標を確認する
         if (!indicatorManager.hasIndicator()) {
             indicatorManager.addIndicators(wrapper.getIndicators());
-            indicatorManager.printIndicatorDateTimes();
+            indicatorManager.printIndicators(LocalDate.now());
+            indicatorManager.printIndicators(LocalDate.now().plusDays(1));
         }
 
         // ログイン
@@ -243,7 +247,7 @@ public abstract class AutoTrader {
 
             // 非活性時間の終了までスリープする
             Duration durationToActive = Duration.between(LocalDateTime.now(),
-                    LocalDateTime.of(LocalDate.now(), inactiveEnd));
+                    LocalDateTime.of(LocalDate.now(), activeStart));
             log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
             AutoTradeUtils.sleep(durationToActive);
         }
@@ -320,6 +324,11 @@ public abstract class AutoTrader {
                 // 閾値間隔が狭い場合は注文しない
                 return false;
             }
+            if (indicatorManager.isNextImportant()
+                    && indicatorManager.isIndicatorAround(Duration.ofSeconds(300), Duration.ofSeconds(15))) {
+                // 重要指標が近い場合は注文しない
+                return false;
+            }
             if (indicatorManager.isIndicatorAround(Duration.ofSeconds(90), Duration.ofSeconds(15))) {
                 // 指標が近い場合は注文しない
                 return false;
@@ -391,8 +400,26 @@ public abstract class AutoTrader {
         }
     }
 
+    protected boolean isActiveTime() {
+        LocalTime now = LocalTime.now();
+        if (activeStart.equals(activeEnd)) {
+            return true;
+        }
+        if (activeStart.equals(now)) {
+            return true;
+        }
+        if (activeStart.isBefore(activeEnd)) {
+            return activeStart.isBefore(now) && now.isBefore(activeEnd);
+        }
+        if (LocalTime.MIN.equals(now)) {
+            return true;
+        }
+        return (activeStart.isBefore(now) && now.isBefore(LocalTime.MAX))
+                || (LocalTime.MIN.isBefore(now) && now.isBefore(activeEnd));
+    }
+
     protected boolean isInactiveTime() {
-        return inactiveStart.isBefore(LocalTime.now()) && LocalTime.now().isBefore(inactiveEnd);
+        return !isActiveTime();
     }
 
     protected void orderAsk(int orderLot, Snapshot snapshot) {

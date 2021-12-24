@@ -1,6 +1,7 @@
 package autotrade.local.actor;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class IndicatorManager {
         this.prevDateTime = LocalDateTime.now();
     }
 
-    private LocalDateTime getNextIndicator() {
+    private LocalDateTime getNextDateTime() {
         if (LocalDateTime.now().isAfter(nextDateTime)) {
             prevDateTime = nextDateTime;
             nextDateTime = indicatorDateTimes.stream()
@@ -36,7 +37,7 @@ public class IndicatorManager {
     }
 
     public boolean isNextIndicatorWithin(Duration duration) {
-        return LocalDateTime.now().plus(duration).isAfter(getNextIndicator());
+        return LocalDateTime.now().plus(duration).isAfter(getNextDateTime());
     }
 
     public boolean isPrevIndicatorWithin(Duration duration) {
@@ -51,7 +52,7 @@ public class IndicatorManager {
         return LocalDateTime.now()
                 .plus(duration)
                 .truncatedTo(ChronoUnit.SECONDS)
-                .isEqual(getNextIndicator());
+                .isEqual(getNextDateTime());
     }
 
     public boolean hasIndicator() {
@@ -72,12 +73,24 @@ public class IndicatorManager {
         log.info("indicator datetime list:{}", indicatorDateTimes);
     }
 
-    public void printNextIndicator() {
-        log.info("next indicator is below");
+    public void printIndicators(LocalDate date) {
+        log.info("{} indicators are as follows", date);
         indicators.stream()
-                .filter(ind -> ind.getDateTime().isEqual(getNextIndicator()))
-                .forEach(ind -> {
-                    log.info("{} {} {}", ind.getDateTime(), ind.getCountryName(), ind.getIndicatorName());
-                });
+                .filter(ind -> ind.getDateTime().toLocalDate().isEqual(date))
+                .forEach(Indicator::print);
+    }
+
+    public void printNextIndicator() {
+        log.info("next indicators are as follows");
+        indicators.stream()
+                .filter(ind -> ind.getDateTime().isEqual(getNextDateTime()))
+                .forEach(Indicator::print);
+    }
+
+    public boolean isNextImportant() {
+        return indicators.stream()
+                .filter(ind -> ind.getDateTime().isEqual(getNextDateTime()))
+                .filter(Indicator::isImportant)
+                .count() > 0;
     }
 }

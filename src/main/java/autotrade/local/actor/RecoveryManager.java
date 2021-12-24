@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 public class RecoveryManager implements Serializable {
 
     private boolean isOpen;
-    private boolean isReachedRecover;
     private Snapshot openSnapshot;
     private ToIntFunction<Snapshot> profitCalcurator;
     private int stopLossCount;
@@ -50,12 +49,7 @@ public class RecoveryManager implements Serializable {
 
     public void close() {
         isOpen = false;
-        resetReachedRecover();
         log.info("RecoveryManager closed.");
-    }
-
-    public void resetReachedRecover() {
-        isReachedRecover = false;
     }
 
     public boolean isClose() {
@@ -66,6 +60,10 @@ public class RecoveryManager implements Serializable {
         return isRecovered(openSnapshot.getMargin(), snapshot.getEffectiveMargin());
     }
 
+    private boolean isRecovered(int startMargin, int effectiveMargin) {
+        return startMargin <= effectiveMargin;
+    }
+
     public boolean isRecoveredWithProfit(Snapshot snapshot) {
         return isRecoveredWithProfit(snapshot, profitCalcurator);
     }
@@ -73,15 +71,6 @@ public class RecoveryManager implements Serializable {
     public boolean isRecoveredWithProfit(Snapshot snapshot, ToIntFunction<Snapshot> toProfit) {
         return isRecovered(openSnapshot.getMargin() + toProfit.applyAsInt(openSnapshot),
                 snapshot.getEffectiveMargin());
-    }
-
-    private boolean isRecovered(int startMargin, int effectiveMargin) {
-        boolean isRecovered = startMargin <= effectiveMargin;
-        if (!isReachedRecover && isRecovered) {
-            log.info("reached recovery.");
-            isReachedRecover = isRecovered;
-        }
-        return isRecovered;
     }
 
     public boolean isSuccessCounterTradingAsk(Rate rate) {
@@ -111,7 +100,7 @@ public class RecoveryManager implements Serializable {
                 - openSnapshot.getMargin();
     }
 
-    private int getProfit(Snapshot snapshot) {
+    public int getProfit(Snapshot snapshot) {
         return snapshot.getEffectiveMargin() - openSnapshot.getMargin();
     }
 
@@ -138,7 +127,6 @@ public class RecoveryManager implements Serializable {
             counterTradingStartLot = snapshot.getMoreLot() * percentage / 100;
         }
         stopLossCount++;
-        resetReachedRecover();
     }
 
     public CurrencyPair getHandlePair() {
