@@ -305,10 +305,10 @@ public class AutoTrader21th extends AbstractAutoTrader {
     }
 
     private void printRecoveryProgress(Snapshot snapshot) {
-        log.info("stopLossRate:{} recovery progress:{} profit:{}",
-                stopLossRate,
+        log.info("recovery progress:{} profit:{} stopLossRate:{}",
                 recoveryManager.getRecoveryProgress(snapshot),
-                recoveryManager.getProfit(snapshot));
+                recoveryManager.getProfit(snapshot),
+                stopLossRate);
     }
 
 }
