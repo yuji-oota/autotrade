@@ -246,8 +246,7 @@ public abstract class AbstractAutoTrader {
             printSummary(snapshot);
 
             // 非活性時間の終了までスリープする
-            Duration durationToActive = Duration.between(LocalDateTime.now(),
-                    LocalDateTime.of(LocalDate.now(), activeStart));
+            Duration durationToActive = Duration.between(LocalTime.now(), activeStart);
             log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
             AutoTradeUtils.sleep(durationToActive);
         }
@@ -306,10 +305,6 @@ public abstract class AbstractAutoTrader {
             return false;
         }
         if (isThroughOrder) {
-            return false;
-        }
-        if (Duration.between(rateAnalyzer.getEarliestRate().getTimestamp(), LocalDateTime.now()).toMinutes() < 1) {
-            // 過去Rateがある程度存在しない場合は注文しない
             return false;
         }
         if (!rateAnalyzer.isMoved()) {
@@ -445,19 +440,26 @@ public abstract class AbstractAutoTrader {
         AutoTradeUtils.playAudioRandom(AudioPath.FixSoundEffect);
         verifyOrder(0, Snapshot::getAskLot);
         verifyOrder(0, Snapshot::getBidLot);
-        log.info("fix all position.");
+        log.info("{} fix all position. bid lot:{} ask lot:{} bid rate:{} ask rate:{}",
+                snapshot.getPair(),
+                snapshot.getBidLot(), snapshot.getAskLot(),
+                snapshot.getRate().getRawBid(), snapshot.getRate().getRawAsk());
     }
 
     protected void fixAsk(Snapshot snapshot) {
         wrapper.fixAsk();
         verifyOrder(0, Snapshot::getAskLot);
-        log.info("fix ask position.");
+        log.info("{} fix ask position. lot:{} rate:{}",
+                snapshot.getPair(),
+                snapshot.getAskLot(), snapshot.getRate().getRawAsk());
     }
 
     protected void fixBid(Snapshot snapshot) {
         wrapper.fixBid();
         verifyOrder(0, Snapshot::getBidLot);
-        log.info("fix bid position.");
+        log.info("{} fix bid position. lot:{} rate:{}",
+                snapshot.getPair(),
+                snapshot.getBidLot(), snapshot.getRate().getRawBid());
     }
 
     protected void verifyOrder(int lot, ToIntFunction<Snapshot> lotAfterOrder) {

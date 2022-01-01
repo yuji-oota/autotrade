@@ -3,7 +3,6 @@ package autotrade.local.actor;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.Temporal;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -72,8 +71,9 @@ public class RateAnalyzer implements Serializable {
             rates.add(rate);
             updateWaterMark(rate);
         }
+        LocalDateTime from = LocalDateTime.now().minus(Duration.ofMinutes(10));
         rates = rates.stream()
-                .filter(r -> r.passed().toMillis() <= Duration.ofMinutes(20).toMillis())
+                .filter(r -> r.getTimestamp().isAfter(from))
                 .collect(Collectors.toList());
 
         // 売買閾値設定
@@ -102,7 +102,7 @@ public class RateAnalyzer implements Serializable {
         return (maxWithin(duration) + minWithin(duration)) / 2;
     }
 
-    public int maxBetween(Temporal from, Temporal to) {
+    public int maxBetween(LocalDateTime from, LocalDateTime to) {
         return rates.stream()
                 .filter(rateBetweenFilter(from, to))
                 .map(Rate::getAsk)
@@ -110,7 +110,7 @@ public class RateAnalyzer implements Serializable {
                 .orElse(Integer.MAX_VALUE);
     }
 
-    public int minBetween(Temporal from, Temporal to) {
+    public int minBetween(LocalDateTime from, LocalDateTime to) {
         return rates.stream()
                 .filter(rateBetweenFilter(from, to))
                 .map(Rate::getBid)
@@ -122,7 +122,7 @@ public class RateAnalyzer implements Serializable {
         return averageBetween(LocalDateTime.now().minus(duration), LocalDateTime.now());
     }
 
-    public int averageBetween(Temporal from, Temporal to) {
+    public int averageBetween(LocalDateTime from, LocalDateTime to) {
         return (int) rates.stream()
                 .filter(rateBetweenFilter(from, to))
                 .mapToInt(Rate::getMiddle)
@@ -143,23 +143,22 @@ public class RateAnalyzer implements Serializable {
         }
     }
 
-    private Predicate<Rate> rateBetweenFilter(Temporal from, Temporal to) {
-        return r -> !Duration.between(from, r.getTimestamp()).isNegative()
-                && !Duration.between(r.getTimestamp(), to).isNegative();
+    private Predicate<Rate> rateBetweenFilter(LocalDateTime from, LocalDateTime to) {
+        return r -> r.getTimestamp().isAfter(from) && r.getTimestamp().isBefore(to);
     }
 
     public boolean isUpwardWithin(Duration duration) {
-        LocalDateTime whenMax = rates.stream()
+        LocalDateTime maxDateTime = rates.stream()
                 .filter(rateBetweenFilter(LocalDateTime.now().minus(duration), LocalDateTime.now()))
                 .max(Comparator.comparing(Rate::getAsk))
                 .map(Rate::getTimestamp)
                 .orElse(LocalDateTime.now());
-        LocalDateTime whenMin = rates.stream()
+        LocalDateTime minDateTime = rates.stream()
                 .filter(rateBetweenFilter(LocalDateTime.now().minus(duration), LocalDateTime.now()))
                 .min(Comparator.comparing(Rate::getBid))
                 .map(Rate::getTimestamp)
                 .orElse(LocalDateTime.now());
-        return whenMax.isAfter(whenMin);
+        return maxDateTime.isAfter(minDateTime);
     }
 
     public boolean isDownwardWithin(Duration duration) {
@@ -304,4 +303,5 @@ public class RateAnalyzer implements Serializable {
         return diffRateQueue.getFirst().getAsk() != diffRateQueue.getLast().getAsk()
                 || diffRateQueue.getFirst().getBid() != diffRateQueue.getLast().getBid();
     }
+
 }

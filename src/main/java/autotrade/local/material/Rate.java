@@ -1,7 +1,6 @@
 package autotrade.local.material;
 
 import java.io.Serializable;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -22,10 +21,6 @@ public class Rate implements Serializable {
 
     public int getSpread() {
         return ask - bid;
-    }
-
-    public Duration passed() {
-        return Duration.between(timestamp, LocalDateTime.now());
     }
 
     public int getMiddle() {
