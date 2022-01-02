@@ -11,11 +11,17 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import autotrade.local.material.Rate;
-import autotrade.local.utility.AutoTradeProperties;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @Slf4j
 @Getter
 public class RateAnalyzer implements Serializable {
@@ -29,11 +35,15 @@ public class RateAnalyzer implements Serializable {
     private int countertradingAsk;
     private int countertradingBid;
     private boolean isSenceOfDirection;
-    private Duration thresholdDuration;
     private int noMoveCounter;
     private ArrayDeque<Rate> latestRateQueue;
     private ArrayDeque<Rate> diffRateQueue;
+
+    @Value("#{T(java.time.Duration).ofSeconds('${autotrade.rateAnalizer.threshold.seconds}')}")
+    private Duration thresholdDuration;
+    @Value("#{T(java.time.Duration).ofSeconds('${autotrade.rateAnalizer.calm.seconds}')}")
     private Duration calmDration;
+    @Value("${autotrade.rateAnalizer.calm.range}")
     private int calmRange;
 
     public RateAnalyzer() {
@@ -42,13 +52,10 @@ public class RateAnalyzer implements Serializable {
         bidThreshold = Integer.MIN_VALUE;
         highWaterMark = Rate.builder().ask(Integer.MIN_VALUE).build();
         lowWaterMark = Rate.builder().bid(Integer.MAX_VALUE).build();
-        thresholdDuration = Duration.ofSeconds(AutoTradeProperties.getInt("autotrade.rateAnalizer.threshold.seconds"));
         latestRateQueue = new ArrayDeque<Rate>();
         latestRateQueue.add(Rate.builder().ask(Integer.MIN_VALUE).bid(Integer.MAX_VALUE).build());
         diffRateQueue = new ArrayDeque<Rate>();
         diffRateQueue.add(Rate.builder().ask(Integer.MIN_VALUE).bid(Integer.MAX_VALUE).build());
-        calmDration = Duration.ofSeconds(AutoTradeProperties.getInt("autotrade.rateAnalizer.calm.seconds"));
-        calmRange = AutoTradeProperties.getInt("autotrade.rateAnalizer.calm.range");
     }
 
     public void add(Rate rate) {

@@ -12,20 +12,20 @@ import java.util.stream.Stream;
 
 import autotrade.local.utility.AutoTradeProperties;
 
-public enum CurrencyPair {
+public enum CurrencyPairBackup {
     USDJPY, EURUSD, GBPUSD, AUDUSD,
     ;
-
+    
     private final static DateTimeFormatter timeFormatter = DateTimeFormatter.ISO_TIME
             .withResolverStyle(ResolverStyle.LENIENT);
 
     private final static List<Map<String, Object>> listMap = AutoTradeProperties.getListMap("autotrade.pairs");
     private final static Map<String, Map<String, Object>> pairProperties = listMap.stream()
             .collect(Collectors.toMap(m -> m.get("name").toString(), Function.identity()));
-    private final static List<String> descriptions = Stream.of(CurrencyPair.values()).map(CurrencyPair::getDescription)
+    private final static List<String> descriptions = Stream.of(CurrencyPairBackup.values()).map(CurrencyPairBackup::getDescription)
             .toList();
-    private final static List<String> names = Stream.of(CurrencyPair.values()).map(CurrencyPair::name).toList();
-    private final static List<CurrencyPair> pairs = List.of(CurrencyPair.values());
+    private final static List<String> names = Stream.of(CurrencyPairBackup.values()).map(CurrencyPairBackup::name).toList();
+    private final static List<CurrencyPairBackup> pairs = List.of(CurrencyPairBackup.values());
 
     private Map<String, Object> getPairPropertie() {
         return pairProperties.get(this.name());
@@ -81,7 +81,7 @@ public enum CurrencyPair {
         return names;
     }
 
-    public static List<CurrencyPair> getPairs() {
+    public static List<CurrencyPairBackup> getPairs() {
         return pairs;
     }
 }

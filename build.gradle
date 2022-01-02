@@ -11,6 +11,7 @@ plugins {
     id 'java-library'
     id 'eclipse'
     id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'org.springframework.boot' version '2.6.2'
 }
 
 javafx {
@@ -26,43 +27,25 @@ repositories {
 
 dependencies {
 
-    // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3
-    implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.676'
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter', version: '2.6.2'
 
     // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
     implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '3.141.59'
 
-    // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-    implementation group: 'io.lettuce', name: 'lettuce-core', version: '5.2.1.RELEASE'
-
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.10.1'
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.1'
 
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
 
-    // https://mvnrepository.com/artifact/org.yaml/snakeyaml
-    implementation group: 'org.yaml', name: 'snakeyaml', version: '1.25'
-
-    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-
-    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.8.2'
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test
+    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.6.2'
 
     testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
     testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
 
-}
-
-jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    manifest {
-        attributes('Main-Class': 'autotrade.local.Application')
-        baseName "autotrade-local"
-    }
 }
 
 tasks.withType(JavaCompile) {
@@ -70,7 +53,7 @@ tasks.withType(JavaCompile) {
 }
 
 task collect(type: Copy) {
-    dependsOn jar
+    dependsOn bootJar
     from 'build/libs'
     into './'
 }

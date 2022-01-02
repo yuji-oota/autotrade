@@ -10,13 +10,15 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.function.ToIntFunction;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import autotrade.local.actor.RecoveryManager;
 import autotrade.local.autotrader.AbstractAutoTrader;
-import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.DisplayMode;
+import autotrade.local.material.Pair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
-import autotrade.local.utility.AutoTradeProperties;
 import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,18 +26,23 @@ import lombok.extern.slf4j.Slf4j;
  * 20thから派生
  *
  */
+@Component("autoTrader21th")
 @Slf4j
 public class AutoTrader21th extends AbstractAutoTrader {
 
     private RecoveryManager recoveryManager;
+
     private boolean doAsk;
     private boolean doBid;
-    private Duration stopLossDuration;
     private int stopLossRate;
-    private int lotGeInitial;
     private ToIntFunction<Snapshot> toProfit;
     private ToIntFunction<Snapshot> toMinimumProfit;
     private ToIntFunction<Snapshot> toInitialLot;
+
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader21th.stopLoss.duration.seconds}')}")
+    private Duration stopLossDuration;
+    @Value("${autoTrader21th.order.lot.geInitial}")
+    private int lotGeInitial;
 
     @SuppressWarnings("unchecked")
     public AutoTrader21th() {
@@ -44,9 +51,6 @@ public class AutoTrader21th extends AbstractAutoTrader {
         toProfit = (ToIntFunction<Snapshot> & Serializable) s -> new BigDecimal(s.getMargin())
                 .multiply(s.getPair().getProfitMagnification()).intValue();
         recoveryManager = new RecoveryManager(toProfit);
-        stopLossDuration = Duration.ofSeconds(
-                AutoTradeProperties.getInt("autoTrader21th.stopLoss.duration.seconds"));
-        lotGeInitial = AutoTradeProperties.getInt("autoTrader21th.order.lot.geInitial");
         toInitialLot = s -> toProfit.applyAsInt(s) / 100;
         toMinimumProfit = s -> s.getMargin() / 10000;
     }
@@ -67,7 +71,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
     }
 
     @Override
-    protected CurrencyPair selectPair() {
+    protected Pair selectPair() {
 
         if (recoveryManager.isOpen()) {
             return recoveryManager.getHandlePair();
@@ -76,10 +80,10 @@ public class AutoTrader21th extends AbstractAutoTrader {
         changeDisplay(DisplayMode.RATELIST);
         // 推奨通貨ペア選択
         LocalTime now = LocalTime.now();
-        return CurrencyPair.getPairs().stream()
+        return pairManager.getPairs().stream()
                 .filter(pair -> pair.isHandleable(now))
                 .map(pair -> {
-                    return new AbstractMap.SimpleEntry<CurrencyPair, Integer>(
+                    return new AbstractMap.SimpleEntry<Pair, Integer>(
                             pair, pairAnalyzerMap.get(pair).rangeWithin(stopLossDuration) - pair.getMinSpread());
                 })
                 .max(Comparator.comparingInt(Map.Entry::getValue))

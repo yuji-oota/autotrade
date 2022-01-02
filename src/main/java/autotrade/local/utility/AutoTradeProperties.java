@@ -15,38 +15,6 @@ import org.yaml.snakeyaml.Yaml;
 import autotrade.local.exception.ApplicationException;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * ymlファイルの設定項目は以下を想定しています
-fx:
-  login:
-    username: xxx
-    password: xxx
-
-autotrade:
-  targetAmount:
-    oneTrade: xxx
-    oneDay: xxx
-  inactive:
-    start: xx:xx
-    end: xx:xx
-  lot:
-    initial: xxx
-    nextMagnification: xxx
-    sameLimit:
-      positive: xxx
-      negative: xxx
-
-aws:
-  s3:
-    bucketName: xxx
-    accessKey: xxx
-    secretKey: xxx
-  elasticache:
-    redis:
-      uri: xxx
-      channel: xxx
- *
- */
 @Slf4j
 public class AutoTradeProperties {
 

@@ -22,7 +22,7 @@ public class Snapshot implements Serializable, Cloneable {
     private int bidAverageRate;
     private int todaysProfit;
 
-    public CurrencyPair getPair() {
+    public Pair getPair() {
         return rate.getPair();
     }
 

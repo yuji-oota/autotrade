@@ -12,7 +12,7 @@ import lombok.Data;
 @Builder
 public class Rate implements Serializable {
 
-    private CurrencyPair pair;
+    private Pair pair;
     private String rawAsk;
     private String rawBid;
     private int ask;

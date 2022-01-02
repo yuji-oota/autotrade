@@ -2,22 +2,18 @@ package autotrade.local.utility;
 
 import java.util.List;
 
-import autotrade.local.material.CurrencyPair;
+import org.openqa.selenium.WebDriver;
+
 import autotrade.local.material.Indicator;
+import autotrade.local.material.Pair;
 
 public interface WebDriverWrapper {
 
     List<Indicator> getIndicators();
 
-    void login();
+    void setDriver(WebDriver driver);
 
-    void cancelMessage();
-
-    void startUpTradeTool();
-
-    void orderSettings();
-
-    void pairSettings();
+    void initialize();
 
     String getPair();
 
@@ -39,13 +35,13 @@ public interface WebDriverWrapper {
 
     String getBidRate();
 
-    String getBidRateFromList(CurrencyPair pair);
+    String getBidRateFromList(Pair pair);
 
     String getAskRate();
 
-    String getAskRateFromList(CurrencyPair pair);
+    String getAskRateFromList(Pair pair);
 
-    String getRateDiffFromList(CurrencyPair pair);
+    String getRateDiffFromList(Pair pair);
 
     void setLot(int lot);
 
@@ -64,5 +60,7 @@ public interface WebDriverWrapper {
     void displayChart();
 
     void changePair(String pair);
+
+    void quit();
 
 }

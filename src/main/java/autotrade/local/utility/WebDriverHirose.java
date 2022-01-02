@@ -15,17 +15,32 @@ import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import autotrade.local.material.CurrencyPair;
+import autotrade.local.actor.PairManager;
 import autotrade.local.material.Indicator;
+import autotrade.local.material.Pair;
 import lombok.extern.slf4j.Slf4j;
 
+@Component("webDriverHirose")
 @Slf4j
 public class WebDriverHirose implements WebDriverWrapper {
 
     private WebDriver driver;
 
-    public WebDriverHirose(WebDriver driver) {
+    @Value("${fx.login.username}")
+    private String username;
+
+    @Value("${fx.login.password}")
+    private String password;
+
+    @Autowired
+    private PairManager pairManager;
+
+    @Override
+    public void setDriver(WebDriver driver) {
         this.driver = driver;
     }
 
@@ -71,7 +86,28 @@ public class WebDriverHirose implements WebDriverWrapper {
     }
 
     @Override
-    public void login() {
+    public void initialize() {
+        // ログイン
+        login();
+        AutoTradeUtils.sleep(Duration.ofSeconds(5));
+
+        // メッセージダイアログクローズ
+        cancelMessage();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+
+        // ツール起動
+        startUpTradeTool();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+
+        // 取引設定
+        orderSettings();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+
+        // 通貨ペア定義
+        pairSettings();
+    }
+
+    private void login() {
 
         driver.get("https://hirose-fx.co.jp/landing/tool_lp/#web");
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
@@ -87,8 +123,8 @@ public class WebDriverHirose implements WebDriverWrapper {
         while (true) {
             AutoTradeUtils.sleep(Duration.ofSeconds(5));
             try {
-                driver.findElement(By.id("login-id")).sendKeys(AutoTradeProperties.get("fx.login.username"));
-                driver.findElement(By.id("login-pw")).sendKeys(AutoTradeProperties.get("fx.login.password"));
+                driver.findElement(By.id("login-id")).sendKeys(username);
+                driver.findElement(By.id("login-pw")).sendKeys(password);
                 break;
             } catch (ElementNotInteractableException e) {
                 log.warn(e.getMessage());
@@ -97,8 +133,7 @@ public class WebDriverHirose implements WebDriverWrapper {
         driver.findElement(By.id("doLogin")).click();
     }
 
-    @Override
-    public void cancelMessage() {
+    private void cancelMessage() {
         try {
             driver.findElement(By.xpath("//button[starts-with(@id, 'message-cancel')]")).click();
         } catch (Exception e) {
@@ -106,31 +141,27 @@ public class WebDriverHirose implements WebDriverWrapper {
         }
     }
 
-    @Override
-    public void startUpTradeTool() {
+    private void startUpTradeTool() {
         //        driver.navigate().to("https://trade.fx.dmm.com/comportal/SsoOutbound.do?subSystemType=-20");
         driver.manage().window().maximize();
     }
 
-    @Override
-    public void orderSettings() {
+    private void orderSettings() {
         driver.findElement(By.id("fifo-on-label-quick")).click();
         driver.findElement(By.id("all-confm-quick")).click();
         driver.findElement(By.id("account-status")).click();
     }
 
-    @Override
-    public void pairSettings() {
+    private void pairSettings() {
         // 通貨ペア設定
         // ヒロセではここで設定した通貨ペアに変更可能
         driver.findElement(By.id("brand-menu-button")).click();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
         driver.findElement(By.id("brand-regist-nocheck")).click();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
-        List<String> pairs = CurrencyPair.getDescriptions();
         List<WebElement> elements = driver.findElements(By.xpath("//li[@class='brand-regist-list-item']"));
         elements.stream().filter(e -> {
-            for (String pair : pairs) {
+            for (String pair : pairManager.getDescriptions()) {
                 if (!e.findElements(By.xpath(MessageFormat.format("div[contains(text(),\"{0}\")]", pair))).isEmpty()) {
                     return true;
                 }
@@ -196,9 +227,9 @@ public class WebDriverHirose implements WebDriverWrapper {
     }
 
     @Override
-    public String getBidRateFromList(CurrencyPair pair) {
+    public String getBidRateFromList(Pair pair) {
         String xpath = MessageFormat.format("//tr[@id=''tab_rate_brand_{0}'']//span[starts-with(@class, ''bid'')]",
-                pair.name());
+                pair.getName());
         List<WebElement> elements = driver.findElements(By.xpath(xpath));
         return elements.stream().map(WebElement::getText).collect(Collectors.joining());
     }
@@ -211,18 +242,18 @@ public class WebDriverHirose implements WebDriverWrapper {
     }
 
     @Override
-    public String getAskRateFromList(CurrencyPair pair) {
+    public String getAskRateFromList(Pair pair) {
         String xpath = MessageFormat.format("//tr[@id=''tab_rate_brand_{0}'']//span[starts-with(@class, ''ask'')]",
-                pair.name());
+                pair.getName());
         List<WebElement> elements = driver.findElements(By.xpath(xpath));
         return elements.stream().map(WebElement::getText).collect(Collectors.joining());
     }
 
     @Override
-    public String getRateDiffFromList(CurrencyPair pair) {
+    public String getRateDiffFromList(Pair pair) {
         // NOTE:rate_diff_xxxxのサフィックスが不定っぽいのでstarts-withにした
         String xpath = MessageFormat
-                .format("//tr[@id=''tab_rate_brand_{0}'']//span[starts-with(@class, ''rate_diff'')]", pair.name());
+                .format("//tr[@id=''tab_rate_brand_{0}'']//span[starts-with(@class, ''rate_diff'')]", pair.getName());
         return driver.findElements(By.xpath(xpath)).get(0).getText();
     }
 
@@ -296,6 +327,11 @@ public class WebDriverHirose implements WebDriverWrapper {
                 MessageFormat.format("//div[contains(text(),\"{0}\")]", pair))).click();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
         orderSettings();
+    }
+
+    @Override
+    public void quit() {
+        driver.quit();
     }
 
 }

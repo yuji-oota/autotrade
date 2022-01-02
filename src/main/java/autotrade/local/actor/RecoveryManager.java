@@ -6,7 +6,7 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.function.ToIntFunction;
 
-import autotrade.local.material.CurrencyPair;
+import autotrade.local.material.Pair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
 import lombok.Getter;
@@ -106,7 +106,7 @@ public class RecoveryManager implements Serializable {
 
     public void printSummary(Snapshot snapshot) {
         log.info("recovery summary. {} lot:{} start profit:{} end profit:{} total profit:{} stopLossCount:{}",
-                snapshot.getPair(), snapshot.getMoreLot(),
+                snapshot.getPair().getName(), snapshot.getMoreLot(),
                 getStartProfit(), getProfit(snapshot),
                 snapshot.getTotalProfit(), stopLossCount);
     }
@@ -129,7 +129,7 @@ public class RecoveryManager implements Serializable {
         stopLossCount++;
     }
 
-    public CurrencyPair getHandlePair() {
+    public Pair getHandlePair() {
         return openSnapshot.getPair();
     }
 }

@@ -1,25 +1,13 @@
 package autotrade.local;
 
-import autotrade.local.autotrader.AbstractAutoTrader;
-import autotrade.local.utility.AutoTradeProperties;
-import autotrade.local.utility.AutoTradeUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@Slf4j
+@SpringBootApplication
 public class Application {
 
     public static void main(String[] args) {
-
-        AbstractAutoTrader autoTrader = AutoTradeUtils.newInstance(AutoTradeProperties.get("autotrade.implementation"));
-        try {
-            autoTrader.preOperation();
-            while(true) {
-                autoTrader.operation();
-            }
-        } catch(Exception e) {
-            log.error(e.getMessage(), e);
-        }
-
+        SpringApplication.run(Application.class, args);
     }
 
 }

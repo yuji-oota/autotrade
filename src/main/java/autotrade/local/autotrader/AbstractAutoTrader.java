@@ -5,67 +5,72 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.ResolverStyle;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import autotrade.local.actor.IndicatorManager;
+import autotrade.local.actor.PairManager;
 import autotrade.local.actor.RateAnalyzer;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.AudioPath;
-import autotrade.local.material.CurrencyPair;
 import autotrade.local.material.DisplayMode;
+import autotrade.local.material.Pair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
-import autotrade.local.utility.AutoTradeProperties;
 import autotrade.local.utility.AutoTradeUtils;
-import autotrade.local.utility.WebDriverHirose;
 import autotrade.local.utility.WebDriverWrapper;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AbstractAutoTrader {
 
-    protected CurrencyPair pair;
+    @Autowired
+    protected ApplicationContext applicationContext;
 
-    protected WebDriver driver;
-    protected WebDriverWrapper wrapper;
-    protected Map<CurrencyPair, RateAnalyzer> pairAnalyzerMap;
-    protected RateAnalyzer rateAnalyzer;
+    @Autowired
     protected IndicatorManager indicatorManager;
 
+    @Autowired
+    protected PairManager pairManager;
+
+    @Autowired
+    protected WebDriverWrapper webDriverWrapper;
+
+    protected Pair pair;
+    protected Map<Pair, RateAnalyzer> pairAnalyzerMap;
+    protected RateAnalyzer rateAnalyzer;
+
     protected int startMargin;
-
-    private final static DateTimeFormatter timeFormatter = DateTimeFormatter.ISO_TIME
-            .withResolverStyle(ResolverStyle.LENIENT);
-    protected LocalTime activeStart;
-    protected LocalTime activeEnd;
-
     protected boolean isThroughOrder;
     protected boolean isThroughFix;
     protected boolean isForceException;
 
-    public AbstractAutoTrader() {
-        pair = CurrencyPair.USDJPY;
-        activeStart = LocalTime.parse(AutoTradeProperties.get("autotrade.active.start"), timeFormatter);
-        activeEnd = LocalTime.parse(AutoTradeProperties.get("autotrade.active.end"), timeFormatter);
+    @Value("${autotrade.active.start}")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    protected LocalTime activeStart;
+    @Value("${autotrade.active.end}")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    protected LocalTime activeEnd;
 
-        pairAnalyzerMap = Stream.of(CurrencyPair.values())
-                .collect(Collectors.toMap(pair -> pair, pair -> new RateAnalyzer()));
-        rateAnalyzer = pairAnalyzerMap.get(pair);
-        indicatorManager = new IndicatorManager();
+    public AbstractAutoTrader() {
     }
 
     public void preOperation() {
+        pair = pairManager.get("USDJPY");
+        pairAnalyzerMap = pairManager.getPairs().stream()
+                .collect(Collectors.toMap(pair -> pair, pair -> applicationContext.getBean(RateAnalyzer.class)));
+        rateAnalyzer = pairAnalyzerMap.get(pair);
+
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
             String input = scanner.next();
@@ -117,9 +122,6 @@ public abstract class AbstractAutoTrader {
                 // 取引後処理
                 postTrade(snapshot);
 
-                // メッセージダイアログクローズ
-                wrapper.cancelMessage();
-
                 // 強制例外スロー
                 if (isForceException) {
                     isForceException = false;
@@ -130,64 +132,48 @@ public abstract class AbstractAutoTrader {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         } finally {
-            driver.quit();
+            webDriverWrapper.quit();
         }
 
     }
 
     protected void initialize() {
+
         // WebDriver初期化
-        driver = new ChromeDriver();
-        wrapper = new WebDriverHirose(driver);
+        webDriverWrapper.setDriver(new ChromeDriver());
 
         // 指標を確認する
         if (!indicatorManager.hasIndicator()) {
-            indicatorManager.addIndicators(wrapper.getIndicators());
+            indicatorManager.addIndicators(webDriverWrapper.getIndicators());
             indicatorManager.printIndicators(LocalDate.now());
             indicatorManager.printIndicators(LocalDate.now().plusDays(1));
         }
 
-        // ログイン
-        wrapper.login();
-        AutoTradeUtils.sleep(Duration.ofSeconds(5));
-
-        // メッセージダイアログクローズ
-        wrapper.cancelMessage();
-        AutoTradeUtils.sleep(Duration.ofSeconds(1));
-
-        // ツール起動
-        wrapper.startUpTradeTool();
-        AutoTradeUtils.sleep(Duration.ofSeconds(1));
-
-        // 取引設定
-        wrapper.orderSettings();
-        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+        // Web取引ツールの起動から初期設定まで
+        webDriverWrapper.initialize();
 
         // 開始時の証拠金を取得
         if (startMargin == 0) {
-            startMargin = AutoTradeUtils.toInt(wrapper.getMargin());
+            startMargin = AutoTradeUtils.toInt(webDriverWrapper.getMargin());
         }
-
-        // 通貨ペア定義
-        wrapper.pairSettings();
     }
 
     protected Snapshot buildSnapshot() {
         return Snapshot.builder()
-                .askLot(AutoTradeUtils.toInt(wrapper.getAskLot()))
-                .bidLot(AutoTradeUtils.toInt(wrapper.getBidLot()))
-                .askAverageRate(AutoTradeUtils.toInt(wrapper.getAskAverageRate()))
-                .bidAverageRate(AutoTradeUtils.toInt(wrapper.getBidAverageRate()))
-                .margin(AutoTradeUtils.toInt(wrapper.getMargin()))
-                .effectiveMargin(AutoTradeUtils.toInt(wrapper.getEffectiveMargin()))
-                .todaysProfit(AutoTradeUtils.toInt(wrapper.getMargin()) - startMargin)
+                .askLot(AutoTradeUtils.toInt(webDriverWrapper.getAskLot()))
+                .bidLot(AutoTradeUtils.toInt(webDriverWrapper.getBidLot()))
+                .askAverageRate(AutoTradeUtils.toInt(webDriverWrapper.getAskAverageRate()))
+                .bidAverageRate(AutoTradeUtils.toInt(webDriverWrapper.getBidAverageRate()))
+                .margin(AutoTradeUtils.toInt(webDriverWrapper.getMargin()))
+                .effectiveMargin(AutoTradeUtils.toInt(webDriverWrapper.getEffectiveMargin()))
+                .todaysProfit(AutoTradeUtils.toInt(webDriverWrapper.getMargin()) - startMargin)
                 .rate(buildRate())
                 .build();
     }
 
     protected Rate buildRate() {
-        CompletableFuture<String> futureAsk = CompletableFuture.supplyAsync(() -> wrapper.getAskRate());
-        CompletableFuture<String> futureBid = CompletableFuture.supplyAsync(() -> wrapper.getBidRate());
+        CompletableFuture<String> futureAsk = CompletableFuture.supplyAsync(() -> webDriverWrapper.getAskRate());
+        CompletableFuture<String> futureBid = CompletableFuture.supplyAsync(() -> webDriverWrapper.getBidRate());
         String rawAsk = null;
         String rawBid = null;
         try {
@@ -198,7 +184,7 @@ public abstract class AbstractAutoTrader {
         }
 
         return Rate.builder()
-                .pair(CurrencyPair.valueOf(wrapper.getPair().replace("/", "")))
+                .pair(pairManager.get(webDriverWrapper.getPair().replace("/", "")))
                 .rawAsk(rawAsk)
                 .rawBid(rawBid)
                 .ask(AutoTradeUtils.toInt(rawAsk))
@@ -207,9 +193,9 @@ public abstract class AbstractAutoTrader {
                 .build();
     }
 
-    protected Rate buildRateFromList(CurrencyPair pair) {
-        String rawAsk = wrapper.getAskRateFromList(pair);
-        String rawBid = wrapper.getBidRateFromList(pair);
+    protected Rate buildRateFromList(Pair pair) {
+        String rawAsk = webDriverWrapper.getAskRateFromList(pair);
+        String rawBid = webDriverWrapper.getBidRateFromList(pair);
         return Rate.builder()
                 .pair(pair)
                 .rawAsk(rawAsk)
@@ -220,7 +206,7 @@ public abstract class AbstractAutoTrader {
                 .build();
     }
 
-    abstract protected CurrencyPair selectPair();
+    abstract protected Pair selectPair();
 
     protected void preTrade(Snapshot snapshot) {
 
@@ -231,7 +217,7 @@ public abstract class AbstractAutoTrader {
         // レートリストから他通貨ペアのレートをRateAnalyzerに追加
         if (snapshot.hasNoPosition()
                 || LocalDateTime.now().getSecond() % 10 == 0) {
-            CurrencyPair.getPairs().stream()
+            pairManager.getPairs().stream()
                     .filter(p -> p != snapshot.getPair())
                     .forEach(p -> {
                         pairAnalyzerMap.get(p).add(buildRateFromList(p));
@@ -272,7 +258,7 @@ public abstract class AbstractAutoTrader {
         if (isFixed) {
             return;
         }
-        
+
         preOrder(snapshot);
         if (isOrderable(snapshot)) {
             // 最新情報を元に注文
@@ -340,8 +326,8 @@ public abstract class AbstractAutoTrader {
         default:
         }
 
-        int verifyAskLot = AutoTradeUtils.toInt(wrapper.getAskLot());
-        int verifyBidLot = AutoTradeUtils.toInt(wrapper.getBidLot());
+        int verifyAskLot = AutoTradeUtils.toInt(webDriverWrapper.getAskLot());
+        int verifyBidLot = AutoTradeUtils.toInt(webDriverWrapper.getBidLot());
         if (snapshot.getAskLot() != verifyAskLot
                 || snapshot.getBidLot() != verifyBidLot) {
             // Fixされている場合は注文しない
@@ -421,46 +407,46 @@ public abstract class AbstractAutoTrader {
 
     protected void orderAsk(int orderLot, Snapshot snapshot) {
         int afterLot = orderLot + snapshot.getAskLot();
-        wrapper.setLot(orderLot);
-        wrapper.orderAsk();
+        webDriverWrapper.setLot(orderLot);
+        webDriverWrapper.orderAsk();
         verifyOrder(afterLot, Snapshot::getAskLot);
         log.info("{} order ask. lot:{} total lot:{} rate:{}",
-                snapshot.getPair(), orderLot, afterLot, snapshot.getRate().getRawAsk());
+                snapshot.getPair().getName(), orderLot, afterLot, snapshot.getRate().getRawAsk());
     }
 
     protected void orderBid(int orderLot, Snapshot snapshot) {
         int afterLot = orderLot + snapshot.getBidLot();
-        wrapper.setLot(orderLot);
-        wrapper.orderBid();
+        webDriverWrapper.setLot(orderLot);
+        webDriverWrapper.orderBid();
         verifyOrder(afterLot, Snapshot::getBidLot);
         log.info("{} order bid. lot:{} total lot:{} rate:{}",
-                snapshot.getPair(), orderLot, afterLot, snapshot.getRate().getRawBid());
+                snapshot.getPair().getName(), orderLot, afterLot, snapshot.getRate().getRawBid());
     }
 
     protected void fixAll(Snapshot snapshot) {
-        wrapper.fixAll();
+        webDriverWrapper.fixAll();
         AutoTradeUtils.playAudioRandom(AudioPath.FixSoundEffect);
         verifyOrder(0, Snapshot::getAskLot);
         verifyOrder(0, Snapshot::getBidLot);
         log.info("{} fix all position. bid lot:{} ask lot:{} bid rate:{} ask rate:{}",
-                snapshot.getPair(),
+                snapshot.getPair().getName(),
                 snapshot.getBidLot(), snapshot.getAskLot(),
                 snapshot.getRate().getRawBid(), snapshot.getRate().getRawAsk());
     }
 
     protected void fixAsk(Snapshot snapshot) {
-        wrapper.fixAsk();
+        webDriverWrapper.fixAsk();
         verifyOrder(0, Snapshot::getAskLot);
         log.info("{} fix ask position. lot:{} rate:{}",
-                snapshot.getPair(),
+                snapshot.getPair().getName(),
                 snapshot.getAskLot(), snapshot.getRate().getRawAsk());
     }
 
     protected void fixBid(Snapshot snapshot) {
-        wrapper.fixBid();
+        webDriverWrapper.fixBid();
         verifyOrder(0, Snapshot::getBidLot);
         log.info("{} fix bid position. lot:{} rate:{}",
-                snapshot.getPair(),
+                snapshot.getPair().getName(),
                 snapshot.getBidLot(), snapshot.getRate().getRawBid());
     }
 
@@ -481,21 +467,21 @@ public abstract class AbstractAutoTrader {
     protected void changeDisplay(DisplayMode displayMode) {
         switch (displayMode) {
         case CHART:
-            wrapper.displayChart();
+            webDriverWrapper.displayChart();
             break;
         case RATELIST:
-            wrapper.displayRateList();
+            webDriverWrapper.displayRateList();
             break;
         }
     }
 
-    protected void changePair(CurrencyPair pair) {
+    protected void changePair(Pair pair) {
         if (this.pair == pair) {
             return;
         }
         this.pair = pair;
-        wrapper.displayRateList();
-        wrapper.changePair(this.pair.getDescription());
+        webDriverWrapper.displayRateList();
+        webDriverWrapper.changePair(this.pair.getDescription());
         this.rateAnalyzer = this.pairAnalyzerMap.get(this.pair);
         log.info("currency pair is changed to {}.", this.pair.getDescription());
     }
