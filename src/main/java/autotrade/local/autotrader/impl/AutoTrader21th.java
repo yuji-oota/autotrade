@@ -49,8 +49,6 @@ public class AutoTrader21th extends AbstractAutoTrader {
         lotGeInitial = AutoTradeProperties.getInt("autoTrader21th.order.lot.geInitial");
         toInitialLot = s -> toProfit.applyAsInt(s) / 100;
         toMinimumProfit = s -> s.getMargin() / 10000;
-
-        postConstruct();
     }
 
     @Override
@@ -118,14 +116,14 @@ public class AutoTrader21th extends AbstractAutoTrader {
     }
 
     @Override
-    protected void fix(Snapshot snapshot) {
+    protected boolean fix(Snapshot snapshot) {
 
         Rate rate = snapshot.getRate();
 
         if (indicatorManager.isNextImportant()
                 && indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(90))) {
             stopLossProcess(snapshot);
-            return;
+            return true;
         }
 
         if (recoveryManager.isRecoveredWithProfit(snapshot)) {
@@ -133,11 +131,13 @@ public class AutoTrader21th extends AbstractAutoTrader {
                     && snapshot.isBidLtAsk()
                     && rateAnalyzer.isReachedBidThreshold(rate)) {
                 fixAll(snapshot);
+                return true;
             }
             if (rateAnalyzer.isAskUp()
                     && snapshot.isBidGtAsk()
                     && rateAnalyzer.isReachedAskThreshold(rate)) {
                 fixAll(snapshot);
+                return true;
             }
         } else {
             if (isAboveStopLossRate(snapshot.getRate())) {
@@ -145,17 +145,18 @@ public class AutoTrader21th extends AbstractAutoTrader {
                         && snapshot.hasBid()
                         && rateAnalyzer.isReachedAskThreshold(rate)) {
                     stopLossProcess(snapshot);
-                    return;
+                    return true;
                 }
             } else {
                 if (rateAnalyzer.isBidDown()
                         && snapshot.hasAsk()
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
                     stopLossProcess(snapshot);
-                    return;
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     @Override
@@ -165,9 +166,6 @@ public class AutoTrader21th extends AbstractAutoTrader {
         }
         if (recoveryManager.isOpen()
                 && recoveryManager.getHandlePair() != snapshot.getPair()) {
-            return false;
-        }
-        if (rateAnalyzer.isCalm()) {
             return false;
         }
         return true;
@@ -293,13 +291,11 @@ public class AutoTrader21th extends AbstractAutoTrader {
             fixBid(snapshot);
         }
         recoveryManager.stopLossProcess(snapshot);
-        snapshot.setFix(true);
     }
 
     @Override
     protected void fixAll(Snapshot snapshot) {
         super.fixAll(snapshot);
-        snapshot.setFix(true);
         recoveryManager.printSummary(snapshot);
         recoveryManager.close();
     }

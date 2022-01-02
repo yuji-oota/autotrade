@@ -52,7 +52,6 @@ public abstract class AbstractAutoTrader {
 
     protected boolean isThroughOrder;
     protected boolean isThroughFix;
-    protected boolean isIgnoreSpread;
     protected boolean isForceException;
 
     public AbstractAutoTrader() {
@@ -66,7 +65,7 @@ public abstract class AbstractAutoTrader {
         indicatorManager = new IndicatorManager();
     }
 
-    protected void postConstruct() {
+    public void preOperation() {
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
             String input = scanner.next();
@@ -263,12 +262,17 @@ public abstract class AbstractAutoTrader {
     protected void trade(Snapshot snapshot) {
 
         preFix(snapshot);
+        boolean isFixed = false;
         if (isFixable(snapshot)) {
             // 最新情報を元に利益確定
-            fix(snapshot);
+            isFixed = fix(snapshot);
         }
         postFix(snapshot);
 
+        if (isFixed) {
+            return;
+        }
+        
         preOrder(snapshot);
         if (isOrderable(snapshot)) {
             // 最新情報を元に注文
@@ -291,7 +295,7 @@ public abstract class AbstractAutoTrader {
         return true;
     }
 
-    abstract protected void fix(Snapshot snapshot);
+    abstract protected boolean fix(Snapshot snapshot);
 
     protected void postFix(Snapshot snapshot) {
     }
@@ -301,9 +305,6 @@ public abstract class AbstractAutoTrader {
 
     protected boolean isOrderable(Snapshot snapshot) {
 
-        if (snapshot.isFix()) {
-            return false;
-        }
         if (isThroughOrder) {
             return false;
         }
@@ -311,14 +312,14 @@ public abstract class AbstractAutoTrader {
             // レートが動いていない場合は注文しない
             return false;
         }
+        if (rateAnalyzer.isCalm()) {
+            // 閾値間隔が狭い場合は注文しない
+            return false;
+        }
 
         switch (snapshot.getStatus()) {
         case NO_POSITION:
         case BID_EQ_ASK:
-            if (rateAnalyzer.isCalm()) {
-                // 閾値間隔が狭い場合は注文しない
-                return false;
-            }
             if (indicatorManager.isNextImportant()
                     && indicatorManager.isIndicatorAround(Duration.ofSeconds(300), Duration.ofSeconds(15))) {
                 // 重要指標が近い場合は注文しない
@@ -328,9 +329,8 @@ public abstract class AbstractAutoTrader {
                 // 指標が近い場合は注文しない
                 return false;
             }
-            if (!isIgnoreSpread && snapshot.isSpreadWiden()) {
-                // スプレッドを無視しない
-                // 且つスプレッドが開いている場合は注文しない
+            if (snapshot.isSpreadWiden()) {
+                // スプレッドが開いている場合は注文しない
                 return false;
             }
             break;
@@ -374,8 +374,10 @@ public abstract class AbstractAutoTrader {
     }
 
     protected void printSummary(Snapshot snapshot) {
-        log.info("below is a summary.");
-        AutoTradeUtils.printObject(snapshot);
+        log.info("margin summary - start:{} end:{} profit and loss:{}",
+                startMargin,
+                snapshot.getMargin(),
+                snapshot.getMargin() - startMargin);
     }
 
     protected boolean isSleep(Snapshot snapshot) {
@@ -506,11 +508,6 @@ public abstract class AbstractAutoTrader {
     protected void changeThroughFix(boolean flag) {
         this.isThroughFix = flag;
         log.info("through fix setting is set {}.", this.isThroughFix);
-    }
-
-    protected void changeIgnoreSpread(boolean flag) {
-        this.isIgnoreSpread = flag;
-        log.info("ignore spread setting is set {}.", this.isIgnoreSpread);
     }
 
 }

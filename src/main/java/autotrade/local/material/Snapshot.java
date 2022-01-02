@@ -22,8 +22,6 @@ public class Snapshot implements Serializable, Cloneable {
     private int bidAverageRate;
     private int todaysProfit;
 
-    private boolean isFix;
-
     public CurrencyPair getPair() {
         return rate.getPair();
     }

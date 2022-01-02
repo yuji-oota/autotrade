@@ -12,6 +12,7 @@ public class Application {
 
         AbstractAutoTrader autoTrader = AutoTradeUtils.newInstance(AutoTradeProperties.get("autotrade.implementation"));
         try {
+            autoTrader.preOperation();
             while(true) {
                 autoTrader.operation();
             }
