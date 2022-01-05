@@ -47,7 +47,7 @@ public abstract class AbstractAutoTrader {
     protected WebDriverWrapper webDriverWrapper;
 
     protected Pair pair;
-    protected Map<Pair, RateAnalyzer> pairAnalyzerMap;
+    protected Map<String, RateAnalyzer> pairAnalyzerMap;
     protected RateAnalyzer rateAnalyzer;
 
     protected int startMargin;
@@ -68,8 +68,8 @@ public abstract class AbstractAutoTrader {
     public void preOperation() {
         pair = pairManager.get("USDJPY");
         pairAnalyzerMap = pairManager.getPairs().stream()
-                .collect(Collectors.toMap(pair -> pair, pair -> applicationContext.getBean(RateAnalyzer.class)));
-        rateAnalyzer = pairAnalyzerMap.get(pair);
+                .collect(Collectors.toMap(pair -> pair.getName(), pair -> applicationContext.getBean(RateAnalyzer.class)));
+        rateAnalyzer = pairAnalyzerMap.get(pair.getName());
 
         try (Scanner scanner = new Scanner(System.in)) {
             System.out.print("do you need local load? (y or any) :");
@@ -92,7 +92,7 @@ public abstract class AbstractAutoTrader {
         startMargin = AutoTradeUtils.localLoad(Paths.get("localSave", "startMargin"));
         pairAnalyzerMap = AutoTradeUtils.localLoad(Paths.get("localSave", "pairAnalyzerMap"));
         log.info("pairAnalyzerMap loaded.");
-        rateAnalyzer = pairAnalyzerMap.get(pair);
+        rateAnalyzer = pairAnalyzerMap.get(pair.getName());
     };
 
     public void operation() {
@@ -211,16 +211,16 @@ public abstract class AbstractAutoTrader {
     protected void preTrade(Snapshot snapshot) {
 
         // SnapshotのレートをRateAnalyzerに追加
-        pairAnalyzerMap.get(snapshot.getPair()).add(snapshot.getRate());
+        pairAnalyzerMap.get(snapshot.getPair().getName()).add(snapshot.getRate());
 
         changeDisplay(DisplayMode.RATELIST);
         // レートリストから他通貨ペアのレートをRateAnalyzerに追加
         if (snapshot.hasNoPosition()
                 || LocalDateTime.now().getSecond() % 10 == 0) {
             pairManager.getPairs().stream()
-                    .filter(p -> p != snapshot.getPair())
+                    .filter(p -> !p.getName().equals(snapshot.getPair().getName()))
                     .forEach(p -> {
-                        pairAnalyzerMap.get(p).add(buildRateFromList(p));
+                        pairAnalyzerMap.get(p.getName()).add(buildRateFromList(p));
                     });
         }
 
@@ -476,13 +476,13 @@ public abstract class AbstractAutoTrader {
     }
 
     protected void changePair(Pair pair) {
-        if (this.pair == pair) {
+        if (this.pair.getName().equals(pair.getName())) {
             return;
         }
         this.pair = pair;
         webDriverWrapper.displayRateList();
         webDriverWrapper.changePair(this.pair.getDescription());
-        this.rateAnalyzer = this.pairAnalyzerMap.get(this.pair);
+        this.rateAnalyzer = this.pairAnalyzerMap.get(this.pair.getName());
         log.info("currency pair is changed to {}.", this.pair.getDescription());
     }
 

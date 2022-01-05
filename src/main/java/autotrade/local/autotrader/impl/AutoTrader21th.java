@@ -84,7 +84,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
                 .filter(pair -> pair.isHandleable(now))
                 .map(pair -> {
                     return new AbstractMap.SimpleEntry<Pair, Integer>(
-                            pair, pairAnalyzerMap.get(pair).rangeWithin(stopLossDuration) - pair.getMinSpread());
+                            pair, pairAnalyzerMap.get(pair.getName()).rangeWithin(stopLossDuration) - pair.getMinSpread());
                 })
                 .max(Comparator.comparingInt(Map.Entry::getValue))
                 .get()
@@ -99,9 +99,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
 
     @Override
     protected void preFix(Snapshot snapshot) {
-        if (recoveryManager.isOpen()
-                && (recoveryManager.isBeforeCounterTrading()
-                        || recoveryManager.getRecoveryProgress(snapshot) >= 50)) {
+        if (isShiftStopLossRate(snapshot)) {
             if (snapshot.hasAskOnly()) {
                 int minRate = rateAnalyzer.minWithin(stopLossDuration);
                 if (stopLossRate < minRate) {
@@ -169,7 +167,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
             return false;
         }
         if (recoveryManager.isOpen()
-                && recoveryManager.getHandlePair() != snapshot.getPair()) {
+                && !recoveryManager.getHandlePair().getName().equals(snapshot.getPair().getName())) {
             return false;
         }
         return true;
@@ -281,6 +279,22 @@ public class AutoTrader21th extends AbstractAutoTrader {
 
     private boolean isAboveStopLossRate(Rate rate) {
         return stopLossRate < rate.getMiddle();
+    }
+
+    private boolean isShiftStopLossRate(Snapshot snapshot) {
+        if (recoveryManager.isOpen()) {
+            if (recoveryManager.isBeforeCounterTrading()) {
+                return true;
+            }
+            if (recoveryManager.getRecoveryProgress(snapshot) >= 50) {
+                return true;
+            }
+            if (snapshot.isPositionGeLimit()
+                    && recoveryManager.getRecoveryProgress(snapshot) >= 25) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void stopLossProcess(Snapshot snapshot) {

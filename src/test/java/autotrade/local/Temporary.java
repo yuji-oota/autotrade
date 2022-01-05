@@ -3,7 +3,6 @@ package autotrade.local;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -11,23 +10,7 @@ import java.time.format.ResolverStyle;
 
 import org.junit.jupiter.api.Test;
 
-import autotrade.local.utility.AutoTradeProperties;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 public class Temporary {
-
-    @AllArgsConstructor
-    private enum OrderTerm {
-        SHORT(Duration.ofSeconds(
-                AutoTradeProperties.getInt("autoTraderEleventh.order.direction.duration.seconds.short"))), LONG(
-                        Duration.ofSeconds(AutoTradeProperties
-                                .getInt("autoTraderEleventh.order.direction.duration.seconds.long")));
-
-        @Getter
-        private Duration duration;
-
-    }
 
     @Test
     public void test() {
