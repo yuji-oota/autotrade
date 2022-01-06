@@ -59,4 +59,18 @@ public class Temporary {
         System.out.println(122998 / 1000 * 1000);
     }
 
+    @Test
+    public void test06() {
+        int maxRatio = 50;
+        int minRatio = 25;
+        int current = 80;
+        BigDecimal diffRatio = new BigDecimal(maxRatio - minRatio);
+        BigDecimal limitSubInitial = new BigDecimal(
+                80 - 20);
+        BigDecimal currentSubInitial = new BigDecimal(current - 20);
+        BigDecimal progressUnit = limitSubInitial.divide(diffRatio, 1, RoundingMode.HALF_UP);
+        int progress = maxRatio - currentSubInitial.divide(progressUnit, 0, RoundingMode.HALF_UP).intValue();
+        System.out.println(progress);
+    }
+
 }

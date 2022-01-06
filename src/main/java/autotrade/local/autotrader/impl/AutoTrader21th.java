@@ -2,6 +2,7 @@ package autotrade.local.autotrader.impl;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalTime;
@@ -84,7 +85,8 @@ public class AutoTrader21th extends AbstractAutoTrader {
                 .filter(pair -> pair.isHandleable(now))
                 .map(pair -> {
                     return new AbstractMap.SimpleEntry<Pair, Integer>(
-                            pair, pairAnalyzerMap.get(pair.getName()).rangeWithin(stopLossDuration) - pair.getMinSpread());
+                            pair,
+                            pairAnalyzerMap.get(pair.getName()).rangeWithin(stopLossDuration) - pair.getMinSpread());
                 })
                 .max(Comparator.comparingInt(Map.Entry::getValue))
                 .get()
@@ -286,11 +288,15 @@ public class AutoTrader21th extends AbstractAutoTrader {
             if (recoveryManager.isBeforeCounterTrading()) {
                 return true;
             }
-            if (recoveryManager.getRecoveryProgress(snapshot) >= 50) {
-                return true;
-            }
-            if (snapshot.isPositionGeLimit()
-                    && recoveryManager.getRecoveryProgress(snapshot) >= 25) {
+            int maxRatio = 50;
+            int minRatio = 25;
+            BigDecimal diffRatio = new BigDecimal(maxRatio - minRatio);
+            BigDecimal limitSubInitial = new BigDecimal(
+                    snapshot.getPair().getLimitLot(snapshot.getEffectiveMargin()) - toInitialLot.applyAsInt(snapshot));
+            BigDecimal currentSubInitial = new BigDecimal(snapshot.getMoreLot() - toInitialLot.applyAsInt(snapshot));
+            BigDecimal progressUnit = limitSubInitial.divide(diffRatio, 1, RoundingMode.HALF_UP);
+            int progress = maxRatio - currentSubInitial.divide(progressUnit, 0, RoundingMode.HALF_UP).intValue();
+            if (recoveryManager.getRecoveryProgress(snapshot) >= progress) {
                 return true;
             }
         }
