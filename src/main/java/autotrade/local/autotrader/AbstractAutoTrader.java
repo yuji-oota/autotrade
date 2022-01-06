@@ -218,7 +218,7 @@ public abstract class AbstractAutoTrader {
         if (snapshot.hasNoPosition()
                 || LocalDateTime.now().getSecond() % 10 == 0) {
             pairManager.getPairs().stream()
-                    .filter(p -> !p.getName().equals(snapshot.getPair().getName()))
+                    .filter(p -> !p.equals(snapshot.getPair()))
                     .forEach(p -> {
                         pairAnalyzerMap.get(p.getName()).add(buildRateFromList(p));
                     });
@@ -476,7 +476,7 @@ public abstract class AbstractAutoTrader {
     }
 
     protected void changePair(Pair pair) {
-        if (this.pair.getName().equals(pair.getName())) {
+        if (this.pair.equals(pair)) {
             return;
         }
         this.pair = pair;

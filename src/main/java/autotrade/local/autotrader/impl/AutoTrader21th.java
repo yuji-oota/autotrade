@@ -169,7 +169,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
             return false;
         }
         if (recoveryManager.isOpen()
-                && !recoveryManager.getHandlePair().getName().equals(snapshot.getPair().getName())) {
+                && !recoveryManager.getHandlePair().equals(snapshot.getPair())) {
             return false;
         }
         return true;

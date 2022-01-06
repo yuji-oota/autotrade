@@ -6,12 +6,16 @@ import java.time.LocalTime;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Pair implements Serializable {
 
+    @EqualsAndHashCode.Include
     private String name;
+
     private int minSpread;
     private int marginRequirement;
     private LocalTime startTime;
@@ -38,7 +42,7 @@ public class Pair implements Serializable {
         return (startTime.isBefore(time) && time.isBefore(LocalTime.MAX))
                 || (LocalTime.MIN.isBefore(time) && time.isBefore(endTime));
     }
-    
+
     public String getDescription() {
         return new StringBuilder(name).insert(3, "/").toString();
     }
