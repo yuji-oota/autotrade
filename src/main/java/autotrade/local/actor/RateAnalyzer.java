@@ -264,6 +264,7 @@ public class RateAnalyzer implements Serializable {
     }
 
     public boolean isDoubtful() {
+
         Rate latestRate = latestRateQueue.getLast();
         if (latestRate.getAsk() == 0 || latestRate.getBid() == 0) {
             return true;
@@ -309,6 +310,12 @@ public class RateAnalyzer implements Serializable {
     public boolean isMoved() {
         return diffRateQueue.getFirst().getAsk() != diffRateQueue.getLast().getAsk()
                 || diffRateQueue.getFirst().getBid() != diffRateQueue.getLast().getBid();
+    }
+
+    public void filterNarrow() {
+        rates = rates.stream()
+                .filter(Rate::isSpreadNarrow)
+                .collect(Collectors.toList());
     }
 
 }

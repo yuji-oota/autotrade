@@ -288,19 +288,21 @@ public class AutoTrader21th extends AbstractAutoTrader {
             if (recoveryManager.isBeforeCounterTrading()) {
                 return true;
             }
-            int maxRatio = 50;
-            int minRatio = 25;
-            BigDecimal diffRatio = new BigDecimal(maxRatio - minRatio);
-            BigDecimal limitSubInitial = new BigDecimal(
-                    snapshot.getPair().getLimitLot(snapshot.getEffectiveMargin()) - toInitialLot.applyAsInt(snapshot));
-            BigDecimal currentSubInitial = new BigDecimal(snapshot.getMoreLot() - toInitialLot.applyAsInt(snapshot));
-            BigDecimal progressUnit = limitSubInitial.divide(diffRatio, 1, RoundingMode.HALF_UP);
-            int progress = maxRatio - currentSubInitial.divide(progressUnit, 0, RoundingMode.HALF_UP).intValue();
-            if (recoveryManager.getRecoveryProgress(snapshot) >= progress) {
+            if (recoveryManager.getRecoveryProgress(snapshot) >= calcTargetProgress(snapshot)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private int calcTargetProgress(Snapshot snapshot) {
+        int maxRatio = 50;
+        BigDecimal ratioRange = new BigDecimal(25);
+        BigDecimal limitSubInitial = new BigDecimal(
+                snapshot.getPair().getLimitLot(snapshot.getEffectiveMargin()) - toInitialLot.applyAsInt(snapshot));
+        BigDecimal currentSubInitial = new BigDecimal(snapshot.getMoreLot() - toInitialLot.applyAsInt(snapshot));
+        BigDecimal progressUnit = limitSubInitial.divide(ratioRange, 1, RoundingMode.HALF_UP);
+        return maxRatio - currentSubInitial.divide(progressUnit, 0, RoundingMode.HALF_UP).intValue();
     }
 
     private void stopLossProcess(Snapshot snapshot) {

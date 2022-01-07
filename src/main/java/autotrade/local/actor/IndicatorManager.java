@@ -96,4 +96,11 @@ public class IndicatorManager {
                 .filter(Indicator::isImportant)
                 .count() > 0;
     }
+
+    public boolean isPrevImportant() {
+        return indicators.stream()
+                .filter(ind -> ind.getDateTime().isEqual(prevDateTime))
+                .filter(Indicator::isImportant)
+                .count() > 0;
+    }
 }

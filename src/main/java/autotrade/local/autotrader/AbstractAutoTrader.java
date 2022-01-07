@@ -68,7 +68,8 @@ public abstract class AbstractAutoTrader {
     public void preOperation() {
         pair = pairManager.get("USDJPY");
         pairAnalyzerMap = pairManager.getPairs().stream()
-                .collect(Collectors.toMap(pair -> pair.getName(), pair -> applicationContext.getBean(RateAnalyzer.class)));
+                .collect(Collectors.toMap(pair -> pair.getName(),
+                        pair -> applicationContext.getBean(RateAnalyzer.class)));
         rateAnalyzer = pairAnalyzerMap.get(pair.getName());
 
         try (Scanner scanner = new Scanner(System.in)) {
@@ -234,6 +235,12 @@ public abstract class AbstractAutoTrader {
             Duration durationToActive = Duration.between(LocalTime.now(), activeStart);
             log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
             AutoTradeUtils.sleep(durationToActive);
+        }
+
+        if (snapshot.isSpreadWiden()
+                && indicatorManager.isPrevImportant()
+                && indicatorManager.isPrevIndicatorWithin(Duration.ofMinutes(10))) {
+            rateAnalyzer.filterNarrow();
         }
 
     }
@@ -439,7 +446,7 @@ public abstract class AbstractAutoTrader {
         verifyOrder(0, Snapshot::getAskLot);
         log.info("{} fix ask position. lot:{} rate:{}",
                 snapshot.getPair().getName(),
-                snapshot.getAskLot(), snapshot.getRate().getRawAsk());
+                snapshot.getAskLot(), snapshot.getRate().getRawBid());
     }
 
     protected void fixBid(Snapshot snapshot) {
@@ -447,7 +454,7 @@ public abstract class AbstractAutoTrader {
         verifyOrder(0, Snapshot::getBidLot);
         log.info("{} fix bid position. lot:{} rate:{}",
                 snapshot.getPair().getName(),
-                snapshot.getBidLot(), snapshot.getRate().getRawBid());
+                snapshot.getBidLot(), snapshot.getRate().getRawAsk());
     }
 
     protected void verifyOrder(int lot, ToIntFunction<Snapshot> lotAfterOrder) {
