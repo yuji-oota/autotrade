@@ -1,8 +1,5 @@
 package autotrade.local.autotrader.impl;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalTime;
@@ -11,6 +8,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.function.ToIntFunction;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -31,29 +29,28 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AutoTrader21th extends AbstractAutoTrader {
 
-    private RecoveryManager recoveryManager;
-
     private boolean doAsk;
     private boolean doBid;
     private int stopLossRate;
-    private ToIntFunction<Snapshot> toProfit;
+
+    @Autowired
+    private RecoveryManager recoveryManager;
+
+    @Autowired
     private ToIntFunction<Snapshot> toMinimumProfit;
+
+    @Autowired
     private ToIntFunction<Snapshot> toInitialLot;
 
     @Value("#{T(java.time.Duration).ofSeconds('${autoTrader21th.stopLoss.duration.seconds}')}")
     private Duration stopLossDuration;
+
     @Value("${autoTrader21th.order.lot.geInitial}")
     private int lotGeInitial;
 
-    @SuppressWarnings("unchecked")
     public AutoTrader21th() {
         super();
         log.info("autoTrader21th started.");
-        toProfit = (ToIntFunction<Snapshot> & Serializable) s -> new BigDecimal(s.getMargin())
-                .multiply(s.getPair().getProfitMagnification()).intValue();
-        recoveryManager = new RecoveryManager(toProfit);
-        toInitialLot = s -> toProfit.applyAsInt(s) / 100;
-        toMinimumProfit = s -> s.getMargin() / 10000;
     }
 
     @Override
@@ -126,6 +123,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
 
         if (indicatorManager.isNextImportant()
                 && indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(90))) {
+            log.info("stop loss in preparation for important indicators.");
             stopLossProcess(snapshot);
             return true;
         }
@@ -288,21 +286,11 @@ public class AutoTrader21th extends AbstractAutoTrader {
             if (recoveryManager.isBeforeCounterTrading()) {
                 return true;
             }
-            if (recoveryManager.getRecoveryProgress(snapshot) >= calcTargetProgress(snapshot)) {
+            if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
                 return true;
             }
         }
         return false;
-    }
-
-    private int calcTargetProgress(Snapshot snapshot) {
-        int maxRatio = 50;
-        BigDecimal ratioRange = new BigDecimal(25);
-        BigDecimal limitSubInitial = new BigDecimal(
-                snapshot.getPair().getLimitLot(snapshot.getEffectiveMargin()) - toInitialLot.applyAsInt(snapshot));
-        BigDecimal currentSubInitial = new BigDecimal(snapshot.getMoreLot() - toInitialLot.applyAsInt(snapshot));
-        BigDecimal progressUnit = limitSubInitial.divide(ratioRange, 1, RoundingMode.HALF_UP);
-        return maxRatio - currentSubInitial.divide(progressUnit, 0, RoundingMode.HALF_UP).intValue();
     }
 
     private void stopLossProcess(Snapshot snapshot) {

@@ -6,6 +6,9 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.function.ToIntFunction;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import autotrade.local.material.Pair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
@@ -13,30 +16,27 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+@Component
 @Slf4j
 @Getter
 public class RecoveryManager implements Serializable {
 
     private boolean isOpen;
     private Snapshot openSnapshot;
-    private ToIntFunction<Snapshot> profitCalcurator;
     private int stopLossCount;
     private int openCount;
+
+    @Autowired
+    private ToIntFunction<Snapshot> toProfit;
+
+    @Autowired
+    private ToIntFunction<Snapshot> toTargetProgress;
 
     @Setter
     private Snapshot counterTradingSnapshot;
 
     @Setter
     private int counterTradingStartLot;
-
-    @SuppressWarnings("unchecked")
-    public RecoveryManager() {
-        profitCalcurator = (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / 10000;
-    }
-
-    public RecoveryManager(ToIntFunction<Snapshot> profitCalcurator) {
-        this.profitCalcurator = profitCalcurator;
-    }
 
     public void open(Snapshot snapshot) {
         openSnapshot = snapshot;
@@ -65,7 +65,7 @@ public class RecoveryManager implements Serializable {
     }
 
     public boolean isRecoveredWithProfit(Snapshot snapshot) {
-        return isRecoveredWithProfit(snapshot, profitCalcurator);
+        return isRecoveredWithProfit(snapshot, toProfit);
     }
 
     public boolean isRecoveredWithProfit(Snapshot snapshot, ToIntFunction<Snapshot> toProfit) {
@@ -82,8 +82,8 @@ public class RecoveryManager implements Serializable {
     }
 
     public int getRecoveryProgress(Snapshot snapshot) {
-        int startProfit = getStartProfit() - profitCalcurator.applyAsInt(openSnapshot);
-        int profit = getProfit(snapshot) - profitCalcurator.applyAsInt(openSnapshot);
+        int startProfit = getStartProfit() - toProfit.applyAsInt(openSnapshot);
+        int profit = getProfit(snapshot) - toProfit.applyAsInt(openSnapshot);
         if (startProfit == 0) {
             return 0;
         }
@@ -131,5 +131,9 @@ public class RecoveryManager implements Serializable {
 
     public Pair getHandlePair() {
         return openSnapshot.getPair();
+    }
+
+    public boolean isReachedRecoveryProgress(Snapshot snapshot) {
+        return getRecoveryProgress(snapshot) >= toTargetProgress.applyAsInt(snapshot);
     }
 }

@@ -1,18 +1,19 @@
 package autotrade.local.actor;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
-import autotrade.local.material.Snapshot;
-
+@ActiveProfiles("test")
+@SpringBootTest
 class RecoveryManagerTest {
+
+    @Autowired
+    RecoveryManager recoveryManager;
 
     @Test
     void test() {
-        RecoveryManager recoveryManager = new RecoveryManager();
-        recoveryManager.open(Snapshot.builder().build());
-        System.out.println(recoveryManager.isAfterCounterTrading());
-        recoveryManager.setCounterTradingSnapshot(Snapshot.builder().askLot(1).build());
-        System.out.println(recoveryManager.isAfterCounterTrading());
     }
 
 }
