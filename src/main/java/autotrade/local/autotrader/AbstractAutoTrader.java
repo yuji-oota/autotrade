@@ -10,10 +10,10 @@ import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.ToIntFunction;
-import java.util.stream.Collectors;
 
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -46,8 +46,11 @@ public abstract class AbstractAutoTrader {
     @Autowired
     protected WebDriverWrapper webDriverWrapper;
 
-    protected Pair pair;
+    @Autowired
+    @Qualifier("pairAnalyzerMap")
     protected Map<String, RateAnalyzer> pairAnalyzerMap;
+
+    protected Pair pair;
     protected RateAnalyzer rateAnalyzer;
 
     protected int startMargin;
@@ -67,9 +70,6 @@ public abstract class AbstractAutoTrader {
 
     public void preOperation() {
         pair = pairManager.get("USDJPY");
-        pairAnalyzerMap = pairManager.getPairs().stream()
-                .collect(Collectors.toMap(pair -> pair.getName(),
-                        pair -> applicationContext.getBean(RateAnalyzer.class)));
         rateAnalyzer = pairAnalyzerMap.get(pair.getName());
 
         try (Scanner scanner = new Scanner(System.in)) {

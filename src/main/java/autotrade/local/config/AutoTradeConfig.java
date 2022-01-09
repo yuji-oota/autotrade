@@ -3,12 +3,17 @@ package autotrade.local.config;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Map;
 import java.util.function.ToIntFunction;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import autotrade.local.actor.PairManager;
+import autotrade.local.actor.RateAnalyzer;
 import autotrade.local.material.Snapshot;
 
 @SuppressWarnings("unchecked")
@@ -42,6 +47,14 @@ public class AutoTradeConfig {
             BigDecimal progressUnit = limitSubInitial.divide(ratioRange, 1, RoundingMode.HALF_UP);
             return maxRatio - currentSubInitial.divide(progressUnit, 0, RoundingMode.HALF_UP).intValue();
         };
+    }
+
+    @Bean
+    public Map<String, RateAnalyzer> pairAnalyzerMap(ApplicationContext applicationContext,
+            PairManager pairManager) {
+        return pairManager.getPairs().stream()
+                .collect(Collectors.toMap(pair -> pair.getName(),
+                        pair -> applicationContext.getBean(RateAnalyzer.class)));
     }
 
 }

@@ -155,13 +155,16 @@ public class RateAnalyzer implements Serializable {
     }
 
     public boolean isUpwardWithin(Duration duration) {
+        LocalDateTime to = LocalDateTime.now();
+        LocalDateTime from = to.minus(duration);
+
         LocalDateTime maxDateTime = rates.stream()
-                .filter(rateBetweenFilter(LocalDateTime.now().minus(duration), LocalDateTime.now()))
+                .filter(rateBetweenFilter(from, to))
                 .max(Comparator.comparing(Rate::getAsk))
                 .map(Rate::getTimestamp)
                 .orElse(LocalDateTime.now());
         LocalDateTime minDateTime = rates.stream()
-                .filter(rateBetweenFilter(LocalDateTime.now().minus(duration), LocalDateTime.now()))
+                .filter(rateBetweenFilter(from, to))
                 .min(Comparator.comparing(Rate::getBid))
                 .map(Rate::getTimestamp)
                 .orElse(LocalDateTime.now());
