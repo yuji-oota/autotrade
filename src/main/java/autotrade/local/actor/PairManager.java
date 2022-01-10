@@ -40,6 +40,7 @@ public class PairManager {
                     .minSpread((int) m.get("minSpread"))
                     .marginRequirement((int) m.get("marginRequirement"))
                     .profitMagnification(new BigDecimal(m.get("profitMagnification").toString()))
+                    .isDefault(Boolean.valueOf(m.get("isDefault").toString()))
                     .build();
         }).toList();
         pairMap = pairs.stream().collect(Collectors.toMap(p -> p.getName(), Function.identity()));
@@ -47,6 +48,10 @@ public class PairManager {
 
     public Pair get(String name) {
         return pairMap.get(name);
+    }
+
+    public Pair getDefault() {
+        return pairs.stream().filter(Pair::isDefault).findFirst().get();
     }
 
     public List<Pair> getPairs() {

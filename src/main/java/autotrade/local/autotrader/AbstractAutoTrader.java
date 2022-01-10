@@ -69,7 +69,7 @@ public abstract class AbstractAutoTrader {
     }
 
     public void preOperation() {
-        pair = pairManager.get("USDJPY");
+        pair = pairManager.getDefault();
         rateAnalyzer = pairAnalyzerMap.get(pair.getName());
 
         try (Scanner scanner = new Scanner(System.in)) {

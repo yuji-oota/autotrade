@@ -21,6 +21,7 @@ public class Pair implements Serializable {
     private LocalTime startTime;
     private LocalTime endTime;
     private BigDecimal profitMagnification;
+    private boolean isDefault;
 
     public int getLimitLot(int margin) {
         return (int) (margin / marginRequirement * 0.9);

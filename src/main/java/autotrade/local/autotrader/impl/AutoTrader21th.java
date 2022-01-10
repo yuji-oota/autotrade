@@ -3,7 +3,7 @@ package autotrade.local.autotrader.impl;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalTime;
-import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.function.ToIntFunction;
@@ -81,13 +81,13 @@ public class AutoTrader21th extends AbstractAutoTrader {
         return pairManager.getPairs().stream()
                 .filter(pair -> pair.isHandleable(now))
                 .map(pair -> {
-                    return new AbstractMap.SimpleEntry<Pair, Integer>(
+                    return new SimpleEntry<Pair, Integer>(
                             pair,
                             pairAnalyzerMap.get(pair.getName()).rangeWithin(stopLossDuration) - pair.getMinSpread());
                 })
                 .max(Comparator.comparingInt(Map.Entry::getValue))
-                .get()
-                .getKey();
+                .map(SimpleEntry::getKey)
+                .orElseGet(pairManager::getDefault);
     }
 
     @Override
