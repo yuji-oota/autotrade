@@ -124,12 +124,16 @@ public class Snapshot implements Serializable, Cloneable {
         return bidLot >= askLot;
     }
 
+    public int getLimitLot() {
+        return rate.getPair().getLimitLot(Math.min(margin, effectiveMargin));
+    }
+
     public boolean isAskLtLimit() {
-        return askLot < rate.getPair().getLimitLot(Math.min(margin, effectiveMargin));
+        return askLot < getLimitLot();
     }
 
     public boolean isBidLtLimit() {
-        return bidLot < rate.getPair().getLimitLot(Math.min(margin, effectiveMargin));
+        return bidLot < getLimitLot();
     }
 
     public boolean isAskGeLimit() {

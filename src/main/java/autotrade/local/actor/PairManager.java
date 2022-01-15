@@ -1,6 +1,5 @@
 package autotrade.local.actor;
 
-import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
@@ -39,7 +38,6 @@ public class PairManager {
                     .endTime(LocalTime.parse(m.get("handleEnd").toString(), timeFormatter))
                     .minSpread((int) m.get("minSpread"))
                     .marginRequirement((int) m.get("marginRequirement"))
-                    .profitMagnification(new BigDecimal(m.get("profitMagnification").toString()))
                     .isDefault(Boolean.valueOf(m.get("isDefault").toString()))
                     .build();
         }).toList();

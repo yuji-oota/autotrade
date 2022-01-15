@@ -21,14 +21,21 @@ import autotrade.local.material.Snapshot;
 public class AutoTradeConfig {
 
     @Bean
-    public ToIntFunction<Snapshot> toProfit() {
-        return (ToIntFunction<Snapshot> & Serializable) s -> new BigDecimal(s.getMargin())
-                .multiply(s.getPair().getProfitMagnification()).intValue();
+    public ToIntFunction<Snapshot> toProfit(
+            @Value("${autotrade.config.toProfit.denominator}") int denominator) {
+        return (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / denominator;
     }
 
     @Bean
-    public ToIntFunction<Snapshot> toInitialLot(ToIntFunction<Snapshot> toProfit) {
-        return (ToIntFunction<Snapshot> & Serializable) s -> toProfit.applyAsInt(s) / 100;
+    public ToIntFunction<Snapshot> toInitialLot(ToIntFunction<Snapshot> toProfit,
+            @Value("${autotrade.config.toInitialLot.denominator}") int denominator) {
+        return (ToIntFunction<Snapshot> & Serializable) s -> toProfit.applyAsInt(s) / denominator;
+    }
+
+    @Bean
+    public ToIntFunction<Snapshot> toNextLot(ToIntFunction<Snapshot> toProfit,
+            @Value("${autotrade.config.toNextLot.denominator}") int denominator) {
+        return (ToIntFunction<Snapshot> & Serializable) s -> (s.getLimitLot() - s.getMoreLot()) / denominator + 1;
     }
 
     @Bean

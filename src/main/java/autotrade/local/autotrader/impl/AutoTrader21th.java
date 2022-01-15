@@ -42,11 +42,11 @@ public class AutoTrader21th extends AbstractAutoTrader {
     @Autowired
     private ToIntFunction<Snapshot> toInitialLot;
 
+    @Autowired
+    private ToIntFunction<Snapshot> toNextLot;
+
     @Value("#{T(java.time.Duration).ofSeconds('${autoTrader21th.stopLoss.duration.seconds}')}")
     private Duration stopLossDuration;
-
-    @Value("${autoTrader21th.order.lot.geInitial}")
-    private int lotGeInitial;
 
     public AutoTrader21th() {
         super();
@@ -231,7 +231,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
                     if (doAsk
                             && snapshot.isAskLtLimit()
                             && rateAnalyzer.isReachedAskThreshold(rate)) {
-                        orderAsk(lotGeInitial, snapshot);
+                        orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
                         doAsk = false;
                         return;
                     }
@@ -241,7 +241,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
                     if (doBid
                             && snapshot.isBidLtLimit()
                             && rateAnalyzer.isReachedBidThreshold(rate)) {
-                        orderBid(lotGeInitial, snapshot);
+                        orderBid(toNextLot.applyAsInt(snapshot), snapshot);
                         doBid = false;
                         return;
                     }

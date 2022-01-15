@@ -1,7 +1,6 @@
 package autotrade.local.material;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalTime;
 
 import lombok.Builder;
@@ -20,7 +19,6 @@ public class Pair implements Serializable {
     private int marginRequirement;
     private LocalTime startTime;
     private LocalTime endTime;
-    private BigDecimal profitMagnification;
     private boolean isDefault;
 
     public int getLimitLot(int margin) {
