@@ -321,4 +321,7 @@ public class RateAnalyzer implements Serializable {
                 .collect(Collectors.toList());
     }
 
+    public void clear() {
+        rates.clear();
+    }
 }

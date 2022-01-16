@@ -237,6 +237,11 @@ public abstract class AbstractAutoTrader {
             AutoTradeUtils.sleep(durationToActive);
         }
 
+        if (indicatorManager.isPrevImportant()
+                && indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15))) {
+            rateAnalyzer.clear();
+        }
+
         if (snapshot.isSpreadWiden()
                 && indicatorManager.isPrevImportant()
                 && indicatorManager.isPrevIndicatorWithin(Duration.ofMinutes(10))) {
