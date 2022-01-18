@@ -30,6 +30,9 @@ public class RecoveryManager implements Serializable {
     private ToIntFunction<Snapshot> toProfit;
 
     @Autowired
+    private ToIntFunction<Snapshot> toInitialLot;
+
+    @Autowired
     private ToIntFunction<Snapshot> toTargetProgress;
 
     @Setter
@@ -126,6 +129,7 @@ public class RecoveryManager implements Serializable {
             int percentage = 100 - getRecoveryProgress(snapshot);
             counterTradingStartLot = snapshot.getMoreLot() * percentage / 100;
         }
+        counterTradingStartLot = Math.max(toInitialLot.applyAsInt(snapshot), counterTradingStartLot);
         stopLossCount++;
     }
 

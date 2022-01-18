@@ -191,10 +191,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
                         orderAsk(toInitialLot.applyAsInt(snapshot), snapshot);
                     } else {
                         recoveryManager.setCounterTradingSnapshot(snapshot);
-                        orderAsk(
-                                Math.max(toInitialLot.applyAsInt(snapshot),
-                                        recoveryManager.getCounterTradingStartLot()),
-                                snapshot);
+                        orderAsk(recoveryManager.getCounterTradingStartLot(), snapshot);
                     }
                     printRecoveryProgress(snapshot);
                     doAsk = false;
@@ -208,10 +205,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
                         orderBid(toInitialLot.applyAsInt(snapshot), snapshot);
                     } else {
                         recoveryManager.setCounterTradingSnapshot(snapshot);
-                        orderBid(
-                                Math.max(toInitialLot.applyAsInt(snapshot),
-                                        recoveryManager.getCounterTradingStartLot()),
-                                snapshot);
+                        orderBid(recoveryManager.getCounterTradingStartLot(), snapshot);
                     }
                     printRecoveryProgress(snapshot);
                     doBid = false;

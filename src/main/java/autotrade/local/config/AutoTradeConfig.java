@@ -49,7 +49,7 @@ public class AutoTradeConfig {
             @Value("${autotrade.config.toTargetProgress.ratioRange}") BigDecimal ratioRange) {
         return (ToIntFunction<Snapshot> & Serializable) s -> {
             BigDecimal limitSubInitial = new BigDecimal(
-                    s.getPair().getLimitLot(s.getEffectiveMargin()) - toInitialLot.applyAsInt(s));
+                    s.getLimitLot() - toInitialLot.applyAsInt(s));
             BigDecimal currentSubInitial = new BigDecimal(s.getMoreLot() - toInitialLot.applyAsInt(s));
             BigDecimal progressUnit = limitSubInitial.divide(ratioRange, 1, RoundingMode.HALF_UP);
             return maxRatio - currentSubInitial.divide(progressUnit, 0, RoundingMode.HALF_UP).intValue();
