@@ -28,7 +28,11 @@ public class Rate implements Serializable {
     }
 
     public boolean isAbobe(Rate rate) {
-        return this.bid > rate.getBid();
+        return this.ask > rate.getAsk();
+    }
+
+    public boolean isBelow(Rate rate) {
+        return this.bid < rate.getBid();
     }
 
     public boolean isSpreadWiden() {

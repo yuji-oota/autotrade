@@ -111,6 +111,7 @@ public abstract class AbstractAutoTrader {
                 // 最新情報取得
                 Snapshot snapshot = buildSnapshot();
                 this.pair = snapshot.getPair();
+                this.rateAnalyzer = pairAnalyzerMap.get(this.pair.getName());
 
                 // 取引前処理
                 preTrade(snapshot);

@@ -25,6 +25,10 @@ public class RecoveryManager implements Serializable {
     private Snapshot openSnapshot;
     private int stopLossCount;
     private int openCount;
+    private int counterTradingStartLot;
+
+    @Setter
+    private Snapshot counterTradingSnapshot;
 
     @Autowired
     private ToIntFunction<Snapshot> toProfit;
@@ -34,12 +38,6 @@ public class RecoveryManager implements Serializable {
 
     @Autowired
     private ToIntFunction<Snapshot> toTargetProgress;
-
-    @Setter
-    private Snapshot counterTradingSnapshot;
-
-    @Setter
-    private int counterTradingStartLot;
 
     public void open(Snapshot snapshot) {
         openSnapshot = snapshot;
@@ -140,4 +138,5 @@ public class RecoveryManager implements Serializable {
     public boolean isReachedRecoveryProgress(Snapshot snapshot) {
         return getRecoveryProgress(snapshot) >= toTargetProgress.applyAsInt(snapshot);
     }
+
 }
