@@ -39,7 +39,7 @@ public class AutoTrader22th extends AbstractAutoTrader {
 
     @Autowired
     private RangeManager rangeManager;
-    
+
     @Autowired
     private ToIntFunction<Snapshot> toMinimumProfit;
 
@@ -104,7 +104,14 @@ public class AutoTrader22th extends AbstractAutoTrader {
 
     @Override
     protected void preTrade(Snapshot snapshot) {
+        if (recoveryManager.isOpen()
+                && isSleep(snapshot)) {
+            rangeManager.reset();
+            saveLocal();
+        }
+
         super.preTrade(snapshot);
+
         if (indicatorManager.isPrevImportant()
                 && indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15))) {
             rangeManager.reset();
@@ -301,15 +308,6 @@ public class AutoTrader22th extends AbstractAutoTrader {
         }
     }
 
-    @Override
-    protected void postTrade(Snapshot snapshot) {
-        if (recoveryManager.isOpen()
-                && isSleep(snapshot)) {
-            saveLocal();
-        }
-        super.postTrade(snapshot);
-    }
-
     private boolean isAboveStopLossRate(Rate rate) {
         return stopLossRate < rate.getMiddle();
     }
@@ -325,7 +323,7 @@ public class AutoTrader22th extends AbstractAutoTrader {
         }
         return false;
     }
-    
+
     private boolean isStopLossRateNegativeZone(Snapshot snapshot) {
         if (snapshot.isBidLtAsk()) {
             if (stopLossRate < recoveryManager.getCounterTradingSnapshot().getRate().getAsk()) {
@@ -336,7 +334,7 @@ public class AutoTrader22th extends AbstractAutoTrader {
             if (stopLossRate > recoveryManager.getCounterTradingSnapshot().getRate().getBid()) {
                 return true;
             }
-        } 
+        }
         return false;
     }
 

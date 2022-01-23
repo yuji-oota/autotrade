@@ -1,7 +1,7 @@
 package autotrade.local.actor;
 
 import java.io.Serializable;
-import java.util.Objects;
+import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
@@ -13,48 +13,48 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RangeManager implements Serializable {
 
-    private Rate upperLimit;
-    private Rate lowerLimit;
+    private Optional<Rate> upperLimit = Optional.empty();
+    private Optional<Rate> lowerLimit = Optional.empty();
 
-    private Rate upperLimitSave;
-    private Rate lowerLimitSave;
+    private Optional<Rate> upperLimitSave = Optional.empty();
+    private Optional<Rate> lowerLimitSave = Optional.empty();
 
     public void reset() {
-        upperLimit = null;
-        lowerLimit = null;
-        upperLimitSave = null;
-        lowerLimitSave = null;
+        upperLimit = Optional.empty();
+        lowerLimit = Optional.empty();
+        upperLimitSave = Optional.empty();
+        lowerLimitSave = Optional.empty();
     }
-    
+
     public boolean isWithinRange(Snapshot snapshot) {
-        if (Objects.isNull(upperLimit) || Objects.isNull(lowerLimit)) {
+        if (upperLimit.isEmpty() || lowerLimit.isEmpty()) {
             return false;
         }
         Rate rate = snapshot.getRate();
-        if (rate.isAbobe(lowerLimit) && rate.isBelow(upperLimit)) {
+        if (rate.isAbobe(lowerLimit.get()) && rate.isBelow(upperLimit.get())) {
             return true;
         }
         return false;
     }
 
     public void save(Snapshot snapshot) {
-        
+
         Rate newRate = snapshot.getRate();
 
-        if (Objects.isNull(upperLimitSave) || Objects.isNull(lowerLimitSave)) {
-            upperLimitSave = newRate;
-            lowerLimitSave = newRate;
+        if (upperLimitSave.isEmpty() || lowerLimitSave.isEmpty()) {
+            upperLimitSave = Optional.of(newRate);
+            lowerLimitSave = Optional.of(newRate);
             return;
         }
         if (snapshot.isBidLtAsk()) {
-            if (newRate.isAbobe(upperLimitSave)) {
-                upperLimitSave = newRate;
+            if (newRate.isAbobe(upperLimitSave.get())) {
+                upperLimitSave = Optional.of(newRate);
                 return;
             }
         }
         if (snapshot.isBidGtAsk()) {
-            if (newRate.isBelow(lowerLimitSave)) {
-                lowerLimitSave = newRate;
+            if (newRate.isBelow(lowerLimitSave.get())) {
+                lowerLimitSave = Optional.of(newRate);
                 return;
             }
         }
@@ -63,8 +63,8 @@ public class RangeManager implements Serializable {
     public void apply() {
         lowerLimit = lowerLimitSave;
         upperLimit = upperLimitSave;
-        if (Objects.nonNull(lowerLimit) && Objects.nonNull(upperLimit)) {
-            log.info("lower limit:{} upper limit:{}", lowerLimit.getRawBid(), upperLimit.getRawAsk());
+        if (lowerLimit.isPresent() && upperLimit.isPresent()) {
+            log.info("lower limit:{} upper limit:{}", lowerLimit.get().getRawBid(), upperLimit.get().getRawAsk());
         }
     }
 }

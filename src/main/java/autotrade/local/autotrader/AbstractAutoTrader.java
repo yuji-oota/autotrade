@@ -1,6 +1,7 @@
 package autotrade.local.autotrader;
 
 import java.nio.file.Paths;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -234,6 +235,18 @@ public abstract class AbstractAutoTrader {
 
             // 非活性時間の終了までスリープする
             Duration durationToActive = Duration.between(LocalTime.now(), activeStart);
+            switch (DayOfWeek.from(LocalDate.now())) {
+            case SATURDAY:
+                durationToActive = Duration.between(LocalDateTime.now(),
+                        LocalDateTime.of(LocalDate.now().plusDays(2), activeStart));
+                break;
+            case SUNDAY:
+                durationToActive = Duration.between(LocalDateTime.now(),
+                        LocalDateTime.of(LocalDate.now().plusDays(1), activeStart));
+                break;
+            default:
+                break;
+            }
             log.info("application will sleep {} minutes, because of inactive time.", durationToActive.toMinutes());
             AutoTradeUtils.sleep(durationToActive);
         }
