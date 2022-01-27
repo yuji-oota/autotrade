@@ -46,7 +46,7 @@ class AutoTradeConfigTest {
                 .rate(Rate.builder().pair(pairManager.get("USDJPY")).build())
                 .margin(300000)
                 .effectiveMargin(300000)
-                .askLot(20)
+                .askLot(58)
                 .build();
 
         System.out.println(toProfit.applyAsInt(snapshot));

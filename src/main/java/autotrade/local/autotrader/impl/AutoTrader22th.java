@@ -12,7 +12,6 @@ import java.util.function.ToIntFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
 import autotrade.local.actor.RangeManager;
@@ -29,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * 21thから派生
  *
  */
-@Component("autoTrader22th")
+//@Component("autoTrader22th")
 @Slf4j
 public class AutoTrader22th extends AbstractAutoTrader {
 

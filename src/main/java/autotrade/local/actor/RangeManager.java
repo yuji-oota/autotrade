@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -18,6 +19,9 @@ public class RangeManager implements Serializable {
 
     private Rate upperLimitSave;
     private Rate lowerLimitSave;
+    
+    @Getter
+    private boolean isExtended;
 
     public void reset() {
         upperLimit = null;
@@ -46,25 +50,30 @@ public class RangeManager implements Serializable {
             lowerLimitSave = newRate;
             return;
         }
-        if (snapshot.isBidLtAsk()) {
-            if (newRate.isAbobe(upperLimitSave)) {
-                upperLimitSave = newRate;
-                return;
-            }
+        if (newRate.isAbobe(upperLimitSave)) {
+            upperLimitSave = newRate;
+            return;
         }
-        if (snapshot.isBidGtAsk()) {
-            if (newRate.isBelow(lowerLimitSave)) {
-                lowerLimitSave = newRate;
-                return;
-            }
+        if (newRate.isBelow(lowerLimitSave)) {
+            lowerLimitSave = newRate;
+            return;
         }
     }
 
     public void apply() {
+        isExtended = isSaveExtend();
+        
         lowerLimit = lowerLimitSave;
         upperLimit = upperLimitSave;
         if (Objects.nonNull(lowerLimit) && Objects.nonNull(upperLimit)) {
             log.info("lower limit:{} upper limit:{}", lowerLimit.getRawBid(), upperLimit.getRawAsk());
         }
+    }
+    
+    public boolean isSaveExtend() {
+        if (Objects.isNull(upperLimit) || Objects.isNull(lowerLimit)) {
+            return true;
+        }
+        return lowerLimitSave.isBelow(lowerLimit) || upperLimitSave.isAbobe(upperLimit);
     }
 }

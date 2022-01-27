@@ -1,5 +1,6 @@
 package autotrade.local.autotrader.impl;
 
+import java.lang.reflect.Field;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalTime;
@@ -10,7 +11,11 @@ import java.util.function.ToIntFunction;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
+import org.springframework.util.ReflectionUtils;
 
+import autotrade.local.actor.RangeManager;
 import autotrade.local.actor.RecoveryManager;
 import autotrade.local.autotrader.AbstractAutoTrader;
 import autotrade.local.material.DisplayMode;
@@ -21,12 +26,12 @@ import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 20thから派生
+ * 22thから派生
  *
  */
-//@Component("autoTrader21th")
+@Component("autoTrader23th")
 @Slf4j
-public class AutoTrader21th extends AbstractAutoTrader {
+public class AutoTrader23th extends AbstractAutoTrader {
 
     private boolean doAsk;
     private boolean doBid;
@@ -34,6 +39,9 @@ public class AutoTrader21th extends AbstractAutoTrader {
 
     @Autowired
     private RecoveryManager recoveryManager;
+
+    @Autowired
+    private RangeManager rangeManager;
 
     @Autowired
     private ToIntFunction<Snapshot> toMinimumProfit;
@@ -44,12 +52,21 @@ public class AutoTrader21th extends AbstractAutoTrader {
     @Autowired
     private ToIntFunction<Snapshot> toNextLot;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader21th.stopLoss.duration.seconds}')}")
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader23th.stopLoss.duration.seconds}')}")
     private Duration stopLossDuration;
 
-    public AutoTrader21th() {
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader23th.order.duration.seconds}')}")
+    private Duration orderDuration;
+
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader23th.fix.duration.seconds}')}")
+    private Duration fixDuration;
+
+    public AutoTrader23th() {
         super();
-        log.info("autoTrader21th started.");
+        log.info("autoTrader23th started.");
     }
 
     @Override
@@ -57,6 +74,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
         super.saveLocal();
         AutoTradeUtils.localSave(Paths.get("localSave", "recoveryManager"), recoveryManager);
         AutoTradeUtils.localSave(Paths.get("localSave", "stopLossRate"), stopLossRate);
+        AutoTradeUtils.localSave(Paths.get("localSave", "rangeManager"), rangeManager);
     }
 
     @Override
@@ -64,7 +82,11 @@ public class AutoTrader21th extends AbstractAutoTrader {
         super.loadLocal();
         recoveryManager = AutoTradeUtils.localLoad(Paths.get("localSave", "recoveryManager"));
         log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
+        Field field = ReflectionUtils.findField(recoveryManager.getClass(), "toTargetProgress");
+        ReflectionUtils.makeAccessible(field);
+        ReflectionUtils.setField(field, recoveryManager, applicationContext.getBean("toTargetProgress"));
         stopLossRate = AutoTradeUtils.localLoad(Paths.get("localSave", "stopLossRate"));
+        rangeManager = AutoTradeUtils.localLoad(Paths.get("localSave", "rangeManager"));
     }
 
     @Override
@@ -82,7 +104,7 @@ public class AutoTrader21th extends AbstractAutoTrader {
                 .map(pair -> {
                     return new SimpleEntry<Pair, Integer>(
                             pair,
-                            pairAnalyzerMap.get(pair.getName()).rangeWithin(stopLossDuration) - pair.getMinSpread());
+                            pairAnalyzerMap.get(pair.getName()).rangeWithin(orderDuration) - pair.getMinSpread());
                 })
                 .max(Comparator.comparingInt(Map.Entry::getValue))
                 .map(SimpleEntry::getKey)
@@ -96,7 +118,26 @@ public class AutoTrader21th extends AbstractAutoTrader {
     }
 
     @Override
+    protected void preTrade(Snapshot snapshot) {
+        if (recoveryManager.isOpen()
+                && isSleep(snapshot)) {
+            rangeManager.reset();
+            saveLocal();
+        }
+
+        super.preTrade(snapshot);
+
+        if (indicatorManager.isPrevImportant()
+                && indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15))) {
+            rangeManager.reset();
+        }
+    }
+
+    @Override
     protected void preFix(Snapshot snapshot) {
+        if (recoveryManager.isOpen()) {
+            rangeManager.save(snapshot);
+        }
         if (isShiftStopLossRate(snapshot)) {
             if (snapshot.hasAskOnly()) {
                 int minRate = rateAnalyzer.minWithin(stopLossDuration);
@@ -130,13 +171,13 @@ public class AutoTrader21th extends AbstractAutoTrader {
         if (recoveryManager.isRecoveredWithProfit(snapshot)) {
             if (rateAnalyzer.isBidDown()
                     && snapshot.isBidLtAsk()
-                    && rateAnalyzer.isReachedBidThreshold(rate)) {
+                    && rateAnalyzer.isReachedBidThresholdWithin(rate, fixDuration)) {
                 fixAll(snapshot);
                 return true;
             }
             if (rateAnalyzer.isAskUp()
                     && snapshot.isBidGtAsk()
-                    && rateAnalyzer.isReachedAskThreshold(rate)) {
+                    && rateAnalyzer.isReachedAskThresholdWithin(rate, fixDuration)) {
                 fixAll(snapshot);
                 return true;
             }
@@ -165,6 +206,9 @@ public class AutoTrader21th extends AbstractAutoTrader {
         if (!super.isOrderable(snapshot)) {
             return false;
         }
+        if (rateAnalyzer.getRates().size() < 100) {
+            return false;
+        }
         if (recoveryManager.isOpen()
                 && !recoveryManager.getHandlePair().equals(snapshot.getPair())) {
             return false;
@@ -181,34 +225,40 @@ public class AutoTrader21th extends AbstractAutoTrader {
         case NO_POSITION:
             // ポジションがない場合
 
-            if (rateAnalyzer.isUpwardWithin(stopLossDuration)) {
-                if (rateAnalyzer.isAskUp()
-                        && rateAnalyzer.isReachedAskThreshold(rate)) {
-                    stopLossRate = rateAnalyzer.minWithin(stopLossDuration);
-                    if (recoveryManager.isClose()) {
-                        recoveryManager.open(snapshot);
-                        orderAsk(toInitialLot.applyAsInt(snapshot), snapshot);
-                    } else {
-                        recoveryManager.setCounterTradingSnapshot(snapshot);
-                        orderAsk(recoveryManager.getCounterTradingStartLot(), snapshot);
-                    }
-                    printRecoveryProgress(snapshot);
-                    doAsk = false;
+            if (!rangeManager.isExtended()
+                    && !rangeManager.isSaveExtend()) {
+                return;
+            }
+
+            if (rateAnalyzer.isAskUp()
+                    && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
+                stopLossRate = rateAnalyzer.minWithin(stopLossDuration);
+                if (recoveryManager.isClose()) {
+                    recoveryManager.open(snapshot);
+                    rangeManager.reset();
+                    orderAsk(toInitialLot.applyAsInt(snapshot), snapshot);
+                } else {
+                    recoveryManager.setCounterTradingSnapshot(snapshot);
+                    rangeManager.apply();
+                    orderAsk(recoveryManager.getCounterTradingStartLot(), snapshot);
                 }
-            } else {
-                if (rateAnalyzer.isBidDown()
-                        && rateAnalyzer.isReachedBidThreshold(rate)) {
-                    stopLossRate = rateAnalyzer.maxWithin(stopLossDuration);
-                    if (recoveryManager.isClose()) {
-                        recoveryManager.open(snapshot);
-                        orderBid(toInitialLot.applyAsInt(snapshot), snapshot);
-                    } else {
-                        recoveryManager.setCounterTradingSnapshot(snapshot);
-                        orderBid(recoveryManager.getCounterTradingStartLot(), snapshot);
-                    }
-                    printRecoveryProgress(snapshot);
-                    doBid = false;
+                printRecoveryProgress(snapshot);
+                doAsk = false;
+            }
+            if (rateAnalyzer.isBidDown()
+                    && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDuration)) {
+                stopLossRate = rateAnalyzer.maxWithin(stopLossDuration);
+                if (recoveryManager.isClose()) {
+                    recoveryManager.open(snapshot);
+                    rangeManager.reset();
+                    orderBid(toInitialLot.applyAsInt(snapshot), snapshot);
+                } else {
+                    recoveryManager.setCounterTradingSnapshot(snapshot);
+                    rangeManager.apply();
+                    orderBid(recoveryManager.getCounterTradingStartLot(), snapshot);
                 }
+                printRecoveryProgress(snapshot);
+                doBid = false;
             }
 
             break;
@@ -261,25 +311,31 @@ public class AutoTrader21th extends AbstractAutoTrader {
         }
     }
 
-    @Override
-    protected void postTrade(Snapshot snapshot) {
-        if (recoveryManager.isOpen()
-                && isSleep(snapshot)) {
-            saveLocal();
-        }
-        super.postTrade(snapshot);
-    }
-
     private boolean isAboveStopLossRate(Rate rate) {
         return stopLossRate < rate.getMiddle();
     }
 
     private boolean isShiftStopLossRate(Snapshot snapshot) {
         if (recoveryManager.isOpen()) {
-            if (recoveryManager.isBeforeCounterTrading()) {
+            if (isStopLossRateNegativeZone(snapshot)) {
                 return true;
             }
             if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
+                rangeManager.reset();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isStopLossRateNegativeZone(Snapshot snapshot) {
+        if (snapshot.isBidLtAsk()) {
+            if (stopLossRate < recoveryManager.getCounterTradingSnapshot().getRate().getAsk()) {
+                return true;
+            }
+        }
+        if (snapshot.isBidGtAsk()) {
+            if (stopLossRate > recoveryManager.getCounterTradingSnapshot().getRate().getBid()) {
                 return true;
             }
         }
@@ -312,6 +368,11 @@ public class AutoTrader21th extends AbstractAutoTrader {
                 recoveryManager.getRecoveryProgress(snapshot),
                 recoveryManager.getProfit(snapshot),
                 stopLossRate);
+    }
+
+    @Override
+    protected boolean isCalm() {
+        return false;
     }
 
 }

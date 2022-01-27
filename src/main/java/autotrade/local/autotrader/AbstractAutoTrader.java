@@ -324,7 +324,7 @@ public abstract class AbstractAutoTrader {
             // レートが動いていない場合は注文しない
             return false;
         }
-        if (rateAnalyzer.isCalm()) {
+        if (isCalm()) {
             // 閾値間隔が狭い場合は注文しない
             return false;
         }
@@ -383,6 +383,10 @@ public abstract class AbstractAutoTrader {
             throw new ApplicationException("RateAnalyzer has doubtful rates.");
         }
 
+    }
+
+    protected boolean isCalm() {
+        return rateAnalyzer.isCalm();
     }
 
     protected void printSummary(Snapshot snapshot) {
