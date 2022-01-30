@@ -239,7 +239,6 @@ public class AutoTrader23th extends AbstractAutoTrader {
                     orderAsk(toInitialLot.applyAsInt(snapshot), snapshot);
                 } else {
                     recoveryManager.setCounterTradingSnapshot(snapshot);
-                    rangeManager.apply();
                     orderAsk(recoveryManager.getCounterTradingStartLot(), snapshot);
                 }
                 printRecoveryProgress(snapshot);
@@ -254,7 +253,6 @@ public class AutoTrader23th extends AbstractAutoTrader {
                     orderBid(toInitialLot.applyAsInt(snapshot), snapshot);
                 } else {
                     recoveryManager.setCounterTradingSnapshot(snapshot);
-                    rangeManager.apply();
                     orderBid(recoveryManager.getCounterTradingStartLot(), snapshot);
                 }
                 printRecoveryProgress(snapshot);
@@ -317,9 +315,9 @@ public class AutoTrader23th extends AbstractAutoTrader {
 
     private boolean isShiftStopLossRate(Snapshot snapshot) {
         if (recoveryManager.isOpen()) {
-            if (isStopLossRateNegativeZone(snapshot)) {
-                return true;
-            }
+            //            if (isStopLossRateNegativeZone(snapshot)) {
+            //                return true;
+            //            }
             if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
                 rangeManager.reset();
                 return true;
@@ -354,6 +352,7 @@ public class AutoTrader23th extends AbstractAutoTrader {
             fixBid(snapshot);
         }
         recoveryManager.stopLossProcess(snapshot);
+        rangeManager.apply();
     }
 
     @Override
