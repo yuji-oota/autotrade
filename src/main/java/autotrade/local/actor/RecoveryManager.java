@@ -7,6 +7,7 @@ import java.math.RoundingMode;
 import java.util.function.ToIntFunction;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import autotrade.local.material.Pair;
@@ -38,6 +39,12 @@ public class RecoveryManager implements Serializable {
 
     @Autowired
     private ToIntFunction<Snapshot> toTargetProgress;
+
+    @Value("${autotrade.config.toTargetProgress.maxRatio}")
+    private int maxRatio;
+
+    @Value("${autotrade.config.toTargetProgress.ratioRange}")
+    private BigDecimal ratioRange;
 
     public void open(Snapshot snapshot) {
         openSnapshot = snapshot;
@@ -127,7 +134,7 @@ public class RecoveryManager implements Serializable {
             int percentage = 100 - getRecoveryProgress(snapshot);
             counterTradingStartLot = snapshot.getMoreLot() * percentage / 100;
         }
-        counterTradingStartLot = Math.max(toInitialLot.applyAsInt(snapshot), counterTradingStartLot);
+        counterTradingStartLot = Math.max(toInitialLot.applyAsInt(openSnapshot), counterTradingStartLot);
         stopLossCount++;
     }
 
@@ -136,7 +143,15 @@ public class RecoveryManager implements Serializable {
     }
 
     public boolean isReachedRecoveryProgress(Snapshot snapshot) {
-        return getRecoveryProgress(snapshot) >= toTargetProgress.applyAsInt(snapshot);
+        return getRecoveryProgress(snapshot) >= toTargetProgress(snapshot);
+    }
+
+    private int toTargetProgress(Snapshot snapshot) {
+        BigDecimal limitSubInitial = new BigDecimal(
+                openSnapshot.getLimitLot() - toInitialLot.applyAsInt(openSnapshot));
+        BigDecimal currentSubInitial = new BigDecimal(snapshot.getMoreLot() - toInitialLot.applyAsInt(openSnapshot));
+        BigDecimal progressUnit = limitSubInitial.divide(ratioRange, 1, RoundingMode.HALF_UP);
+        return maxRatio - currentSubInitial.divide(progressUnit, 0, RoundingMode.HALF_UP).intValue();
     }
 
 }

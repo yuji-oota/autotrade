@@ -30,7 +30,7 @@ class RangeManagerTest {
         log.info("isSaveExtend:{} isExtended:{}", rangeManager.isSaveExtend(), rangeManager.isExtended());
         rangeManager.apply();
         log.info("isSaveExtend:{} isExtended:{}", rangeManager.isSaveExtend(), rangeManager.isExtended());
-        
+
         rangeManager.save(Snapshot.builder()
                 .rate(Rate.builder().pair(pairManager.get("USDJPY"))
                         .rawAsk("105").rawBid("100")
@@ -57,7 +57,7 @@ class RangeManagerTest {
         log.info("isSaveExtend:{} isExtended:{}", rangeManager.isSaveExtend(), rangeManager.isExtended());
         rangeManager.apply();
         log.info("isSaveExtend:{} isExtended:{}", rangeManager.isSaveExtend(), rangeManager.isExtended());
-        
+
     }
 
 }
