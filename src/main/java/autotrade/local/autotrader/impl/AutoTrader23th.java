@@ -137,21 +137,13 @@ public class AutoTrader23th extends AbstractAutoTrader {
     protected void preFix(Snapshot snapshot) {
         if (recoveryManager.isOpen()) {
             rangeManager.save(snapshot);
-        }
-        if (isShiftStopLossRate(snapshot)) {
-            if (snapshot.hasAskOnly()) {
-                int minRate = rateAnalyzer.minWithin(stopLossDuration);
-                if (stopLossRate < minRate) {
-                    stopLossRate = minRate;
-                    printRecoveryProgress(snapshot);
-                }
+
+            if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
+                rangeManager.reset();
+                shiftStopLossRate(snapshot, stopLossDuration);
             }
-            if (snapshot.hasBidOnly()) {
-                int maxRate = rateAnalyzer.maxWithin(stopLossDuration);
-                if (stopLossRate > maxRate) {
-                    stopLossRate = maxRate;
-                    printRecoveryProgress(snapshot);
-                }
+            if (!rangeManager.isWithinRange(snapshot)) {
+                shiftStopLossRate(snapshot, Duration.ofSeconds(150));
             }
         }
     }
@@ -338,6 +330,24 @@ public class AutoTrader23th extends AbstractAutoTrader {
             }
         }
         return false;
+    }
+
+    private void shiftStopLossRate(Snapshot snapshot, Duration duration) {
+        if (snapshot.hasAskOnly()) {
+            int minRate = rateAnalyzer.minWithin(duration);
+            if (stopLossRate < minRate) {
+                stopLossRate = minRate;
+                printRecoveryProgress(snapshot);
+            }
+        }
+        if (snapshot.hasBidOnly()) {
+            int maxRate = rateAnalyzer.maxWithin(duration);
+            if (stopLossRate > maxRate) {
+                stopLossRate = maxRate;
+                printRecoveryProgress(snapshot);
+            }
+        }
+
     }
 
     private void stopLossProcess(Snapshot snapshot) {
