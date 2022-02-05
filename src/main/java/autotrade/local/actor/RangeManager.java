@@ -2,6 +2,7 @@ package autotrade.local.actor;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.function.ToIntFunction;
 
 import org.springframework.stereotype.Component;
 
@@ -14,14 +15,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RangeManager implements Serializable {
 
+    @Getter
     private Rate upperLimit;
+    @Getter
     private Rate lowerLimit;
 
     private Rate upperLimitSave;
     private Rate lowerLimitSave;
-    
+
     @Getter
     private boolean isExtended;
+
+    @SuppressWarnings("unchecked")
+    private ToIntFunction<Snapshot> toDiffFromUpperLimit = (ToIntFunction<Snapshot> & Serializable) s -> upperLimit
+            .getAsk() - s.getRate().getAsk();
+    @SuppressWarnings("unchecked")
+    private ToIntFunction<Snapshot> toDiffFromLowerLimit = (ToIntFunction<Snapshot> & Serializable) s -> s.getRate()
+            .getBid() - lowerLimit.getBid();
 
     public void reset() {
         upperLimit = null;
@@ -62,18 +72,27 @@ public class RangeManager implements Serializable {
 
     public void apply() {
         isExtended = isSaveExtend();
-        
+
         lowerLimit = lowerLimitSave;
         upperLimit = upperLimitSave;
         if (Objects.nonNull(lowerLimit) && Objects.nonNull(upperLimit)) {
-            log.info("lower limit:{} upper limit:{} isExtended:{}", lowerLimit.getRawBid(), upperLimit.getRawAsk(), isExtended);
+            log.info("lower limit:{} upper limit:{} isExtended:{}", lowerLimit.getRawBid(), upperLimit.getRawAsk(),
+                    isExtended);
         }
     }
-    
+
     public boolean isSaveExtend() {
         if (Objects.isNull(upperLimit) || Objects.isNull(lowerLimit)) {
             return true;
         }
         return lowerLimitSave.isBelow(lowerLimit) || upperLimitSave.isAbobe(upperLimit);
+    }
+
+    public boolean isNearUpperLimit(Snapshot snapshot) {
+        return toDiffFromUpperLimit.applyAsInt(snapshot) < toDiffFromLowerLimit.applyAsInt(snapshot);
+    }
+
+    public boolean isNearLowerLimit(Snapshot snapshot) {
+        return toDiffFromUpperLimit.applyAsInt(snapshot) > toDiffFromLowerLimit.applyAsInt(snapshot);
     }
 }

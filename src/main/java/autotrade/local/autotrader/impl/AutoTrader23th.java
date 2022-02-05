@@ -128,7 +128,7 @@ public class AutoTrader23th extends AbstractAutoTrader {
         super.preTrade(snapshot);
 
         if (indicatorManager.isPrevImportant()
-                && indicatorManager.isPrevIndicatorWithin(Duration.ofSeconds(15))) {
+                && rateAnalyzer.getRates().isEmpty()) {
             rangeManager.reset();
         }
     }
@@ -136,7 +136,9 @@ public class AutoTrader23th extends AbstractAutoTrader {
     @Override
     protected void preFix(Snapshot snapshot) {
         if (recoveryManager.isOpen()) {
-            rangeManager.save(snapshot);
+            if (!snapshot.isSpreadWiden()) {
+                rangeManager.save(snapshot);
+            }
 
             if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
                 rangeManager.reset();
@@ -230,6 +232,10 @@ public class AutoTrader23th extends AbstractAutoTrader {
                     rangeManager.reset();
                     orderAsk(toInitialLot.applyAsInt(snapshot), snapshot);
                 } else {
+                    if (rangeManager.isWithinRange(snapshot)
+                            && rangeManager.isNearLowerLimit(snapshot)) {
+                        stopLossRate = rangeManager.getLowerLimit().getBid();
+                    }
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                     orderAsk(recoveryManager.getCounterTradingStartLot(), snapshot);
                 }
@@ -244,6 +250,10 @@ public class AutoTrader23th extends AbstractAutoTrader {
                     rangeManager.reset();
                     orderBid(toInitialLot.applyAsInt(snapshot), snapshot);
                 } else {
+                    if (rangeManager.isWithinRange(snapshot)
+                            && rangeManager.isNearUpperLimit(snapshot)) {
+                        stopLossRate = rangeManager.getUpperLimit().getAsk();
+                    }
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                     orderBid(recoveryManager.getCounterTradingStartLot(), snapshot);
                 }
@@ -303,19 +313,6 @@ public class AutoTrader23th extends AbstractAutoTrader {
 
     private boolean isAboveStopLossRate(Rate rate) {
         return stopLossRate < rate.getMiddle();
-    }
-
-    private boolean isShiftStopLossRate(Snapshot snapshot) {
-        if (recoveryManager.isOpen()) {
-            //            if (isStopLossRateNegativeZone(snapshot)) {
-            //                return true;
-            //            }
-            if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
-                rangeManager.reset();
-                return true;
-            }
-        }
-        return false;
     }
 
     private boolean isStopLossRateNegativeZone(Snapshot snapshot) {
