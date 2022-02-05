@@ -37,13 +37,10 @@ public class RecoveryManager implements Serializable {
     @Autowired
     private ToIntFunction<Snapshot> toInitialLot;
 
-    @Autowired
-    private ToIntFunction<Snapshot> toTargetProgress;
-
-    @Value("${autotrade.config.toTargetProgress.maxRatio}")
+    @Value("${autotrade.recoveryManager.toTargetProgress.maxRatio}")
     private int maxRatio;
 
-    @Value("${autotrade.config.toTargetProgress.ratioRange}")
+    @Value("${autotrade.recoveryManager.toTargetProgress.ratioRange}")
     private BigDecimal ratioRange;
 
     public void open(Snapshot snapshot) {

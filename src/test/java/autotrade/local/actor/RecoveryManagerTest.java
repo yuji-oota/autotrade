@@ -14,6 +14,7 @@ class RecoveryManagerTest {
 
     @Test
     void test() {
+        System.out.println(recoveryManager);
     }
 
 }

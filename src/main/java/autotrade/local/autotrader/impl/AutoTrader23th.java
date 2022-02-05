@@ -1,6 +1,5 @@
 package autotrade.local.autotrader.impl;
 
-import java.lang.reflect.Field;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalTime;
@@ -11,9 +10,7 @@ import java.util.function.ToIntFunction;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ReflectionUtils;
 
 import autotrade.local.actor.RangeManager;
 import autotrade.local.actor.RecoveryManager;
@@ -52,9 +49,6 @@ public class AutoTrader23th extends AbstractAutoTrader {
     @Autowired
     private ToIntFunction<Snapshot> toNextLot;
 
-    @Autowired
-    private ApplicationContext applicationContext;
-
     @Value("#{T(java.time.Duration).ofSeconds('${autoTrader23th.stopLoss.duration.seconds}')}")
     private Duration stopLossDuration;
 
@@ -82,9 +76,6 @@ public class AutoTrader23th extends AbstractAutoTrader {
         super.loadLocal();
         recoveryManager = AutoTradeUtils.localLoad(Paths.get("localSave", "recoveryManager"));
         log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
-        Field field = ReflectionUtils.findField(recoveryManager.getClass(), "toTargetProgress");
-        ReflectionUtils.makeAccessible(field);
-        ReflectionUtils.setField(field, recoveryManager, applicationContext.getBean("toTargetProgress"));
         stopLossRate = AutoTradeUtils.localLoad(Paths.get("localSave", "stopLossRate"));
         rangeManager = AutoTradeUtils.localLoad(Paths.get("localSave", "rangeManager"));
     }
@@ -185,7 +176,8 @@ public class AutoTrader23th extends AbstractAutoTrader {
                     stopLossProcess(snapshot);
                     return true;
                 }
-            } else {
+            }
+            if (isBelowStopLossRate(snapshot.getRate())) {
                 if (rateAnalyzer.isBidDown()
                         && snapshot.hasAsk()
                         && rateAnalyzer.isReachedBidThreshold(rate)) {
@@ -281,7 +273,8 @@ public class AutoTrader23th extends AbstractAutoTrader {
                         return;
                     }
                 }
-            } else {
+            }
+            if (isBelowStopLossRate(snapshot.getRate())) {
                 if (rateAnalyzer.isBidDown()) {
                     if (doBid
                             && snapshot.isBidLtLimit()
@@ -314,21 +307,11 @@ public class AutoTrader23th extends AbstractAutoTrader {
     }
 
     private boolean isAboveStopLossRate(Rate rate) {
-        return stopLossRate < rate.getMiddle();
+        return stopLossRate < rate.getAsk();
     }
 
-    private boolean isStopLossRateNegativeZone(Snapshot snapshot) {
-        if (snapshot.isBidLtAsk()) {
-            if (stopLossRate < recoveryManager.getCounterTradingSnapshot().getRate().getAsk()) {
-                return true;
-            }
-        }
-        if (snapshot.isBidGtAsk()) {
-            if (stopLossRate > recoveryManager.getCounterTradingSnapshot().getRate().getBid()) {
-                return true;
-            }
-        }
-        return false;
+    private boolean isBelowStopLossRate(Rate rate) {
+        return stopLossRate > rate.getBid();
     }
 
     private void shiftStopLossRate(Snapshot snapshot, Duration duration) {
