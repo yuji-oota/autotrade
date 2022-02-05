@@ -140,8 +140,10 @@ public class AutoTrader23th extends AbstractAutoTrader {
                 rangeManager.save(snapshot);
             }
 
-            if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
+            if (recoveryManager.getRecoveryProgress(snapshot) >= 50) {
                 rangeManager.reset();
+            }
+            if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
                 shiftStopLossRate(snapshot, stopLossDuration);
             }
             if (!rangeManager.isWithinRange(snapshot)) {
