@@ -108,6 +108,17 @@ public class AutoTrader23th extends AbstractAutoTrader {
                 && snapshot.hasNoPosition();
     }
 
+    protected boolean isTradable(Snapshot snapshot) {
+        if (!super.isTradable(snapshot)) {
+            return false;
+        }
+        if (recoveryManager.isOpen()
+                && !recoveryManager.getHandlePair().equals(snapshot.getPair())) {
+            return false;
+        }
+        return true;
+    }
+
     @Override
     protected void preTrade(Snapshot snapshot) {
         if (recoveryManager.isOpen()
@@ -135,6 +146,7 @@ public class AutoTrader23th extends AbstractAutoTrader {
                 rangeManager.reset();
             }
             if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
+                rangeManager.reset();
                 shiftStopLossRate(snapshot, stopLossDuration);
             }
             if (!rangeManager.isWithinRange(snapshot)) {
@@ -195,10 +207,6 @@ public class AutoTrader23th extends AbstractAutoTrader {
             return false;
         }
         if (rateAnalyzer.getRates().size() < 100) {
-            return false;
-        }
-        if (recoveryManager.isOpen()
-                && !recoveryManager.getHandlePair().equals(snapshot.getPair())) {
             return false;
         }
         return true;
