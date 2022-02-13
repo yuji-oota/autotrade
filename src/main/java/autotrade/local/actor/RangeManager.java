@@ -40,15 +40,31 @@ public class RangeManager implements Serializable {
         lowerLimitSave = null;
     }
 
+    public boolean isBeforeApply() {
+        return Objects.isNull(upperLimit) || Objects.isNull(lowerLimit);
+    }
+
+    public boolean isAfterApply() {
+        return !isBeforeApply();
+    }
+
     public boolean isWithinRange(Snapshot snapshot) {
-        if (Objects.isNull(upperLimit) || Objects.isNull(lowerLimit)) {
+        if (isBeforeApply()) {
             return false;
         }
         Rate rate = snapshot.getRate();
-        if (rate.isAbobe(lowerLimit) && rate.isBelow(upperLimit)) {
+        if (rate.isAbove(lowerLimit) && rate.isBelow(upperLimit)) {
             return true;
         }
         return false;
+    }
+
+    public boolean isAboveRange(Snapshot snapshot) {
+        return snapshot.getRate().isAbove(upperLimit);
+    }
+
+    public boolean isBelowRange(Snapshot snapshot) {
+        return snapshot.getRate().isBelow(lowerLimit);
     }
 
     public void save(Snapshot snapshot) {
@@ -60,7 +76,7 @@ public class RangeManager implements Serializable {
             lowerLimitSave = newRate;
             return;
         }
-        if (newRate.isAbobe(upperLimitSave)) {
+        if (newRate.isAbove(upperLimitSave)) {
             upperLimitSave = newRate;
             return;
         }
@@ -82,10 +98,10 @@ public class RangeManager implements Serializable {
     }
 
     public boolean isSaveExtend() {
-        if (Objects.isNull(upperLimit) || Objects.isNull(lowerLimit)) {
+        if (isBeforeApply()) {
             return true;
         }
-        return lowerLimitSave.isBelow(lowerLimit) || upperLimitSave.isAbobe(upperLimit);
+        return lowerLimitSave.isBelow(lowerLimit) || upperLimitSave.isAbove(upperLimit);
     }
 
     public boolean isNearUpperLimit(Snapshot snapshot) {
@@ -94,5 +110,9 @@ public class RangeManager implements Serializable {
 
     public boolean isNearLowerLimit(Snapshot snapshot) {
         return toDiffFromUpperLimit.applyAsInt(snapshot) > toDiffFromLowerLimit.applyAsInt(snapshot);
+    }
+
+    public int getSaveMiddle() {
+        return (lowerLimitSave.getBid() + upperLimitSave.getAsk()) / 2;
     }
 }

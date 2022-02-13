@@ -27,7 +27,7 @@ public class Rate implements Serializable {
         return (ask + bid) / 2;
     }
 
-    public boolean isAbobe(Rate rate) {
+    public boolean isAbove(Rate rate) {
         return this.ask > rate.getAsk();
     }
 
