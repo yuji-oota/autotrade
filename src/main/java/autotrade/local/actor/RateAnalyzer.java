@@ -39,6 +39,8 @@ public class RateAnalyzer implements Serializable {
     private ArrayDeque<Rate> latestRateQueue;
     private ArrayDeque<Rate> diffRateQueue;
 
+    @Value("#{T(java.time.Duration).ofSeconds('${autotrade.rateAnalizer.rates.seconds}')}")
+    private Duration ratesDuration;
     @Value("#{T(java.time.Duration).ofSeconds('${autotrade.rateAnalizer.threshold.seconds}')}")
     private Duration thresholdDuration;
     @Value("#{T(java.time.Duration).ofSeconds('${autotrade.rateAnalizer.calm.seconds}')}")
@@ -78,10 +80,7 @@ public class RateAnalyzer implements Serializable {
             rates.add(rate);
             updateWaterMark(rate);
         }
-        LocalDateTime from = LocalDateTime.now().minus(Duration.ofMinutes(10));
-        rates = rates.stream()
-                .filter(r -> r.getTimestamp().isAfter(from))
-                .collect(Collectors.toList());
+        rates = ratesWithin(ratesDuration);
 
         // 売買閾値設定
         askThreshold = maxWithin(thresholdDuration);
@@ -323,5 +322,12 @@ public class RateAnalyzer implements Serializable {
 
     public void clear() {
         rates.clear();
+    }
+
+    public List<Rate> ratesWithin(Duration duration) {
+        LocalDateTime from = LocalDateTime.now().minus(duration);
+        return rates.stream()
+                .filter(r -> r.getTimestamp().isAfter(from))
+                .collect(Collectors.toList());
     }
 }

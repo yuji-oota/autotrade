@@ -207,7 +207,7 @@ public class AutoTrader24th extends AbstractAutoTrader {
         if (!super.isOrderable(snapshot)) {
             return false;
         }
-        if (rateAnalyzer.getRates().size() < 100) {
+        if (rateAnalyzer.getRates().size() == rateAnalyzer.ratesWithin(orderDuration).size()) {
             return false;
         }
         return true;
