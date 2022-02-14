@@ -48,6 +48,14 @@ public class RangeManager implements Serializable {
         return !isBeforeApply();
     }
 
+    public boolean isBeforeSave() {
+        return Objects.isNull(upperLimitSave) || Objects.isNull(lowerLimitSave);
+    }
+
+    public boolean isAfterSave() {
+        return !isBeforeSave();
+    }
+
     public boolean isWithinRange(Snapshot snapshot) {
         if (isBeforeApply()) {
             return false;
@@ -71,7 +79,7 @@ public class RangeManager implements Serializable {
 
         Rate newRate = snapshot.getRate();
 
-        if (Objects.isNull(upperLimitSave) || Objects.isNull(lowerLimitSave)) {
+        if (isBeforeSave()) {
             upperLimitSave = newRate;
             lowerLimitSave = newRate;
             return;
