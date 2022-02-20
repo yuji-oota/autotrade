@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 public class Rate implements Serializable {
 
     private Pair pair;

@@ -124,4 +124,17 @@ public class RangeManager implements Serializable {
     public int getSaveMiddle() {
         return (lowerLimitSave.getBid() + upperLimitSave.getAsk()) / 2;
     }
+
+    public boolean isFirstSave() {
+        return lowerLimitSave == upperLimitSave;
+    }
+
+    public void adjustTermination(int lower, int upper) {
+        if (lowerLimitSave.getBid() > lower) {
+            lowerLimitSave = lowerLimitSave.toBuilder().bid(lower).ask(lower + lowerLimitSave.getSpread()).build();
+        }
+        if (upperLimitSave.getAsk() < upper) {
+            upperLimitSave = upperLimitSave.toBuilder().bid(upper - upperLimitSave.getSpread()).ask(upper).build();
+        }
+    }
 }

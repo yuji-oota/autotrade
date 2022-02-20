@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Builder(toBuilder = true)
-public class Snapshot implements Serializable, Cloneable {
+public class Snapshot implements Serializable {
 
     private int positionProfit;
     private int totalProfit;

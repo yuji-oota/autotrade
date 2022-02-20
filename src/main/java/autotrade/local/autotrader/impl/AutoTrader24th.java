@@ -141,17 +141,25 @@ public class AutoTrader24th extends AbstractAutoTrader {
         if (recoveryManager.isOpen()) {
             if (!snapshot.isSpreadWiden()) {
                 rangeManager.save(snapshot);
+
+                if (rangeManager.isFirstSave()) {
+                    rangeManager.adjustTermination(rateAnalyzer.minWithin(stopLossDuration),
+                            rateAnalyzer.maxWithin(stopLossDuration));
+                }
             }
 
-            if (recoveryManager.getRecoveryProgress(snapshot) >= 25) {
-                rangeManager.reset();
-            }
             Duration shiftDuration = stopLossDuration;
+            boolean isForceShift = false;
+            if (recoveryManager.getRecoveryProgress(snapshot) >= 50) {
+                rangeManager.reset();
+                isForceShift = true;
+            }
             if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
                 rangeManager.reset();
                 shiftDuration = orderDuration;
+                isForceShift = true;
             }
-            shiftStopLossRate(snapshot, shiftDuration);
+            shiftStopLossRate(snapshot, shiftDuration, isForceShift);
         }
     }
 
@@ -333,12 +341,13 @@ public class AutoTrader24th extends AbstractAutoTrader {
         return stopLossRate > rate.getBid();
     }
 
-    private void shiftStopLossRate(Snapshot snapshot, Duration duration) {
+    private void shiftStopLossRate(Snapshot snapshot, Duration duration, boolean isForce) {
         if (snapshot.hasAskOnly()) {
-            int minRate = rateAnalyzer.minWithin(duration);
-            int shiftTarget = minRate;
-            if (rangeManager.isAfterSave()) {
-                shiftTarget = Math.min(minRate, rangeManager.getSaveMiddle());
+            int minWithinDuration = rateAnalyzer.minWithin(duration);
+            int shiftTarget = Math.min(minWithinDuration,
+                    recoveryManager.getCounterTradingSnapshot().getRate().getAsk());
+            if (isForce) {
+                shiftTarget = minWithinDuration;
             }
             if (stopLossRate < shiftTarget) {
                 stopLossRate = shiftTarget;
@@ -346,10 +355,11 @@ public class AutoTrader24th extends AbstractAutoTrader {
             }
         }
         if (snapshot.hasBidOnly()) {
-            int maxRate = rateAnalyzer.maxWithin(duration);
-            int shiftTarget = maxRate;
-            if (rangeManager.isAfterSave()) {
-                shiftTarget = Math.max(maxRate, rangeManager.getSaveMiddle());
+            int maxWithinDuration = rateAnalyzer.maxWithin(duration);
+            int shiftTarget = Math.max(maxWithinDuration,
+                    recoveryManager.getCounterTradingSnapshot().getRate().getBid());
+            if (isForce) {
+                shiftTarget = maxWithinDuration;
             }
             if (stopLossRate > shiftTarget) {
                 stopLossRate = shiftTarget;
