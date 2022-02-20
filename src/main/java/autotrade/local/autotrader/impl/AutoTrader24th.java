@@ -143,7 +143,7 @@ public class AutoTrader24th extends AbstractAutoTrader {
                 rangeManager.save(snapshot);
             }
 
-            if (recoveryManager.getRecoveryProgress(snapshot) >= 50) {
+            if (recoveryManager.getRecoveryProgress(snapshot) >= 25) {
                 rangeManager.reset();
             }
             Duration shiftDuration = stopLossDuration;
@@ -221,6 +221,12 @@ public class AutoTrader24th extends AbstractAutoTrader {
         case NO_POSITION:
             // ポジションがない場合
 
+            if (!rangeManager.isExtended()
+                    && !rangeManager.isSaveExtend()) {
+                // レンジ未拡張
+                return;
+            }
+
             if (rateAnalyzer.isAskUp()
                     && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
                 stopLossRate = rateAnalyzer.minWithin(stopLossDuration);
@@ -231,6 +237,12 @@ public class AutoTrader24th extends AbstractAutoTrader {
                 } else {
                     if (rangeManager.isAfterApply()) {
                         stopLossRate = rangeManager.getLowerLimit().getBid();
+                    }
+                    if (rangeManager.isAfterSave()
+                            && rangeManager.getUpperLimitSave().getAsk() == rate.getAsk()) {
+                        // レンジ未拡張→レンジ拡張時
+                        log.info("range reset by termination order.");
+                        rangeManager.reset();
                     }
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                     orderAsk(recoveryManager.getCounterTradingStartLot(), snapshot);
@@ -248,6 +260,12 @@ public class AutoTrader24th extends AbstractAutoTrader {
                 } else {
                     if (rangeManager.isAfterApply()) {
                         stopLossRate = rangeManager.getUpperLimit().getAsk();
+                    }
+                    if (rangeManager.isAfterSave()
+                            && rangeManager.getLowerLimitSave().getBid() == rate.getBid()) {
+                        // レンジ未拡張→レンジ拡張時
+                        log.info("range reset by termination order.");
+                        rangeManager.reset();
                     }
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                     orderBid(recoveryManager.getCounterTradingStartLot(), snapshot);

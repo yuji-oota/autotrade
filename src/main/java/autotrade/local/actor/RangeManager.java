@@ -19,8 +19,9 @@ public class RangeManager implements Serializable {
     private Rate upperLimit;
     @Getter
     private Rate lowerLimit;
-
+    @Getter
     private Rate upperLimitSave;
+    @Getter
     private Rate lowerLimitSave;
 
     @Getter
