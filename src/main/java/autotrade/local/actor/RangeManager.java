@@ -101,7 +101,7 @@ public class RangeManager implements Serializable {
         lowerLimit = lowerLimitSave;
         upperLimit = upperLimitSave;
         if (Objects.nonNull(lowerLimit) && Objects.nonNull(upperLimit)) {
-            log.info("lower limit:{} upper limit:{} isExtended:{}", lowerLimit.getRawBid(), upperLimit.getRawAsk(),
+            log.info("lower limit:{} upper limit:{} isExtended:{}", lowerLimit.getBid(), upperLimit.getAsk(),
                     isExtended);
         }
     }

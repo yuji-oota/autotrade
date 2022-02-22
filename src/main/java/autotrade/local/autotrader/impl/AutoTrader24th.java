@@ -53,6 +53,9 @@ public class AutoTrader24th extends AbstractAutoTrader {
     @Value("#{T(java.time.Duration).ofSeconds('${autoTrader24th.stopLoss.duration.seconds}')}")
     private Duration stopLossDuration;
 
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader24th.shift.duration.seconds}')}")
+    private Duration shiftDuration;
+
     @Value("#{T(java.time.Duration).ofSeconds('${autoTrader24th.order.duration.seconds}')}")
     private Duration orderDuration;
 
@@ -143,23 +146,28 @@ public class AutoTrader24th extends AbstractAutoTrader {
                 rangeManager.save(snapshot);
 
                 if (rangeManager.isFirstSave()) {
-                    rangeManager.adjustTermination(rateAnalyzer.minWithin(stopLossDuration),
-                            rateAnalyzer.maxWithin(stopLossDuration));
+                    int min = rateAnalyzer.minWithin(stopLossDuration);
+                    int max = rateAnalyzer.maxWithin(stopLossDuration);
+                    if (Integer.MIN_VALUE < min && max < Integer.MAX_VALUE) {
+                        rangeManager.adjustTermination(rateAnalyzer.minWithin(stopLossDuration),
+                                rateAnalyzer.maxWithin(stopLossDuration));
+                    }
                 }
             }
 
-            Duration shiftDuration = stopLossDuration;
+            Duration duration = shiftDuration;
             boolean isForceShift = false;
             if (recoveryManager.getRecoveryProgress(snapshot) >= 50) {
                 rangeManager.reset();
+                duration = stopLossDuration;
                 isForceShift = true;
             }
             if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
                 rangeManager.reset();
-                shiftDuration = orderDuration;
+                duration = orderDuration;
                 isForceShift = true;
             }
-            shiftStopLossRate(snapshot, shiftDuration, isForceShift);
+            shiftStopLossRate(snapshot, duration, isForceShift);
         }
     }
 
@@ -243,9 +251,6 @@ public class AutoTrader24th extends AbstractAutoTrader {
                     rangeManager.reset();
                     orderAsk(toInitialLot.applyAsInt(snapshot), snapshot);
                 } else {
-                    if (rangeManager.isAfterApply()) {
-                        stopLossRate = rangeManager.getLowerLimit().getBid();
-                    }
                     if (rangeManager.isAfterSave()
                             && rangeManager.getUpperLimitSave().getAsk() == rate.getAsk()) {
                         // レンジ未拡張→レンジ拡張時
@@ -266,9 +271,6 @@ public class AutoTrader24th extends AbstractAutoTrader {
                     rangeManager.reset();
                     orderBid(toInitialLot.applyAsInt(snapshot), snapshot);
                 } else {
-                    if (rangeManager.isAfterApply()) {
-                        stopLossRate = rangeManager.getUpperLimit().getAsk();
-                    }
                     if (rangeManager.isAfterSave()
                             && rangeManager.getLowerLimitSave().getBid() == rate.getBid()) {
                         // レンジ未拡張→レンジ拡張時
