@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 23thから派生
- * レンジの中間でStopLossする
+ * shiftDurationでStopLossRateをshiftする
  *
  */
 @Component("autoTrader24th")
@@ -156,18 +156,15 @@ public class AutoTrader24th extends AbstractAutoTrader {
             }
 
             Duration duration = shiftDuration;
-            boolean isForceShift = false;
             if (recoveryManager.getRecoveryProgress(snapshot) >= 50) {
                 rangeManager.reset();
                 duration = stopLossDuration;
-                isForceShift = true;
             }
             if (recoveryManager.isReachedRecoveryProgress(snapshot)) {
                 rangeManager.reset();
                 duration = orderDuration;
-                isForceShift = true;
             }
-            shiftStopLossRate(snapshot, duration, isForceShift);
+            shiftStopLossRate(snapshot, duration);
         }
     }
 
@@ -343,26 +340,16 @@ public class AutoTrader24th extends AbstractAutoTrader {
         return stopLossRate > rate.getBid();
     }
 
-    private void shiftStopLossRate(Snapshot snapshot, Duration duration, boolean isForce) {
+    private void shiftStopLossRate(Snapshot snapshot, Duration duration) {
         if (snapshot.hasAskOnly()) {
-            int minWithinDuration = rateAnalyzer.minWithin(duration);
-            int shiftTarget = Math.min(minWithinDuration,
-                    recoveryManager.getCounterTradingSnapshot().getRate().getAsk());
-            if (isForce) {
-                shiftTarget = minWithinDuration;
-            }
+            int shiftTarget = rateAnalyzer.minWithin(duration);
             if (stopLossRate < shiftTarget) {
                 stopLossRate = shiftTarget;
                 printRecoveryProgress(snapshot);
             }
         }
         if (snapshot.hasBidOnly()) {
-            int maxWithinDuration = rateAnalyzer.maxWithin(duration);
-            int shiftTarget = Math.max(maxWithinDuration,
-                    recoveryManager.getCounterTradingSnapshot().getRate().getBid());
-            if (isForce) {
-                shiftTarget = maxWithinDuration;
-            }
+            int shiftTarget = rateAnalyzer.maxWithin(duration);
             if (stopLossRate > shiftTarget) {
                 stopLossRate = shiftTarget;
                 printRecoveryProgress(snapshot);
