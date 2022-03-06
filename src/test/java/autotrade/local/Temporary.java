@@ -3,6 +3,7 @@ package autotrade.local;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -73,6 +74,22 @@ public class Temporary {
         BigDecimal progressUnit = limitSubInitial.divide(diffRatio, 1, RoundingMode.HALF_UP);
         int progress = maxRatio - currentSubInitial.divide(progressUnit, 0, RoundingMode.HALF_UP).intValue();
         System.out.println(progress);
+    }
+
+    @Test
+    public void test07() {
+        Duration duration = Duration.ofSeconds(600);
+        System.out.println(duration.minusMillis(1 * 5700));
+        System.out.println(duration.minusMillis(10 * 5700));
+        System.out.println(duration.minusMillis(20 * 5700));
+        System.out.println(duration.minusMillis(30 * 5700));
+        System.out.println(duration.minusMillis(40 * 5700));
+        System.out.println(duration.minusMillis(50 * 5700));
+        System.out.println(duration.minusMillis(60 * 5700));
+        System.out.println(duration.minusMillis(70 * 5700));
+        System.out.println(duration.minusMillis(80 * 5700));
+        System.out.println(duration.minusMillis(90 * 5700));
+        System.out.println(duration.minusMillis(99 * 5700));
     }
 
 }
