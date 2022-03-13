@@ -167,7 +167,7 @@ public class AutoTrader24th extends AbstractAutoTrader {
                 duration = fixDuration;
             }
             if (!snapshot.hasProfit()) {
-                duration = orderDuration;
+                duration = Duration.ofSeconds(300);
             }
             shiftStopLossRate(snapshot, duration);
         }

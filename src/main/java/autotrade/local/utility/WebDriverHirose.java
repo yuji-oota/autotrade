@@ -160,15 +160,22 @@ public class WebDriverHirose implements WebDriverWrapper {
         driver.findElement(By.id("brand-regist-nocheck")).click();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
         List<WebElement> elements = driver.findElements(By.xpath("//li[@class='brand-regist-list-item']"));
-        elements.stream().filter(e -> {
-            for (String pair : pairManager.getDescriptions()) {
-                if (!e.findElements(By.xpath(MessageFormat.format("div[contains(text(),\"{0}\")]", pair))).isEmpty()) {
-                    return true;
-                }
-            }
-            return false;
-        })
-                .forEach(e -> e.click());
+//        elements.stream().filter(e -> {
+//            for (String pair : pairManager.getDescriptions()) {
+//                if (!e.findElements(By.xpath(MessageFormat.format("div[contains(text(),\"{0}\")]", pair))).isEmpty()) {
+//                    return true;
+//                }
+//            }
+//            return false;
+//        })
+//                .forEach(e -> e.click());
+        pairManager.getDescriptions().stream().forEach(pair -> {
+            elements.stream()
+                    .filter(e -> !e.findElements(By.xpath(MessageFormat.format("div[contains(text(),\"{0}\")]", pair))).isEmpty())
+                    .findFirst()
+                    .get()
+                    .click();
+        });
         driver.findElement(By.id("brand-regist-ok")).click();
     }
 
@@ -324,7 +331,7 @@ public class WebDriverHirose implements WebDriverWrapper {
     @Override
     public void changePair(String pair) {
         driver.findElement(By.xpath(
-                MessageFormat.format("//div[contains(text(),\"{0}\")]", pair))).click();
+                MessageFormat.format("//tbody[@id=''rate-table'']//div[contains(text(),\"{0}\")]", pair))).click();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
         orderSettings();
     }
