@@ -10,7 +10,6 @@ import java.util.function.ToIntFunction;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import autotrade.local.actor.RangeManager;
 import autotrade.local.actor.RecoveryManager;
@@ -27,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
  * shiftDurationでStopLossRateをshiftする
  *
  */
-@Component("autoTrader24th")
 @Slf4j
 public class AutoTrader24th extends AbstractAutoTrader {
 

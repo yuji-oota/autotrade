@@ -137,4 +137,9 @@ public class RangeManager implements Serializable {
             upperLimitSave = upperLimitSave.toBuilder().bid(upper - upperLimitSave.getSpread()).ask(upper).build();
         }
     }
+
+    public boolean isRange() {
+        return !isExtended
+                && !isSaveExtend();
+    }
 }
