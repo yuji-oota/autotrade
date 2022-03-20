@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 24thから派生
  * レンジ内の注文、決済処理を追加
+ * レンジ拡張時の小刻み決済を追加
  *
  */
 @Component("autoTrader25th")
@@ -186,7 +187,7 @@ public class AutoTrader25th extends AbstractAutoTrader {
             return true;
         }
 
-        if (rangeManager.isRange()
+        if ((rangeManager.isRange() || rangeManager.isSaveExtend())
                 && snapshot.hasProfit()) {
             if (rateAnalyzer.isBidDown()
                     && snapshot.hasAsk()
