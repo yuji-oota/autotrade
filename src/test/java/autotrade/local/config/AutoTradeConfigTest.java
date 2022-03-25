@@ -31,9 +31,6 @@ class AutoTradeConfigTest {
     ToIntFunction<Snapshot> toMinimumProfit;
 
     @Autowired
-    ToIntFunction<Snapshot> toTargetProgress;
-
-    @Autowired
     PairManager pairManager;
 
     @Autowired
@@ -55,11 +52,18 @@ class AutoTradeConfigTest {
         System.out.println(snapshot.getMoreLot());
         System.out.println(toNextLot.applyAsInt(snapshot));
         System.out.println(toMinimumProfit.applyAsInt(snapshot));
-        System.out.println(toTargetProgress.applyAsInt(snapshot));
         System.out.println(pairAnalyzerMap.size());
         System.out.println(pairAnalyzerMap.get("USDJPY"));
         System.out.println(pairAnalyzerMap.get("EURUSD"));
         ;
+
+        snapshot = Snapshot.builder()
+                .rate(Rate.builder().pair(pairManager.get("USDJPY")).build())
+                .margin(30000)
+                .effectiveMargin(30000)
+                .askLot(0)
+                .build();
+        System.out.println(toNextLot.applyAsInt(snapshot));
     }
 
 }

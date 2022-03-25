@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 24thから派生
  * レンジ内の注文、決済処理を追加
- * レンジ拡張時の小刻み決済を追加
  *
  */
 @Component("autoTrader25th")
@@ -168,9 +167,6 @@ public class AutoTrader25th extends AbstractAutoTrader {
             if (recoveryProgress >= 100) {
                 duration = fixDuration;
             }
-            if (!snapshot.hasProfit()) {
-                duration = stopLossDuration;
-            }
             shiftStopLossRate(snapshot, duration);
         }
     }
@@ -187,7 +183,7 @@ public class AutoTrader25th extends AbstractAutoTrader {
             return true;
         }
 
-        if ((rangeManager.isRange() || rangeManager.isSaveExtend())
+        if (rangeManager.isRange()
                 && snapshot.hasProfit()) {
             if (rateAnalyzer.isBidDown()
                     && snapshot.hasAsk()
@@ -265,7 +261,7 @@ public class AutoTrader25th extends AbstractAutoTrader {
                             && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
                         stopLossRate = rangeManager.getLowerLimit().getBid();
                         recoveryManager.setCounterTradingSnapshot(snapshot);
-                        orderAsk(toInitialLot.applyAsInt(snapshot), snapshot);
+                        orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
                         printRecoveryProgress(snapshot);
                         doAsk = false;
                     }
@@ -275,7 +271,7 @@ public class AutoTrader25th extends AbstractAutoTrader {
                             && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDuration)) {
                         stopLossRate = rangeManager.getUpperLimit().getAsk();
                         recoveryManager.setCounterTradingSnapshot(snapshot);
-                        orderBid(toInitialLot.applyAsInt(snapshot), snapshot);
+                        orderBid(toNextLot.applyAsInt(snapshot), snapshot);
                         printRecoveryProgress(snapshot);
                         doBid = false;
                     }
@@ -360,11 +356,11 @@ public class AutoTrader25th extends AbstractAutoTrader {
 
         Rate rate = snapshot.getRate();
         if (rateAnalyzer.isAskUp()
-                && rateAnalyzer.isReachedAskThreshold(rate)) {
+                && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
             doBid = true;
         }
         if (rateAnalyzer.isBidDown()
-                && rateAnalyzer.isReachedBidThreshold(rate)) {
+                && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDuration)) {
             doAsk = true;
         }
     }
