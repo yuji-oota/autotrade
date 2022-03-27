@@ -92,4 +92,69 @@ public class Temporary {
         System.out.println(duration.minusMillis(99 * 5700));
     }
 
+    @Test
+    public void test08() {
+        BigDecimal currentRange = new BigDecimal(20);
+        BigDecimal halfRange = new BigDecimal(20);
+
+        currentRange = new BigDecimal(20);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(19);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(18);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(17);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(16);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(15);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(14);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(10);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(8);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(6);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(4);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(2);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(1);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.UP).intValue());
+        currentRange = new BigDecimal(0);
+        System.out.println(new BigDecimal(5)
+                .multiply(currentRange)
+                .divide(halfRange, 0, RoundingMode.HALF_UP).intValue());
+
+
+    }
+
 }

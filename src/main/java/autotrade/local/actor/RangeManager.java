@@ -121,6 +121,14 @@ public class RangeManager implements Serializable {
         return toDiffFromUpperLimit.applyAsInt(snapshot) > toDiffFromLowerLimit.applyAsInt(snapshot);
     }
 
+    public int getRange() {
+        return upperLimit.getAsk() - lowerLimit.getBid();
+    }
+
+    public int getMiddle() {
+        return (lowerLimit.getBid() + upperLimit.getAsk()) / 2;
+    }
+
     public int getSaveMiddle() {
         return (lowerLimitSave.getBid() + upperLimitSave.getAsk()) / 2;
     }
