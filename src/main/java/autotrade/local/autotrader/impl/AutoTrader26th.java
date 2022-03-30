@@ -163,11 +163,14 @@ public class AutoTrader26th extends AbstractAutoTrader {
 
             Duration duration = shiftDuration;
             int recoveryProgress = recoveryManager.getRecoveryProgress(snapshot);
-            if (0 < recoveryProgress && recoveryProgress < 100) {
-                duration = shiftDuration.minusMillis(recoveryProgress * 5700);
+            int targetProgress = 75;
+            int maxMillis = 570000;
+            if (0 < recoveryProgress && recoveryProgress < targetProgress) {
+                duration = shiftDuration.minusMillis(recoveryProgress * maxMillis / targetProgress);
             }
-            if (recoveryProgress >= 100) {
+            if (recoveryProgress >= targetProgress) {
                 duration = fixDuration;
+                rangeManager.reset();
             }
             shiftStopLossRate(snapshot, duration);
         }
