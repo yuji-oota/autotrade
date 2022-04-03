@@ -157,22 +157,25 @@ public class AutoTrader26th extends AbstractAutoTrader {
                 }
             }
 
-            if (rangeManager.isWithinRange(snapshot)) {
-                return;
-            }
+            if (rangeManager.isSaveExtend()) {
 
-            Duration duration = shiftDuration;
-            int recoveryProgress = recoveryManager.getRecoveryProgress(snapshot);
-            int targetProgress = 75;
-            int maxMillis = 570000;
-            if (0 < recoveryProgress && recoveryProgress < targetProgress) {
-                duration = shiftDuration.minusMillis(recoveryProgress * maxMillis / targetProgress);
+                Duration duration = shiftDuration;
+                int recoveryProgress = recoveryManager.getRecoveryProgress(snapshot);
+                int targetProgress = 50;
+                int maxMillis = 570000;
+                if (0 < recoveryProgress && recoveryProgress < targetProgress) {
+                    duration = shiftDuration.minusMillis(recoveryProgress * maxMillis / targetProgress);
+                }
+                if (recoveryProgress >= targetProgress) {
+                    duration = fixDuration;
+                    rangeManager.reset();
+                }
+                if (!snapshot.hasProfit()) {
+                    duration = stopLossDuration;
+                }
+                shiftStopLossRate(snapshot, duration);
+
             }
-            if (recoveryProgress >= targetProgress) {
-                duration = fixDuration;
-                rangeManager.reset();
-            }
-            shiftStopLossRate(snapshot, duration);
         }
     }
 

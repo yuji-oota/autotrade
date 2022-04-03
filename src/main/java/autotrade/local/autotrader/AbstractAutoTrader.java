@@ -159,6 +159,11 @@ public abstract class AbstractAutoTrader {
         if (startMargin == 0) {
             startMargin = AutoTradeUtils.toInt(webDriverWrapper.getMargin());
         }
+
+        // 通貨ペア初期化
+        Snapshot snapshot = buildSnapshot();
+        this.pair = snapshot.getPair();
+        this.rateAnalyzer = pairAnalyzerMap.get(this.pair.getName());
     }
 
     protected Snapshot buildSnapshot() {
