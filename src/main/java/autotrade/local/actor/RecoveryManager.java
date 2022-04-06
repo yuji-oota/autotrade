@@ -117,7 +117,7 @@ public class RecoveryManager implements Serializable {
     }
 
     public boolean isBeforeCounterTrading() {
-        return stopLossCount == 0;
+        return openSnapshot == counterTradingSnapshot;
     }
 
     public boolean isAfterCounterTrading() {

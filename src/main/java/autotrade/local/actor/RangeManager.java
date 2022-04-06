@@ -95,15 +95,18 @@ public class RangeManager implements Serializable {
         }
     }
 
+    public void print() {
+        if (Objects.nonNull(lowerLimit) && Objects.nonNull(upperLimit)) {
+            log.info("lower limit:{} middle:{} upper limit:{} isExtended:{}",
+                    lowerLimit.getBid(), getMiddle(), upperLimit.getAsk(), isExtended);
+        }
+    }
+
     public void apply() {
         isExtended = isSaveExtend();
 
         lowerLimit = lowerLimitSave;
         upperLimit = upperLimitSave;
-        if (Objects.nonNull(lowerLimit) && Objects.nonNull(upperLimit)) {
-            log.info("lower limit:{} upper limit:{} middle:{} isExtended:{}",
-                    lowerLimit.getBid(), upperLimit.getAsk(), getMiddle(), isExtended);
-        }
     }
 
     public boolean isSaveExtend() {
