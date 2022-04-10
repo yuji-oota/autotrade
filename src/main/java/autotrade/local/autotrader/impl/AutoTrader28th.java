@@ -28,9 +28,9 @@ import lombok.extern.slf4j.Slf4j;
  * レンジ内は細かく利益確定
  *
  */
-//@Component("autoTrader27th")
+//@Component("autoTrader28th")
 @Slf4j
-public class AutoTrader27th extends AbstractAutoTrader {
+public class AutoTrader28th extends AbstractAutoTrader {
 
     private boolean doAsk;
     private boolean doBid;
@@ -51,21 +51,21 @@ public class AutoTrader27th extends AbstractAutoTrader {
     @Autowired
     private ToIntFunction<Snapshot> toNextLot;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader27th.stopLoss.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader28th.stopLoss.duration.seconds}')}")
     private Duration stopLossDuration;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader27th.shift.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader28th.shift.duration.seconds}')}")
     private Duration shiftDuration;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader27th.order.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader28th.order.duration.seconds}')}")
     private Duration orderDuration;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader27th.fix.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader28th.fix.duration.seconds}')}")
     private Duration fixDuration;
 
-    public AutoTrader27th() {
+    public AutoTrader28th() {
         super();
-        log.info("autoTrader27th started.");
+        log.info("autoTrader28th started.");
     }
 
     @Override
@@ -156,24 +156,24 @@ public class AutoTrader27th extends AbstractAutoTrader {
                 }
             }
 
-            if (rangeManager.isSaveExtend()) {
-
-                Duration duration = shiftDuration;
-                int recoveryProgress = recoveryManager.getRecoveryProgress(snapshot);
-                int targetProgress = 100;
-                int maxMillis = 570000;
-                if (0 < recoveryProgress && recoveryProgress < targetProgress) {
-                    duration = shiftDuration.minusMillis(recoveryProgress * maxMillis / targetProgress);
-                }
-                if (recoveryProgress >= targetProgress) {
-                    duration = fixDuration;
-                }
-                if (!snapshot.hasProfit()) {
-                    duration = stopLossDuration;
-                }
-                shiftStopLossRate(snapshot, duration);
-
-            }
+//            if (rangeManager.isSaveExtend()) {
+//
+//                Duration duration = shiftDuration;
+//                int recoveryProgress = recoveryManager.getRecoveryProgress(snapshot);
+//                int targetProgress = 100;
+//                int maxMillis = 570000;
+//                if (0 < recoveryProgress && recoveryProgress < targetProgress) {
+//                    duration = shiftDuration.minusMillis(recoveryProgress * maxMillis / targetProgress);
+//                }
+//                if (recoveryProgress >= targetProgress) {
+//                    duration = fixDuration;
+//                }
+//                if (!snapshot.hasProfit()) {
+//                    duration = stopLossDuration;
+//                }
+//                shiftStopLossRate(snapshot, duration);
+//
+//            }
         }
     }
 
@@ -189,8 +189,6 @@ public class AutoTrader27th extends AbstractAutoTrader {
             return true;
         }
 
-        //        if (recoveryManager.isAfterCounterTrading()
-        //                && snapshot.hasProfit()) {
         if (snapshot.hasProfit()) {
             if (rateAnalyzer.isBidDown()
                     && snapshot.hasAsk()
@@ -290,8 +288,7 @@ public class AutoTrader27th extends AbstractAutoTrader {
                     stopLossRate = rateAnalyzer.minWithin(stopLossDuration);
                     recoveryManager.open(snapshot);
                     rangeManager.reset();
-                                        orderAsk(toInitialLot.applyAsInt(snapshot), snapshot);
-//                    orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
+                    orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
                     printRecoveryProgress(snapshot);
                     doAsk = false;
                 }
@@ -300,8 +297,7 @@ public class AutoTrader27th extends AbstractAutoTrader {
                     stopLossRate = rateAnalyzer.maxWithin(stopLossDuration);
                     recoveryManager.open(snapshot);
                     rangeManager.reset();
-                                        orderBid(toInitialLot.applyAsInt(snapshot), snapshot);
-//                    orderBid(toNextLot.applyAsInt(snapshot), snapshot);
+                    orderBid(toNextLot.applyAsInt(snapshot), snapshot);
                     printRecoveryProgress(snapshot);
                     doBid = false;
                 }
@@ -311,50 +307,26 @@ public class AutoTrader27th extends AbstractAutoTrader {
             if (recoveryManager.isOpen()) {
 
                 if (rateAnalyzer.isAskUp()
-                        && rangeManager.getUpperLimitSave().getAsk() == rate.getAsk()
+                        && rangeManager.isUpword()
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
-                    stopLossRate = rateAnalyzer.minWithin(stopLossDuration);
-                    //                    stopLossRate = rangeManager.getLowerLimit().getBid();
+                    stopLossRate = rangeManager.getLowerLimit().getBid();
                     recoveryManager.setCounterTradingSnapshot(snapshot);
-                    orderAsk(toRangeInitial(snapshot), snapshot);
-                    //                    orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
+                    orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
                     printRecoveryProgress(snapshot);
                     doAsk = false;
                     return;
                 }
                 if (rateAnalyzer.isBidDown()
-                        && rangeManager.getLowerLimitSave().getBid() == rate.getBid()
+                        && rangeManager.isDownword()
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDuration)) {
-                    stopLossRate = rateAnalyzer.maxWithin(stopLossDuration);
-                    //                    stopLossRate = rangeManager.getUpperLimit().getAsk();
+                    stopLossRate = rangeManager.getUpperLimit().getAsk();
                     recoveryManager.setCounterTradingSnapshot(snapshot);
-                    orderBid(toRangeInitial(snapshot), snapshot);
-                    //                    orderBid(toNextLot.applyAsInt(snapshot), snapshot);
+                    orderBid(toNextLot.applyAsInt(snapshot), snapshot);
                     printRecoveryProgress(snapshot);
                     doBid = false;
                     return;
                 }
 
-                if (rangeManager.isNearLowerLimit(snapshot)) {
-                    if (rateAnalyzer.isAskUp()
-                            && rateAnalyzer.isReachedAskThresholdWithin(rate, toRangeOrderDuration(snapshot))) {
-                        stopLossRate = rangeManager.getLowerLimit().getBid();
-                        recoveryManager.setCounterTradingSnapshot(snapshot);
-                        orderAsk(toRangeInitial(snapshot), snapshot);
-                        printRecoveryProgress(snapshot);
-                        doAsk = false;
-                    }
-                }
-                if (rangeManager.isNearUpperLimit(snapshot)) {
-                    if (rateAnalyzer.isBidDown()
-                            && rateAnalyzer.isReachedBidThresholdWithin(rate, toRangeOrderDuration(snapshot))) {
-                        stopLossRate = rangeManager.getUpperLimit().getAsk();
-                        recoveryManager.setCounterTradingSnapshot(snapshot);
-                        orderBid(toRangeInitial(snapshot), snapshot);
-                        printRecoveryProgress(snapshot);
-                        doBid = false;
-                    }
-                }
                 return;
             }
 

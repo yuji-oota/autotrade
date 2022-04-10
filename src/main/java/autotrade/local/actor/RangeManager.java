@@ -153,4 +153,17 @@ public class RangeManager implements Serializable {
         return !isExtended
                 && !isSaveExtend();
     }
+    
+    public boolean isUpword() {
+        if (isBeforeSave()) {
+            return false;
+        }
+        return upperLimitSave.getTimestamp().isAfter(lowerLimitSave.getTimestamp());
+    }
+    public boolean isDownword() {
+        if (isBeforeSave()) {
+            return false;
+        }
+        return lowerLimitSave.getTimestamp().isAfter(upperLimitSave.getTimestamp());
+    }
 }

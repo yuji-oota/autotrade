@@ -38,7 +38,8 @@ public class AutoTradeConfig {
 
     @Bean
     public ToIntFunction<Snapshot> toMinimumProfit() {
-        return (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / 10000;
+//        return (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / 10000;
+        return (ToIntFunction<Snapshot> & Serializable) s -> 1;
     }
 
     @Bean

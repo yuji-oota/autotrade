@@ -41,8 +41,8 @@ class AutoTradeConfigTest {
     void test() {
         Snapshot snapshot = Snapshot.builder()
                 .rate(Rate.builder().pair(pairManager.get("USDJPY")).build())
-                .margin(300000)
-                .effectiveMargin(300000)
+                .margin(3000000)
+                .effectiveMargin(3000000)
                 .askLot(58)
                 .build();
 
