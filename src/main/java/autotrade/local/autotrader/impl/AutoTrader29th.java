@@ -96,6 +96,7 @@ public class AutoTrader29th extends AbstractAutoTrader {
         LocalTime now = LocalTime.now();
         return pairManager.getPairs().stream()
                 .filter(pair -> pair.isHandleable(now))
+                .filter(pair -> buildRateFromList(pair).isSpreadNarrow())
                 .map(pair -> {
                     return new SimpleEntry<Pair, Integer>(
                             pair,
@@ -183,22 +184,22 @@ public class AutoTrader29th extends AbstractAutoTrader {
                 return true;
             }
         } else {
-            if (isAboveStopLossRate(snapshot.getRate())) {
-                if (rateAnalyzer.isAskUp()
-                        && snapshot.hasBid()
-                        && rateAnalyzer.isReachedAskThreshold(rate)) {
-                    stopLossProcess(snapshot);
-                    return true;
-                }
-            }
-            if (isBelowStopLossRate(snapshot.getRate())) {
-                if (rateAnalyzer.isBidDown()
-                        && snapshot.hasAsk()
-                        && rateAnalyzer.isReachedBidThreshold(rate)) {
-                    stopLossProcess(snapshot);
-                    return true;
-                }
-            }
+//            if (isAboveStopLossRate(snapshot.getRate())) {
+//                if (rateAnalyzer.isAskUp()
+//                        && snapshot.hasBid()
+//                        && rateAnalyzer.isReachedAskThreshold(rate)) {
+//                    stopLossProcess(snapshot);
+//                    return true;
+//                }
+//            }
+//            if (isBelowStopLossRate(snapshot.getRate())) {
+//                if (rateAnalyzer.isBidDown()
+//                        && snapshot.hasAsk()
+//                        && rateAnalyzer.isReachedBidThreshold(rate)) {
+//                    stopLossProcess(snapshot);
+//                    return true;
+//                }
+//            }
         }
         return false;
     }
@@ -249,7 +250,7 @@ public class AutoTrader29th extends AbstractAutoTrader {
 
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
-                    stopLossRate = rangeManager.getLowerLimit().getBid();
+                    stopLossRate = rangeManager.getLowerLimitSave().getBid();
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                     orderAsk(recoveryManager.getCounterTradingStartLot(), snapshot);
                     printRecoveryProgress(snapshot);
@@ -258,7 +259,7 @@ public class AutoTrader29th extends AbstractAutoTrader {
                 }
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDuration)) {
-                    stopLossRate = rangeManager.getUpperLimit().getAsk();
+                    stopLossRate = rangeManager.getUpperLimitSave().getAsk();
                     recoveryManager.setCounterTradingSnapshot(snapshot);
                     orderBid(recoveryManager.getCounterTradingStartLot(), snapshot);
                     printRecoveryProgress(snapshot);
@@ -277,26 +278,48 @@ public class AutoTrader29th extends AbstractAutoTrader {
         case BID_EQ_ASK:
             // ポジションが同数の場合
 
-            if (isAboveStopLossRate(snapshot.getRate())) {
-                if (rateAnalyzer.isAskUp()) {
-                    if (doAsk
-                            && snapshot.isAskLtLimit()
-                            && rateAnalyzer.isReachedAskThresholdWithin(rate, followUpOrderDuration)) {
-                        orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
-                        doAsk = false;
-                        return;
-                    }
+//            if (isAboveStopLossRate(snapshot.getRate())) {
+//                if (rateAnalyzer.isAskUp()) {
+//                    if (doAsk
+//                            && snapshot.isAskLtLimit()
+//                            && snapshot.hasAskOnly()
+//                            && rateAnalyzer.isReachedAskThresholdWithin(rate, followUpOrderDuration)) {
+//                        orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
+//                        doAsk = false;
+//                        return;
+//                    }
+//                }
+//            }
+//            if (isBelowStopLossRate(snapshot.getRate())) {
+//                if (rateAnalyzer.isBidDown()) {
+//                    if (doBid
+//                            && snapshot.isBidLtLimit()
+//                            && snapshot.hasBidOnly()
+//                            && rateAnalyzer.isReachedBidThresholdWithin(rate, followUpOrderDuration)) {
+//                        orderBid(toNextLot.applyAsInt(snapshot), snapshot);
+//                        doBid = false;
+//                        return;
+//                    }
+//                }
+//            }
+            if (rateAnalyzer.isAskUp()) {
+                if (doAsk
+                        && snapshot.isAskLtLimit()
+                        && snapshot.hasAskOnly()
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, followUpOrderDuration)) {
+                    orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
+                    doAsk = false;
+                    return;
                 }
             }
-            if (isBelowStopLossRate(snapshot.getRate())) {
-                if (rateAnalyzer.isBidDown()) {
-                    if (doBid
-                            && snapshot.isBidLtLimit()
-                            && rateAnalyzer.isReachedBidThresholdWithin(rate, followUpOrderDuration)) {
-                        orderBid(toNextLot.applyAsInt(snapshot), snapshot);
-                        doBid = false;
-                        return;
-                    }
+            if (rateAnalyzer.isBidDown()) {
+                if (doBid
+                        && snapshot.isBidLtLimit()
+                        && snapshot.hasBidOnly()
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, followUpOrderDuration)) {
+                    orderBid(toNextLot.applyAsInt(snapshot), snapshot);
+                    doBid = false;
+                    return;
                 }
             }
 

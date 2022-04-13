@@ -142,7 +142,6 @@ public class WebDriverHirose implements WebDriverWrapper {
     }
 
     private void startUpTradeTool() {
-        //        driver.navigate().to("https://trade.fx.dmm.com/comportal/SsoOutbound.do?subSystemType=-20");
         driver.manage().window().maximize();
     }
 
@@ -160,15 +159,6 @@ public class WebDriverHirose implements WebDriverWrapper {
         driver.findElement(By.id("brand-regist-nocheck")).click();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
         List<WebElement> elements = driver.findElements(By.xpath("//li[@class='brand-regist-list-item']"));
-//        elements.stream().filter(e -> {
-//            for (String pair : pairManager.getDescriptions()) {
-//                if (!e.findElements(By.xpath(MessageFormat.format("div[contains(text(),\"{0}\")]", pair))).isEmpty()) {
-//                    return true;
-//                }
-//            }
-//            return false;
-//        })
-//                .forEach(e -> e.click());
         pairManager.getDescriptions().stream().forEach(pair -> {
             elements.stream()
                     .filter(e -> !e.findElements(By.xpath(MessageFormat.format("div[contains(text(),\"{0}\")]", pair))).isEmpty())
@@ -235,8 +225,8 @@ public class WebDriverHirose implements WebDriverWrapper {
 
     @Override
     public String getBidRateFromList(Pair pair) {
-        String xpath = MessageFormat.format("//tr[@id=''tab_rate_brand_{0}'']//span[starts-with(@class, ''bid'')]",
-                pair.getName());
+        String xpath = MessageFormat.format("//th[@id=''tab_rate_bid_{0}'']//span[starts-with(@class, ''bid'')]",
+                pair.getCode());
         List<WebElement> elements = driver.findElements(By.xpath(xpath));
         return elements.stream().map(WebElement::getText).collect(Collectors.joining());
     }
@@ -250,8 +240,8 @@ public class WebDriverHirose implements WebDriverWrapper {
 
     @Override
     public String getAskRateFromList(Pair pair) {
-        String xpath = MessageFormat.format("//tr[@id=''tab_rate_brand_{0}'']//span[starts-with(@class, ''ask'')]",
-                pair.getName());
+        String xpath = MessageFormat.format("//th[@id=''tab_rate_ask_{0}'']//span[starts-with(@class, ''ask'')]",
+                pair.getCode());
         List<WebElement> elements = driver.findElements(By.xpath(xpath));
         return elements.stream().map(WebElement::getText).collect(Collectors.joining());
     }
@@ -260,7 +250,7 @@ public class WebDriverHirose implements WebDriverWrapper {
     public String getRateDiffFromList(Pair pair) {
         // NOTE:rate_diff_xxxxのサフィックスが不定っぽいのでstarts-withにした
         String xpath = MessageFormat
-                .format("//tr[@id=''tab_rate_brand_{0}'']//span[starts-with(@class, ''rate_diff'')]", pair.getName());
+                .format("//th[@id=''tab_rate_diff_{0}'']//span[starts-with(@class, ''rate_diff'')]", pair.getCode());
         return driver.findElements(By.xpath(xpath)).get(0).getText();
     }
 

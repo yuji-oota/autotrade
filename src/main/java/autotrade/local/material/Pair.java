@@ -15,6 +15,7 @@ public class Pair implements Serializable {
     @EqualsAndHashCode.Include
     private String name;
 
+    private String code;
     private int minSpread;
     private int marginRequirement;
     private LocalTime startTime;

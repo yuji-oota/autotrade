@@ -34,6 +34,7 @@ public class PairManager {
         pairs = pairProperties.getPairs().stream().map(m -> {
             return Pair.builder()
                     .name(m.get("name").toString())
+                    .code(m.get("code").toString())
                     .startTime(LocalTime.parse(m.get("handleStart").toString(), timeFormatter))
                     .endTime(LocalTime.parse(m.get("handleEnd").toString(), timeFormatter))
                     .minSpread((int) m.get("minSpread"))
