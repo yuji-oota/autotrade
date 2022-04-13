@@ -40,6 +40,9 @@ public class AutoTrader29th extends AbstractAutoTrader {
     private ToIntFunction<Snapshot> toMinimumProfit;
 
     @Autowired
+    private ToIntFunction<Snapshot> toInitialLot;
+
+    @Autowired
     private ToIntFunction<Snapshot> toNextLot;
 
     @Value("#{T(java.time.Duration).ofSeconds('${autoTrader29th.order.duration.seconds}')}")
@@ -159,6 +162,10 @@ public class AutoTrader29th extends AbstractAutoTrader {
         if (rateAnalyzer.getRates().size() == rateAnalyzer.ratesWithin(orderDuration).size()) {
             return false;
         }
+        if (snapshot.isSpreadWiden()) {
+            // スプレッドが開いている場合はポジションがあっても注文しない
+            return false;
+        }
         return true;
     }
 
@@ -175,14 +182,14 @@ public class AutoTrader29th extends AbstractAutoTrader {
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
                     recoveryManager.open(snapshot);
-                    orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
+                    orderAsk(toInitialLot.applyAsInt(snapshot), snapshot);
                     printRecoveryProgress(snapshot);
                     doAsk = false;
                 }
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDuration)) {
                     recoveryManager.open(snapshot);
-                    orderBid(toNextLot.applyAsInt(snapshot), snapshot);
+                    orderBid(toInitialLot.applyAsInt(snapshot), snapshot);
                     printRecoveryProgress(snapshot);
                     doBid = false;
                 }
@@ -219,11 +226,16 @@ public class AutoTrader29th extends AbstractAutoTrader {
         case BID_EQ_ASK:
             // ポジションが同数の場合
 
+            Duration duration = followUpOrderDuration;
+            if (snapshot.getMoreLot() < toInitialLot.applyAsInt(recoveryManager.getOpenSnapshot()) * 2) {
+                duration = Duration.ofSeconds(150);
+            }
+
             if (rateAnalyzer.isAskUp()) {
                 if (doAsk
                         && snapshot.isAskLtLimit()
                         && snapshot.hasAskOnly()
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, followUpOrderDuration)) {
+                        && rateAnalyzer.isReachedAskThresholdWithin(rate, duration)) {
                     orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
                     doAsk = false;
                     return;
@@ -233,7 +245,7 @@ public class AutoTrader29th extends AbstractAutoTrader {
                 if (doBid
                         && snapshot.isBidLtLimit()
                         && snapshot.hasBidOnly()
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, followUpOrderDuration)) {
+                        && rateAnalyzer.isReachedBidThresholdWithin(rate, duration)) {
                     orderBid(toNextLot.applyAsInt(snapshot), snapshot);
                     doBid = false;
                     return;

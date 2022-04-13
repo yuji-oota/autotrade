@@ -24,21 +24,32 @@ public class AutoTradeConfig {
         return (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / denominator;
     }
 
+//    @Bean
+//    public ToIntFunction<Snapshot> toInitialLot(ToIntFunction<Snapshot> toProfit,
+//            @Value("${autotrade.config.toInitialLot.denominator}") int denominator) {
+//        return (ToIntFunction<Snapshot> & Serializable) s -> toProfit.applyAsInt(s) / denominator;
+//    }
     @Bean
-    public ToIntFunction<Snapshot> toInitialLot(ToIntFunction<Snapshot> toProfit,
-            @Value("${autotrade.config.toInitialLot.denominator}") int denominator) {
-        return (ToIntFunction<Snapshot> & Serializable) s -> toProfit.applyAsInt(s) / denominator;
+    public ToIntFunction<Snapshot> toInitialLot(@Value("${autotrade.config.toInitialLot.denominator}") int denominator) {
+        return (ToIntFunction<Snapshot> & Serializable) s -> (s.getLimitLot() / denominator) + 1;
     }
 
+//    @Bean
+//    public ToIntFunction<Snapshot> toNextLot(ToIntFunction<Snapshot> toProfit,
+//            @Value("${autotrade.config.toNextLot.denominator}") int denominator) {
+//        return (ToIntFunction<Snapshot> & Serializable) s -> (s.getLimitLot() - s.getMoreLot()) / denominator + 1;
+//    }
     @Bean
-    public ToIntFunction<Snapshot> toNextLot(ToIntFunction<Snapshot> toProfit,
-            @Value("${autotrade.config.toNextLot.denominator}") int denominator) {
-        return (ToIntFunction<Snapshot> & Serializable) s -> (s.getLimitLot() - s.getMoreLot()) / denominator + 1;
+    public ToIntFunction<Snapshot> toNextLot() {
+        return (ToIntFunction<Snapshot> & Serializable) s -> 1;
     }
 
+//    @Bean
+//    public ToIntFunction<Snapshot> toMinimumProfit() {
+//        return (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / 10000;
+//    }
     @Bean
     public ToIntFunction<Snapshot> toMinimumProfit() {
-//        return (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / 10000;
         return (ToIntFunction<Snapshot> & Serializable) s -> 1;
     }
 

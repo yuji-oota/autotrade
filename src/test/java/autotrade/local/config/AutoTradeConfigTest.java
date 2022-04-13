@@ -66,4 +66,25 @@ class AutoTradeConfigTest {
         System.out.println(toNextLot.applyAsInt(snapshot));
     }
 
+    @Test
+    void test2() {
+        Snapshot snapshot = Snapshot.builder()
+                .rate(Rate.builder().pair(pairManager.get("USDJPY")).build())
+                .margin(3000000)
+                .askLot(0)
+                .build();
+        snapshot.setEffectiveMargin(100000);
+        System.out.println(snapshot.getLimitLot() + " " + toInitialLot.applyAsInt(snapshot));
+        snapshot.setEffectiveMargin(200000);
+        System.out.println(snapshot.getLimitLot() + " " + toInitialLot.applyAsInt(snapshot));
+        snapshot.setEffectiveMargin(300000);
+        System.out.println(snapshot.getLimitLot() + " " + toInitialLot.applyAsInt(snapshot));
+        snapshot.setEffectiveMargin(400000);
+        System.out.println(snapshot.getLimitLot() + " " + toInitialLot.applyAsInt(snapshot));
+        snapshot.setEffectiveMargin(500000);
+        System.out.println(snapshot.getLimitLot() + " " + toInitialLot.applyAsInt(snapshot));
+        snapshot.setEffectiveMargin(600000);
+        System.out.println(snapshot.getLimitLot() + " " + toInitialLot.applyAsInt(snapshot));
+    }
+
 }
