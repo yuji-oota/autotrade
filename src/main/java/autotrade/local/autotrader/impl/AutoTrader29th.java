@@ -22,8 +22,6 @@ import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 25thから派生
- * レンジ内は細かく利益確定
  *
  */
 @Component("autoTrader29th")
@@ -130,13 +128,6 @@ public class AutoTrader29th extends AbstractAutoTrader {
 
         Rate rate = snapshot.getRate();
 
-        if (indicatorManager.isNextImportant()
-                && indicatorManager.isNextIndicatorWithin(Duration.ofSeconds(90))) {
-            log.info("stop loss in preparation for important indicators.");
-            stopLossProcess(snapshot);
-            return true;
-        }
-
         if (recoveryManager.isRecoveredWithProfit(snapshot, toMinimumProfit)) {
             if (rateAnalyzer.isBidDown()
                     && snapshot.isBidLtAsk()
@@ -196,28 +187,6 @@ public class AutoTrader29th extends AbstractAutoTrader {
                 return;
             }
 
-            if (recoveryManager.isOpen()) {
-
-                if (rateAnalyzer.isAskUp()
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
-                    recoveryManager.setCounterTradingSnapshot(snapshot);
-                    orderAsk(recoveryManager.getCounterTradingStartLot(), snapshot);
-                    printRecoveryProgress(snapshot);
-                    doAsk = false;
-                    return;
-                }
-                if (rateAnalyzer.isBidDown()
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDuration)) {
-                    recoveryManager.setCounterTradingSnapshot(snapshot);
-                    orderBid(recoveryManager.getCounterTradingStartLot(), snapshot);
-                    printRecoveryProgress(snapshot);
-                    doBid = false;
-                    return;
-                }
-
-                return;
-            }
-
             break;
         case BID_LT_ASK:
             // 買いポジションが多い場合
@@ -270,16 +239,6 @@ public class AutoTrader29th extends AbstractAutoTrader {
                 && rateAnalyzer.isReachedBidThresholdWithin(rate, doOrderDuration)) {
             doAsk = true;
         }
-    }
-
-    private void stopLossProcess(Snapshot snapshot) {
-        if (snapshot.hasAsk()) {
-            fixAsk(snapshot);
-        }
-        if (snapshot.hasBid()) {
-            fixBid(snapshot);
-        }
-        recoveryManager.stopLossProcess(snapshot);
     }
 
     @Override
