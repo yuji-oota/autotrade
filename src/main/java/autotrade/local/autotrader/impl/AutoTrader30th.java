@@ -10,6 +10,7 @@ import java.util.function.ToIntFunction;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import autotrade.local.actor.RecoveryManager;
 import autotrade.local.autotrader.AbstractAutoTrader;
@@ -21,11 +22,11 @@ import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * ナンピンロジック
+ * ナンピンロジック　＋　両建て
  */
-//@Component("autoTrader29th")
+@Component("autoTrader30th")
 @Slf4j
-public class AutoTrader29th extends AbstractAutoTrader {
+public class AutoTrader30th extends AbstractAutoTrader {
 
     private boolean doAsk;
     private boolean doBid;
@@ -42,21 +43,21 @@ public class AutoTrader29th extends AbstractAutoTrader {
     @Autowired
     private ToIntFunction<Snapshot> toNextLot;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader29th.order.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader30th.order.duration.seconds}')}")
     private Duration orderDuration;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader29th.followUpOrder.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader30th.followUpOrder.duration.seconds}')}")
     private Duration followUpOrderDuration;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader29th.doOrder.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader30th.doOrder.duration.seconds}')}")
     private Duration doOrderDuration;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader29th.fix.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader30th.fix.duration.seconds}')}")
     private Duration fixDuration;
 
-    public AutoTrader29th() {
+    public AutoTrader30th() {
         super();
-        log.info("autoTrader29th started.");
+        log.info("autoTrader30th started.");
     }
 
     @Override
@@ -141,6 +142,23 @@ public class AutoTrader29th extends AbstractAutoTrader {
                 return true;
             }
         }
+        
+        // 反対売買用
+        if (rateAnalyzer.isBidDown()
+                && snapshot.getAskProfit() > 0
+                && snapshot.isBidGtAsk()
+                && rateAnalyzer.isReachedBidThresholdWithin(rate, fixDuration)) {
+            fixAsk(snapshot);
+            return true;
+        }
+        if (rateAnalyzer.isAskUp()
+                && snapshot.getBidProfit() > 0
+                && snapshot.isBidLtAsk()
+                && rateAnalyzer.isReachedAskThresholdWithin(rate, fixDuration)) {
+            fixBid(snapshot);
+            return true;
+        }
+        
         return false;
     }
 
@@ -150,10 +168,6 @@ public class AutoTrader29th extends AbstractAutoTrader {
             return false;
         }
         if (rateAnalyzer.getRates().size() == rateAnalyzer.ratesWithin(orderDuration).size()) {
-            return false;
-        }
-        if (snapshot.isSpreadWiden()) {
-            // スプレッドが開いている場合はポジションがあっても注文しない
             return false;
         }
         return true;
@@ -199,24 +213,56 @@ public class AutoTrader29th extends AbstractAutoTrader {
                 duration = Duration.ofSeconds(150);
             }
 
-            if (rateAnalyzer.isAskUp()) {
-                if (doAsk
-                        && snapshot.isAskLtLimit()
-                        && snapshot.hasAskOnly()
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, duration)) {
-                    orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
-                    doAsk = false;
-                    return;
+            if (!snapshot.isSpreadWiden()) {
+                if (rateAnalyzer.isAskUp()) {
+                    if (doAsk
+                            && snapshot.isAskLtLimit()
+                            && snapshot.isBidLtAsk()
+                            && rateAnalyzer.isReachedAskThresholdWithin(rate, duration)) {
+                        orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
+                        doAsk = false;
+                        return;
+                    }
+                }
+                if (rateAnalyzer.isBidDown()) {
+                    if (doBid
+                            && snapshot.isBidLtLimit()
+                            && snapshot.isBidGtAsk()
+                            && rateAnalyzer.isReachedBidThresholdWithin(rate, duration)) {
+                        orderBid(toNextLot.applyAsInt(snapshot), snapshot);
+                        doBid = false;
+                        return;
+                    }
                 }
             }
-            if (rateAnalyzer.isBidDown()) {
-                if (doBid
-                        && snapshot.isBidLtLimit()
-                        && snapshot.hasBidOnly()
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, duration)) {
-                    orderBid(toNextLot.applyAsInt(snapshot), snapshot);
-                    doBid = false;
-                    return;
+            
+            // 反対売買用
+            if (snapshot.getMoreLot() >= 2) {
+                if (snapshot.getAskLot() == 0) {
+                    doAsk = true;
+                }
+                if (rateAnalyzer.isAskUp()) {
+                    if (doAsk
+                            && snapshot.getBidLot() / 2 >= snapshot.getAskLot()
+                            && snapshot.isBidGtAsk()
+                            && rateAnalyzer.isReachedAskThresholdWithin(rate, followUpOrderDuration)) {
+                        orderAsk(1, snapshot);
+                        doAsk = false;
+                        return;
+                    }
+                }
+                if (snapshot.getBidLot() == 0) {
+                    doBid = true;
+                }
+                if (rateAnalyzer.isBidDown()) {
+                    if (doBid
+                            && snapshot.getBidLot() <= snapshot.getAskLot() / 2
+                            && snapshot.isBidLtAsk()
+                            && rateAnalyzer.isReachedBidThresholdWithin(rate, followUpOrderDuration)) {
+                        orderBid(1, snapshot);
+                        doBid = false;
+                        return;
+                    }
                 }
             }
 
