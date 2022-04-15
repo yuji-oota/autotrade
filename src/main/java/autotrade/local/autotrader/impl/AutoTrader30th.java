@@ -149,6 +149,7 @@ public class AutoTrader30th extends AbstractAutoTrader {
                 && snapshot.isBidGtAsk()
                 && rateAnalyzer.isReachedBidThresholdWithin(rate, fixDuration)) {
             fixAsk(snapshot);
+            recoveryManager.printSummary(snapshot);
             return true;
         }
         if (rateAnalyzer.isAskUp()
@@ -156,6 +157,7 @@ public class AutoTrader30th extends AbstractAutoTrader {
                 && snapshot.isBidLtAsk()
                 && rateAnalyzer.isReachedAskThresholdWithin(rate, fixDuration)) {
             fixBid(snapshot);
+            recoveryManager.printSummary(snapshot);
             return true;
         }
         
@@ -187,14 +189,12 @@ public class AutoTrader30th extends AbstractAutoTrader {
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
                     recoveryManager.open(snapshot);
                     orderAsk(toInitialLot.applyAsInt(snapshot), snapshot);
-                    printRecoveryProgress(snapshot);
                     doAsk = false;
                 }
                 if (rateAnalyzer.isBidDown()
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDuration)) {
                     recoveryManager.open(snapshot);
                     orderBid(toInitialLot.applyAsInt(snapshot), snapshot);
-                    printRecoveryProgress(snapshot);
                     doBid = false;
                 }
                 return;
@@ -291,12 +291,6 @@ public class AutoTrader30th extends AbstractAutoTrader {
         super.fixAll(snapshot);
         recoveryManager.printSummary(snapshot);
         recoveryManager.close();
-    }
-
-    private void printRecoveryProgress(Snapshot snapshot) {
-        log.info("recovery progress:{} profit:{}",
-                recoveryManager.getRecoveryProgress(snapshot),
-                recoveryManager.getProfit(snapshot));
     }
 
     @Override
