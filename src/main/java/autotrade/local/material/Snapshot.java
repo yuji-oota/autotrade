@@ -160,6 +160,14 @@ public class Snapshot implements Serializable {
         return Math.min(askLot, bidLot);
     }
 
+    public boolean hasAskProfit() {
+        return getAskProfit() > 0;
+    }
+
+    public boolean hasBidProfit() {
+        return getBidProfit() > 0;
+    }
+
     public boolean hasProfit() {
         return getPositionProfit() > 0;
     }

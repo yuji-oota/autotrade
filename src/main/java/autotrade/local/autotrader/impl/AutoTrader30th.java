@@ -145,7 +145,7 @@ public class AutoTrader30th extends AbstractAutoTrader {
         
         // 反対売買用
         if (rateAnalyzer.isBidDown()
-                && snapshot.getAskProfit() > 0
+                && snapshot.hasAskProfit()
                 && snapshot.isBidGtAsk()
                 && rateAnalyzer.isReachedBidThresholdWithin(rate, fixDuration)) {
             fixAsk(snapshot);
@@ -153,7 +153,7 @@ public class AutoTrader30th extends AbstractAutoTrader {
             return true;
         }
         if (rateAnalyzer.isAskUp()
-                && snapshot.getBidProfit() > 0
+                && snapshot.hasBidProfit()
                 && snapshot.isBidLtAsk()
                 && rateAnalyzer.isReachedAskThresholdWithin(rate, fixDuration)) {
             fixBid(snapshot);
@@ -237,6 +237,10 @@ public class AutoTrader30th extends AbstractAutoTrader {
             }
             
             // 反対売買用
+            int counterLot = 1;
+            if (snapshot.getLessLot() == 0) {
+                counterLot = toInitialLot.applyAsInt(snapshot) / 2;
+            }
             if (snapshot.getMoreLot() >= 2) {
                 if (snapshot.getAskLot() == 0) {
                     doAsk = true;
@@ -246,7 +250,7 @@ public class AutoTrader30th extends AbstractAutoTrader {
                             && snapshot.getBidLot() / 2 >= snapshot.getAskLot()
                             && snapshot.isBidGtAsk()
                             && rateAnalyzer.isReachedAskThresholdWithin(rate, followUpOrderDuration)) {
-                        orderAsk(1, snapshot);
+                        orderAsk(counterLot, snapshot);
                         doAsk = false;
                         return;
                     }
@@ -259,7 +263,7 @@ public class AutoTrader30th extends AbstractAutoTrader {
                             && snapshot.getBidLot() <= snapshot.getAskLot() / 2
                             && snapshot.isBidLtAsk()
                             && rateAnalyzer.isReachedBidThresholdWithin(rate, followUpOrderDuration)) {
-                        orderBid(1, snapshot);
+                        orderBid(counterLot, snapshot);
                         doBid = false;
                         return;
                     }
