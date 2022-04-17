@@ -67,33 +67,32 @@ public class Snapshot implements Serializable {
     }
 
     public boolean hasOneSide() {
-        if ((hasAsk() && bidLot == 0)
-                || (askLot == 0 && hasBid())) {
-            return true;
-        }
-        return false;
+        return (hasAsk() && hasNoBid())
+                || (hasNoAsk() && hasBid());
     }
 
     public boolean hasBothSide() {
-        if (askLot > 0 && bidLot > 0) {
-            return true;
-        }
-        return false;
+        return hasAsk() && hasBid();
     }
 
     public boolean hasAsk() {
         return askLot > 0;
     }
 
+    public boolean hasNoAsk() {
+        return !hasAsk();
+    }
+
     public boolean hasBid() {
         return bidLot > 0;
     }
 
+    public boolean hasNoBid() {
+        return !hasBid();
+    }
+
     public boolean hasPosition() {
-        if (hasAsk() || hasBid()) {
-            return true;
-        }
-        return false;
+        return hasAsk() || hasBid();
     }
 
     public boolean hasNoPosition() {

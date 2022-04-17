@@ -31,6 +31,9 @@ public class RecoveryManager implements Serializable {
     @Setter
     private Snapshot counterTradingSnapshot;
 
+    @Setter
+    private Snapshot followUpSnapshot;
+
     @Autowired
     private ToIntFunction<Snapshot> toProfit;
 
@@ -46,6 +49,7 @@ public class RecoveryManager implements Serializable {
     public void open(Snapshot snapshot) {
         openSnapshot = snapshot;
         counterTradingSnapshot = snapshot;
+        followUpSnapshot = snapshot;
         log.info("RecoveryManager opened.");
         isOpen = true;
         stopLossCount = 0;
@@ -110,10 +114,10 @@ public class RecoveryManager implements Serializable {
     }
 
     public void printSummary(Snapshot snapshot) {
-        log.info("recovery summary. {} lot:{} start profit:{} end profit:{} total profit:{} stopLossCount:{}",
-                snapshot.getPair().getName(), snapshot.getMoreLot(),
-                getStartProfit(), getProfit(snapshot),
-                snapshot.getTotalProfit(), stopLossCount);
+        log.info("recovery summary. {} lot(bid:{} ask:{}) profit(start:{} end:{} total:{}) stopLossCount:{}",
+                snapshot.getPair().getName(), snapshot.getBidLot(), snapshot.getAskLot(),
+                getStartProfit(), getProfit(snapshot), snapshot.getTotalProfit(),
+                stopLossCount);
     }
 
     public boolean isBeforeCounterTrading() {
