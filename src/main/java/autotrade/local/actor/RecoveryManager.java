@@ -114,10 +114,10 @@ public class RecoveryManager implements Serializable {
     }
 
     public void printSummary(Snapshot snapshot) {
-        log.info("recovery summary. {} lot(bid:{} ask:{}) profit(start:{} end:{} total:{}) stopLossCount:{}",
+        log.info("recovery summary. {} lot(bid:{} ask:{}) margin(start:{} end:{}) profit(start:{} end:{} total:{})",
                 snapshot.getPair().getName(), snapshot.getBidLot(), snapshot.getAskLot(),
-                getStartProfit(), getProfit(snapshot), snapshot.getTotalProfit(),
-                stopLossCount);
+                openSnapshot.getMargin(), snapshot.getEffectiveMargin(),
+                getStartProfit(), getProfit(snapshot), snapshot.getTotalProfit());
     }
 
     public boolean isBeforeCounterTrading() {

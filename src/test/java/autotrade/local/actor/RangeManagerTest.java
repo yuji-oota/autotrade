@@ -16,6 +16,8 @@ class RangeManagerTest {
 
     @Autowired
     RangeManager rangeManager;
+    @Autowired
+    RangeManager rangeManager2;
 
     @Autowired
     PairManager pairManager;
@@ -58,6 +60,12 @@ class RangeManagerTest {
         rangeManager.apply();
         log.info("isSaveExtend:{} isExtended:{}", rangeManager.isSaveExtend(), rangeManager.isExtended());
 
+    }
+
+    @Test
+    void test2() {
+        System.out.println(rangeManager);
+        System.out.println(rangeManager2);
     }
 
 }
