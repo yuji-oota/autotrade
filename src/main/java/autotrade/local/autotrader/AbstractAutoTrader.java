@@ -1,6 +1,5 @@
 package autotrade.local.autotrader;
 
-import java.nio.file.Paths;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -16,12 +15,12 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import autotrade.local.actor.IndicatorManager;
 import autotrade.local.actor.PairManager;
 import autotrade.local.actor.RateAnalyzer;
+import autotrade.local.actor.StrageManager;
 import autotrade.local.exception.ApplicationException;
 import autotrade.local.material.AudioPath;
 import autotrade.local.material.DisplayMode;
@@ -34,9 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AbstractAutoTrader {
-
-    @Autowired
-    protected ApplicationContext applicationContext;
 
     @Autowired
     protected IndicatorManager indicatorManager;
@@ -77,22 +73,26 @@ public abstract class AbstractAutoTrader {
             System.out.print("do you need local load? (y or any) :");
             String input = scanner.next();
             if ("y".equals(input.toLowerCase())) {
+                StrageManager.loadLocal();
                 loadLocal();
             }
         }
 
         // シャットダウンフックでローカルセーブ
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> saveLocal()));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            saveLocal();
+            StrageManager.saveLocal();
+        }));
     }
 
     protected void saveLocal() {
-        AutoTradeUtils.localSave(Paths.get("localSave", "startMargin"), startMargin);
-        AutoTradeUtils.localSave(Paths.get("localSave", "pairAnalyzerMap"), pairAnalyzerMap);
+        StrageManager.put("startMargin", startMargin);
+        StrageManager.put("pairAnalyzerMap", pairAnalyzerMap);
     };
 
     protected void loadLocal() {
-        startMargin = AutoTradeUtils.localLoad(Paths.get("localSave", "startMargin"));
-        pairAnalyzerMap = AutoTradeUtils.localLoad(Paths.get("localSave", "pairAnalyzerMap"));
+        startMargin = StrageManager.get("startMargin");
+        pairAnalyzerMap = StrageManager.get("pairAnalyzerMap");
         log.info("pairAnalyzerMap loaded.");
         rateAnalyzer = pairAnalyzerMap.get(pair.getName());
     };

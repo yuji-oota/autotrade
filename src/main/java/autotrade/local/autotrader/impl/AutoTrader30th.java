@@ -1,6 +1,5 @@
 package autotrade.local.autotrader.impl;
 
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.AbstractMap.SimpleEntry;
@@ -13,12 +12,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import autotrade.local.actor.RecoveryManager;
+import autotrade.local.actor.StrageManager;
 import autotrade.local.autotrader.AbstractAutoTrader;
 import autotrade.local.material.DisplayMode;
 import autotrade.local.material.Pair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
-import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -66,13 +65,13 @@ public class AutoTrader30th extends AbstractAutoTrader {
     @Override
     protected void saveLocal() {
         super.saveLocal();
-        AutoTradeUtils.localSave(Paths.get("localSave", "recoveryManager"), recoveryManager);
+        StrageManager.put("recoveryManager", recoveryManager);
     }
 
     @Override
     protected void loadLocal() {
         super.loadLocal();
-        recoveryManager = AutoTradeUtils.localLoad(Paths.get("localSave", "recoveryManager"));
+        recoveryManager = StrageManager.get("recoveryManager");
         log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
     }
 
