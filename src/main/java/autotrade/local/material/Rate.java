@@ -27,12 +27,20 @@ public class Rate implements Serializable {
         return (ask + bid) / 2;
     }
 
-    public boolean isAbove(Rate rate) {
+    public boolean isAskGt(Rate rate) {
         return this.ask > rate.getAsk();
     }
 
-    public boolean isBelow(Rate rate) {
+    public boolean isBidLt(Rate rate) {
         return this.bid < rate.getBid();
+    }
+
+    public boolean isAskLt(Rate rate) {
+        return this.ask < rate.getAsk();
+    }
+
+    public boolean isBidGt(Rate rate) {
+        return this.bid > rate.getBid();
     }
 
     public boolean isSpreadWiden() {

@@ -32,7 +32,10 @@ public class RecoveryManager implements Serializable {
     private Snapshot counterTradingSnapshot;
 
     @Setter
-    private Snapshot followUpSnapshot;
+    private Snapshot lastFollowUpAskSnapshot;
+
+    @Setter
+    private Snapshot lastFollowUpBidSnapshot;
 
     @Autowired
     private ToIntFunction<Snapshot> toProfit;
@@ -49,7 +52,6 @@ public class RecoveryManager implements Serializable {
     public void open(Snapshot snapshot) {
         openSnapshot = snapshot;
         counterTradingSnapshot = snapshot;
-        followUpSnapshot = snapshot;
         log.info("RecoveryManager opened.");
         isOpen = true;
         stopLossCount = 0;

@@ -65,18 +65,18 @@ public class RangeManager implements Serializable {
             return false;
         }
         Rate rate = snapshot.getRate();
-        if (rate.isAbove(lowerLimit) && rate.isBelow(upperLimit)) {
+        if (rate.isAskGt(lowerLimit) && rate.isBidLt(upperLimit)) {
             return true;
         }
         return false;
     }
 
     public boolean isAboveRange(Snapshot snapshot) {
-        return snapshot.getRate().isAbove(upperLimit);
+        return snapshot.getRate().isAskGt(upperLimit);
     }
 
     public boolean isBelowRange(Snapshot snapshot) {
-        return snapshot.getRate().isBelow(lowerLimit);
+        return snapshot.getRate().isBidLt(lowerLimit);
     }
 
     public void save(Snapshot snapshot) {
@@ -88,11 +88,11 @@ public class RangeManager implements Serializable {
             lowerLimitSave = newRate;
             return;
         }
-        if (newRate.isAbove(upperLimitSave)) {
+        if (newRate.isAskGt(upperLimitSave)) {
             upperLimitSave = newRate;
             return;
         }
-        if (newRate.isBelow(lowerLimitSave)) {
+        if (newRate.isBidLt(lowerLimitSave)) {
             lowerLimitSave = newRate;
             return;
         }
@@ -116,7 +116,7 @@ public class RangeManager implements Serializable {
         if (isBeforeApply()) {
             return true;
         }
-        return lowerLimitSave.isBelow(lowerLimit) || upperLimitSave.isAbove(upperLimit);
+        return lowerLimitSave.isBidLt(lowerLimit) || upperLimitSave.isAskGt(upperLimit);
     }
 
     public boolean isNearUpperLimit(Snapshot snapshot) {

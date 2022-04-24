@@ -151,6 +151,10 @@ public class Snapshot implements Serializable {
         return rate.isSpreadWiden();
     }
 
+    public boolean isSpreadNarrow() {
+        return rate.isSpreadNarrow();
+    }
+
     public int getMoreLot() {
         return Math.max(askLot, bidLot);
     }
