@@ -69,14 +69,7 @@ public abstract class AbstractAutoTrader {
         pair = pairManager.getDefault();
         rateAnalyzer = pairAnalyzerMap.get(pair.getName());
 
-        try (Scanner scanner = new Scanner(System.in)) {
-            System.out.print("do you need local load? (y or any) :");
-            String input = scanner.next();
-            if ("y".equals(input.toLowerCase())) {
-                StrageManager.loadLocal();
-                loadLocal();
-            }
-        }
+        scanProcess();
 
         // シャットダウンフックでローカルセーブ
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -96,6 +89,17 @@ public abstract class AbstractAutoTrader {
         log.info("pairAnalyzerMap loaded.");
         rateAnalyzer = pairAnalyzerMap.get(pair.getName());
     };
+
+    @SuppressWarnings("resource")
+    protected void scanProcess() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("do you need local load? (y or any) :");
+        String input = scanner.next();
+        if ("y".equals(input.toLowerCase())) {
+            StrageManager.loadLocal();
+            loadLocal();
+        }
+    }
 
     public void operation() {
 
@@ -223,10 +227,12 @@ public abstract class AbstractAutoTrader {
 
         changeDisplay(DisplayMode.RATELIST);
         // レートリストから他通貨ペアのレートをRateAnalyzerに追加
+        LocalTime now = LocalTime.now();
         if (snapshot.hasNoPosition()
                 || LocalDateTime.now().getSecond() % 10 == 0) {
             pairManager.getPairs().stream()
                     .filter(p -> !p.equals(snapshot.getPair()))
+                    .filter(pair -> pair.isHandleable(now))
                     .forEach(p -> {
                         pairAnalyzerMap.get(p.getName()).add(buildRateFromList(p));
                     });
