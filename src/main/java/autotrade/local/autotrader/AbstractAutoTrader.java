@@ -239,7 +239,8 @@ public abstract class AbstractAutoTrader {
         }
 
         // 非活性時間処理
-        if (isSleep(snapshot)) {
+        if (isSleep(snapshot)
+                || isNonBusinessHours()) {
 
             // サマリ出力
             printSummary(snapshot);
@@ -411,6 +412,26 @@ public abstract class AbstractAutoTrader {
         return isInactiveTime()
                 && snapshot.hasNoPosition()
                 && snapshot.isSpreadWiden();
+    }
+    
+    private boolean isNonBusinessHours() {
+        LocalDateTime now = LocalDateTime.now();
+        switch (now.getDayOfWeek()) {
+        case SATURDAY:
+            if (now.getHour() > 6) {
+                return true;
+            }
+            break;
+        case SUNDAY:
+            return true;
+        case MONDAY:
+            if (now.getHour() < 7) {
+                return true;
+            }
+            break;
+        default:
+        }
+        return false;
     }
 
     protected void forceSame(Snapshot snapshot) {
