@@ -490,7 +490,7 @@ public abstract class AbstractAutoTrader {
         AutoTradeUtils.playAudioRandom(AudioPath.FixSoundEffect);
         verifyOrder(0, Snapshot::getAskLot);
         verifyOrder(0, Snapshot::getBidLot);
-        log.info("{} fix all position. bid lot:{} ask lot:{} bid rate:{} ask rate:{}",
+        log.info("{} fix all position. lot(bid:{} ask:{}) rate(bid:{} ask:{})",
                 snapshot.getPair().getName(),
                 snapshot.getBidLot(), snapshot.getAskLot(),
                 snapshot.getRate().getRawBid(), snapshot.getRate().getRawAsk());
