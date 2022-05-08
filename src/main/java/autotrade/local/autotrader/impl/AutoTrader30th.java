@@ -132,8 +132,8 @@ public class AutoTrader30th extends AbstractAutoTrader {
 
     @Override
     protected boolean isSleep(Snapshot snapshot) {
-        return isInactiveTime()
-                && snapshot.hasNoPosition();
+        return snapshot.hasNoPosition()
+                && isInactiveTime();
     }
 
     protected boolean isTradable(Snapshot snapshot) {

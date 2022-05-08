@@ -55,12 +55,15 @@ public abstract class AbstractAutoTrader {
     protected boolean isThroughFix;
     protected boolean isForceException;
 
-    @Value("${autotrade.active.start}")
+    @Value("${autotrade.active.weekday.start}")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
     protected LocalTime activeStart;
-    @Value("${autotrade.active.end}")
+    @Value("${autotrade.active.weekday.end}")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
     protected LocalTime activeEnd;
+    @Value("${autotrade.active.saturday.end}")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+    protected LocalTime saturdayEnd;
 
     public AbstractAutoTrader() {
     }
@@ -447,6 +450,9 @@ public abstract class AbstractAutoTrader {
 
     protected boolean isActiveTime() {
         LocalTime now = LocalTime.now();
+        if (LocalDateTime.now().getDayOfWeek() == DayOfWeek.SATURDAY) {
+            return now.isBefore(saturdayEnd);
+        }
         if (activeStart.equals(activeEnd)) {
             return true;
         }
