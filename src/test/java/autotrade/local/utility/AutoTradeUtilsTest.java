@@ -2,22 +2,37 @@ package autotrade.local.utility;
 
 
 import java.nio.file.Paths;
-import java.time.Duration;
-import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
-
-import autotrade.local.material.AudioPath;
 
 public class AutoTradeUtilsTest {
 
     @Test
     public void test() {
-        IntStream.of(0,1,2).forEach(i -> {
-            AutoTradeUtils.playAudioRandom(AudioPath.Alert);
-        });
-        AutoTradeUtils.sleep(Duration.ofSeconds(10));
-
+        System.out.println(AutoTradeUtils.isNumeric(""));
+        System.out.println(AutoTradeUtils.isNumeric("+"));
+        System.out.println(AutoTradeUtils.isNumeric("-"));
+        System.out.println(AutoTradeUtils.isNumeric("1"));
+        System.out.println(AutoTradeUtils.isNumeric("10"));
+        System.out.println(AutoTradeUtils.isNumeric("100"));
+        System.out.println(AutoTradeUtils.isNumeric("100."));
+        System.out.println(AutoTradeUtils.isNumeric("100.0"));
+        System.out.println(AutoTradeUtils.isNumeric("100.01"));
+        System.out.println(AutoTradeUtils.isNumeric("100.001"));
+        System.out.println(AutoTradeUtils.isNumeric("+1"));
+        System.out.println(AutoTradeUtils.isNumeric("-10"));
+        System.out.println(AutoTradeUtils.isNumeric("+100"));
+        System.out.println(AutoTradeUtils.isNumeric("-100."));
+        System.out.println(AutoTradeUtils.isNumeric("+100.0"));
+        System.out.println(AutoTradeUtils.isNumeric("-100.01"));
+        System.out.println(AutoTradeUtils.isNumeric("+100.001"));
+        System.out.println(AutoTradeUtils.isNumeric("+a"));
+        System.out.println(AutoTradeUtils.isNumeric("+1a"));
+        System.out.println(AutoTradeUtils.isNumeric("+10a"));
+        System.out.println(AutoTradeUtils.isNumeric("+100."));
+        System.out.println(AutoTradeUtils.isNumeric("+100.a"));
+        System.out.println(AutoTradeUtils.isNumeric("+100.0a"));
+        System.out.println(AutoTradeUtils.isNumeric("+100.00a"));
     }
 
     @Test

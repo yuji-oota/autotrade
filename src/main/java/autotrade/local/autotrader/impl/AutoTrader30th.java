@@ -21,6 +21,7 @@ import autotrade.local.material.DisplayMode;
 import autotrade.local.material.Pair;
 import autotrade.local.material.Rate;
 import autotrade.local.material.Snapshot;
+import autotrade.local.utility.AutoTradeUtils;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -86,18 +87,23 @@ public class AutoTrader30th extends AbstractAutoTrader {
             Scanner scanner = new Scanner(System.in);
             System.out.print("adjust open snapshot margin if necessary :");
             String input = scanner.nextLine();
-            int adjustMargin = Integer.valueOf(input);
+            if (AutoTradeUtils.isNumeric(input)) {
+                int adjustMargin = Integer.valueOf(input);
 
-            log.info("before adjust");
-            log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
+                log.info("before adjust");
+                log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
 
-            int beforeMargin = recoveryManager.getOpenSnapshot().getMargin();
-            int afterMargin = beforeMargin + adjustMargin;
-            recoveryManager.getOpenSnapshot().setMargin(afterMargin);
-            recoveryManager.getOpenSnapshot().setEffectiveMargin(afterMargin);
+                int beforeMargin = recoveryManager.getOpenSnapshot().getMargin();
+                int afterMargin = beforeMargin + adjustMargin;
+                recoveryManager.getOpenSnapshot().setMargin(afterMargin);
+                recoveryManager.getOpenSnapshot().setEffectiveMargin(afterMargin);
 
-            log.info("after adjust");
-            log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
+                log.info("after adjust");
+                log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
+            } else {
+                log.info("adjust open snapshot skipped because input value is not numeric value:{}", input);
+            }
+
         }
     }
 

@@ -58,16 +58,19 @@ public class AutoTradeUtils {
     }
 
     public static byte[] serialize(Object object) {
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(baos)) {
             oos.writeObject(object);
             return baos.toByteArray();
         } catch (IOException e) {
             throw new ApplicationException(e);
         }
     }
+
     @SuppressWarnings("unchecked")
     public static <T> T deserialize(byte[] bytes) {
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bais)) {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+                ObjectInputStream ois = new ObjectInputStream(bais)) {
             return (T) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             throw new ApplicationException(e);
@@ -79,7 +82,7 @@ public class AutoTradeUtils {
     }
 
     public static void playAudioRandom(AudioPath audioPath) {
-        if(!audioPath.getPath().toFile().isDirectory()) {
+        if (!audioPath.getPath().toFile().isDirectory()) {
             playAudio(audioPath.getPath());
         }
         try {
@@ -106,6 +109,10 @@ public class AutoTradeUtils {
         return str.chars().allMatch(Character::isDigit);
     }
 
+    public static boolean isNumeric(String str) {
+        return str.matches("[+-]?\\d+(\\.\\d+)?");
+    }
+
     public static void localSave(Path path, Object object) {
         try {
             path.getParent().toFile().mkdir();
@@ -124,13 +131,13 @@ public class AutoTradeUtils {
             throw new ApplicationException(e);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
-	public static <T> T newInstance(String fqcn) {
-    	try {
-			return (T) Class.forName(fqcn).getDeclaredConstructor().newInstance();
-		} catch (Exception e) {
+    public static <T> T newInstance(String fqcn) {
+        try {
+            return (T) Class.forName(fqcn).getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
             throw new ApplicationException(e);
-		}
+        }
     }
 }

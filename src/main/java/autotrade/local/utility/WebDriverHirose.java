@@ -99,12 +99,13 @@ public class WebDriverHirose implements WebDriverWrapper {
         startUpTradeTool();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
 
+        // 通貨ペア定義
+        pairSettings();
+        AutoTradeUtils.sleep(Duration.ofSeconds(1));
+
         // 取引設定
         orderSettings();
         AutoTradeUtils.sleep(Duration.ofSeconds(1));
-
-        // 通貨ペア定義
-        pairSettings();
     }
 
     private void login() {
