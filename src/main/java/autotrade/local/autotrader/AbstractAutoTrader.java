@@ -88,7 +88,7 @@ public abstract class AbstractAutoTrader {
 
     protected void loadLocal() {
         startMargin = StrageManager.get("startMargin");
-        pairAnalyzerMap = StrageManager.get("pairAnalyzerMap");
+        pairAnalyzerMap.putAll(StrageManager.get("pairAnalyzerMap"));
         log.info("pairAnalyzerMap loaded.");
         rateAnalyzer = pairAnalyzerMap.get(pair.getName());
     };
