@@ -12,7 +12,9 @@ import java.util.function.ToIntFunction;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+import autotrade.local.actor.RangeManager;
 import autotrade.local.actor.RecoveryManager;
 import autotrade.local.actor.StrageManager;
 import autotrade.local.autotrader.AbstractAutoTrader;
@@ -26,15 +28,18 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * ナンピンロジック　＋　両建て
  */
-//@Component("autoTrader30th")
+@Component("autoTrader31th")
 @Slf4j
-public class AutoTrader30th extends AbstractAutoTrader {
+public class AutoTrader31th extends AbstractAutoTrader {
 
     private boolean doAsk;
     private boolean doBid;
 
     @Autowired
     private RecoveryManager recoveryManager;
+
+    @Autowired
+    private RangeManager rangeManager;
 
     @Autowired
     private ToIntFunction<Snapshot> toMinimumProfit;
@@ -45,30 +50,31 @@ public class AutoTrader30th extends AbstractAutoTrader {
     @Autowired
     private ToIntFunction<Snapshot> toNextLot;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader30th.order.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader31th.order.duration.seconds}')}")
     private Duration orderDuration;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader30th.counterOrder.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader31th.counterOrder.duration.seconds}')}")
     private Duration counterOrderDuration;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader30th.followUpOrder.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader31th.followUpOrder.duration.seconds}')}")
     private Duration followUpOrderDuration;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader30th.doOrder.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader31th.doOrder.duration.seconds}')}")
     private Duration doOrderDuration;
 
-    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader30th.fix.duration.seconds}')}")
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader31th.fix.duration.seconds}')}")
     private Duration fixDuration;
 
-    public AutoTrader30th() {
+    public AutoTrader31th() {
         super();
-        log.info("autoTrader30th started.");
+        log.info("autoTrader31th started.");
     }
 
     @Override
     protected void saveLocal() {
         super.saveLocal();
         StrageManager.put("recoveryManager", recoveryManager);
+        StrageManager.put("rangeManager", rangeManager);
     }
 
     @Override
@@ -76,6 +82,7 @@ public class AutoTrader30th extends AbstractAutoTrader {
         super.loadLocal();
         recoveryManager = StrageManager.get("recoveryManager");
         log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
+        rangeManager = StrageManager.get("rangeManager");
     }
 
     @SuppressWarnings("resource")
@@ -218,6 +225,15 @@ public class AutoTrader30th extends AbstractAutoTrader {
             // ポジションがない場合
 
             if (recoveryManager.isClose()) {
+
+                rangeManager.reset();
+                rangeManager.save(snapshot);
+                int min = rateAnalyzer.minWithin(orderDuration);
+                int max = rateAnalyzer.maxWithin(orderDuration);
+                if (Integer.MIN_VALUE < min && max < Integer.MAX_VALUE) {
+                    rangeManager.adjustTermination(min, max);
+                }
+
                 if (rateAnalyzer.isAskUp()
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
                     recoveryManager.open(snapshot);
@@ -270,6 +286,8 @@ public class AutoTrader30th extends AbstractAutoTrader {
             }
 
             // 反対売買用
+            rangeManager.save(snapshot);
+
             if (snapshot.getMoreLot() < 2) {
                 return;
             }
@@ -277,10 +295,23 @@ public class AutoTrader30th extends AbstractAutoTrader {
                 doAsk = true;
                 recoveryManager.getLastFollowUpAskSnapshot().setRate(rate.toBuilder().ask(Integer.MAX_VALUE).build());
             }
-            if (rateAnalyzer.isAskUp()) {
+            if (rateAnalyzer.isAskUp()
+                    && snapshot.isBidGtAsk()) {
+
+                // レンジブレイク用
+                if (rangeManager.getUpperLimitSave() == rate
+                        && snapshot.getAskLot() < toRangeBreakLot(snapshot)) {
+                    recoveryManager.setCounterTradingSnapshot(snapshot);
+                    if (snapshot.hasNoAsk()) {
+                        recoveryManager.setLastFollowUpAskSnapshot(snapshot);
+                    }
+                    orderAsk(toRangeBreakLot(snapshot) - snapshot.getAskLot(), snapshot);
+                    doAsk = false;
+                    return;
+                }
+
                 if (doAsk
                         && snapshot.getBidLot() > snapshot.getAskLot() * 2 + 1
-                        && snapshot.isBidGtAsk()
                         && rate.isAskLt(recoveryManager.getLastFollowUpAskSnapshot().getRate())
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, counterOrderDuration)) {
                     recoveryManager.setCounterTradingSnapshot(snapshot);
@@ -294,10 +325,23 @@ public class AutoTrader30th extends AbstractAutoTrader {
                 doBid = true;
                 recoveryManager.getLastFollowUpBidSnapshot().setRate(rate.toBuilder().bid(Integer.MIN_VALUE).build());
             }
-            if (rateAnalyzer.isBidDown()) {
+            if (rateAnalyzer.isBidDown()
+                    && snapshot.isBidLtAsk()) {
+
+                // レンジブレイク用
+                if (rangeManager.getLowerLimitSave() == rate
+                        && snapshot.getBidLot() < toRangeBreakLot(snapshot)) {
+                    recoveryManager.setCounterTradingSnapshot(snapshot);
+                    if (snapshot.hasNoBid()) {
+                        recoveryManager.setLastFollowUpBidSnapshot(snapshot);
+                    }
+                    orderBid(toRangeBreakLot(snapshot) - snapshot.getBidLot(), snapshot);
+                    doBid = false;
+                    return;
+                }
+
                 if (doBid
                         && snapshot.getBidLot() * 2 + 1 < snapshot.getAskLot()
-                        && snapshot.isBidLtAsk()
                         && rate.isBidGt(recoveryManager.getLastFollowUpBidSnapshot().getRate())
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, counterOrderDuration)) {
                     recoveryManager.setCounterTradingSnapshot(snapshot);
@@ -315,14 +359,15 @@ public class AutoTrader30th extends AbstractAutoTrader {
     }
 
     private int toCounterLot(Snapshot snapshot) {
-        int counterLot = 1;
-        if (snapshot.hasOneSide()) {
-            counterLot = snapshot.getMoreLot() / 4;
-            if (counterLot < 1) {
-                counterLot = 1;
-            }
+        return 1;
+    }
+
+    private int toRangeBreakLot(Snapshot snapshot) {
+        int rangeBreakLot = snapshot.getMoreLot() / 4;
+        if (rangeBreakLot < 1) {
+            rangeBreakLot = 1;
         }
-        return counterLot;
+        return rangeBreakLot;
     }
 
     @Override
