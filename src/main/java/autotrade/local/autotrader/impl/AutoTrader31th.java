@@ -359,7 +359,22 @@ public class AutoTrader31th extends AbstractAutoTrader {
     }
 
     private int toCounterLot(Snapshot snapshot) {
-        return 1;
+        int counterLot = 1;
+        if (snapshot.getLessLot() == 0) {
+            Rate rate = snapshot.getRate();
+            int depth = 1;
+            if (snapshot.isBidGtAsk()) {
+                depth = rangeManager.getUpperLimitSave().getAsk() - rate.getAsk();
+            }
+            if (snapshot.isBidLtAsk()) {
+                depth = rate.getBid() - rangeManager.getLowerLimitSave().getBid();
+            }
+            counterLot = toRangeBreakLot(snapshot) * depth / rangeManager.getSaveRange();
+            if (counterLot < 1) {
+                counterLot = 1;
+            }
+        }
+        return counterLot;
     }
 
     private int toRangeBreakLot(Snapshot snapshot) {

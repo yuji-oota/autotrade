@@ -131,6 +131,10 @@ public class RangeManager implements Serializable {
         return upperLimit.getAsk() - lowerLimit.getBid();
     }
 
+    public int getSaveRange() {
+        return upperLimitSave.getAsk() - lowerLimitSave.getBid();
+    }
+
     public int getMiddle() {
         return (lowerLimit.getBid() + upperLimit.getAsk()) / 2;
     }
@@ -156,13 +160,14 @@ public class RangeManager implements Serializable {
         return !isExtended
                 && !isSaveExtend();
     }
-    
+
     public boolean isUpword() {
         if (isBeforeSave()) {
             return false;
         }
         return upperLimitSave.getTimestamp().isAfter(lowerLimitSave.getTimestamp());
     }
+
     public boolean isDownword() {
         if (isBeforeSave()) {
             return false;
