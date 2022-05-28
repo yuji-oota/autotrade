@@ -83,6 +83,8 @@ public class AutoTrader31th extends AbstractAutoTrader {
         recoveryManager = StrageManager.get("recoveryManager");
         log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
         rangeManager = StrageManager.get("rangeManager");
+        log.info("rangeManager.upperLimitSave:{}", rangeManager.getUpperLimitSave());
+        log.info("rangeManager.lowerLimitSave:{}", rangeManager.getLowerLimitSave());
     }
 
     @SuppressWarnings("resource")

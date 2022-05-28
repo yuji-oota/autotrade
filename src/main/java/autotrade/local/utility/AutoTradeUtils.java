@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.LocalTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.Random;
@@ -139,5 +140,14 @@ public class AutoTradeUtils {
         } catch (Exception e) {
             throw new ApplicationException(e);
         }
+    }
+
+    public static LocalTime nextNiceRound(int munites) {
+        LocalTime now = LocalTime.now();
+        LocalTime nextNiceRound = LocalTime.of(now.getHour(), 0);
+        while (nextNiceRound.isBefore(now)) {
+            nextNiceRound = nextNiceRound.plusMinutes(munites);
+        }
+        return nextNiceRound;
     }
 }

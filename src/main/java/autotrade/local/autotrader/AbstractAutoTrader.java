@@ -143,6 +143,13 @@ public abstract class AbstractAutoTrader {
             log.error(e.getMessage(), e);
         } finally {
             webDriverWrapper.quit();
+            if (isWeekdayInactiveTime()) {
+                // 非活性時間中の例外発生時は一定時間スリープする
+                Duration duration = Duration.between(LocalTime.now(), AutoTradeUtils.nextNiceRound(30));
+                log.info("application will sleep {} minutes, because of inactive time exception.",
+                        duration.toMinutes());
+                AutoTradeUtils.sleep(duration);
+            }
         }
 
     }
@@ -416,7 +423,7 @@ public abstract class AbstractAutoTrader {
                 && snapshot.hasNoPosition()
                 && snapshot.isSpreadWiden();
     }
-    
+
     private boolean isNonBusinessHours() {
         LocalDateTime now = LocalDateTime.now();
         switch (now.getDayOfWeek()) {
@@ -448,11 +455,8 @@ public abstract class AbstractAutoTrader {
         }
     }
 
-    protected boolean isActiveTime() {
+    protected boolean isWeekdayActiveTime() {
         LocalTime now = LocalTime.now();
-        if (LocalDateTime.now().getDayOfWeek() == DayOfWeek.SATURDAY) {
-            return now.isBefore(saturdayEnd);
-        }
         if (activeStart.equals(activeEnd)) {
             return true;
         }
@@ -467,6 +471,18 @@ public abstract class AbstractAutoTrader {
         }
         return (activeStart.isBefore(now) && now.isBefore(LocalTime.MAX))
                 || (LocalTime.MIN.isBefore(now) && now.isBefore(activeEnd));
+    }
+
+    protected boolean isWeekdayInactiveTime() {
+        return !isWeekdayActiveTime();
+    }
+
+    protected boolean isActiveTime() {
+        LocalTime now = LocalTime.now();
+        if (LocalDateTime.now().getDayOfWeek() == DayOfWeek.SATURDAY) {
+            return now.isBefore(saturdayEnd);
+        }
+        return isWeekdayActiveTime();
     }
 
     protected boolean isInactiveTime() {
