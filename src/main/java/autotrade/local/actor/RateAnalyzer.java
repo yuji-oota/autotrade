@@ -271,7 +271,7 @@ public class RateAnalyzer implements Serializable {
         if (latestRate.getAsk() == 0 || latestRate.getBid() == 0) {
             return true;
         }
-        if (latestRate.anyMatch(".*00.", ".*99.")) {
+        if (latestRate.anyMatch(".*00.", ".*01.", ".*99.", ".*98.")) {
             int averageNear000 = (int) rates.stream()
                     .filter(r -> r.anyMatch(".*0..", ".*9.."))
                     .mapToInt(Rate::getMiddle)
@@ -295,6 +295,10 @@ public class RateAnalyzer implements Serializable {
             return true;
         }
         return false;
+    }
+
+    private boolean isDisplayLag() {
+        return true;
     }
 
     public boolean isAskUp() {
