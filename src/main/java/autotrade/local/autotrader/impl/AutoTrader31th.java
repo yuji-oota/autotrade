@@ -414,7 +414,8 @@ public class AutoTrader31th extends AbstractAutoTrader {
             }
         }
 
-        if (recoveryManager.isOpen()) {
+        if (recoveryManager.isOpen()
+                && snapshot.getMoreLot() <= snapshot.getLessLot() * 2 + 1) {
             LocalDateTime now = LocalDateTime.now();
             Snapshot lastFollowUpAskSnapshot = recoveryManager.getLastFollowUpAskSnapshot();
             if (Objects.nonNull(lastFollowUpAskSnapshot)
