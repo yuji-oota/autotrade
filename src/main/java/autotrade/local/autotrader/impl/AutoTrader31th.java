@@ -313,7 +313,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
                 }
 
                 if (doAsk
-                        && snapshot.getBidLot() > snapshot.getAskLot() * 2 + 1
+                        && snapshot.getMoreLot() > snapshot.getLessLot() * 2 + 1
                         && rate.isAskLt(recoveryManager.getLastFollowUpAskSnapshot().getRate())
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, counterOrderDuration)) {
                     recoveryManager.setCounterTradingSnapshot(snapshot);
@@ -343,7 +343,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
                 }
 
                 if (doBid
-                        && snapshot.getBidLot() * 2 + 1 < snapshot.getAskLot()
+                        && snapshot.getMoreLot() > snapshot.getLessLot() * 2 + 1
                         && rate.isBidGt(recoveryManager.getLastFollowUpBidSnapshot().getRate())
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, counterOrderDuration)) {
                     recoveryManager.setCounterTradingSnapshot(snapshot);
@@ -362,25 +362,28 @@ public class AutoTrader31th extends AbstractAutoTrader {
 
     private int toCounterLot(Snapshot snapshot) {
         int counterLot = 1;
-        if (snapshot.getLessLot() == 0) {
-            Rate rate = snapshot.getRate();
-            int depth = 1;
-            if (snapshot.isBidGtAsk()) {
-                depth = rangeManager.getUpperLimitSave().getAsk() - rate.getAsk();
-            }
-            if (snapshot.isBidLtAsk()) {
-                depth = rate.getBid() - rangeManager.getLowerLimitSave().getBid();
-            }
-            counterLot = toRangeBreakLot(snapshot) * depth / rangeManager.getSaveRange();
-            if (counterLot < 1) {
-                counterLot = 1;
-            }
+//        if (snapshot.getLessLot() == 0) {
+//            Rate rate = snapshot.getRate();
+//            int depth = 1;
+//            if (snapshot.isBidGtAsk()) {
+//                depth = rangeManager.getUpperLimitSave().getAsk() - rate.getAsk();
+//            }
+//            if (snapshot.isBidLtAsk()) {
+//                depth = rate.getBid() - rangeManager.getLowerLimitSave().getBid();
+//            }
+//            counterLot = toRangeBreakLot(snapshot) * depth / rangeManager.getSaveRange();
+//            if (counterLot < 1) {
+//                counterLot = 1;
+//            }
+//        }
+        if (snapshot.getMoreLot() > snapshot.getLessLot() * 4) {
+            counterLot = 4;
         }
         return counterLot;
     }
 
     private int toRangeBreakLot(Snapshot snapshot) {
-        int rangeBreakLot = snapshot.getMoreLot() / 4;
+        int rangeBreakLot = snapshot.getMoreLot() / 10;
         if (rangeBreakLot < 1) {
             rangeBreakLot = 1;
         }
