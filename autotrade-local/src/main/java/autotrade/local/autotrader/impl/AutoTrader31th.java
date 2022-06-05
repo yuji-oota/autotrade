@@ -65,9 +65,12 @@ public class AutoTrader31th extends AbstractAutoTrader {
     @Value("#{T(java.time.Duration).ofSeconds('${autoTrader31th.fix.duration.seconds}')}")
     private Duration fixDuration;
 
+    private boolean doFollowUp;
+
     public AutoTrader31th() {
         super();
         log.info("autoTrader31th started.");
+        doFollowUp = true;
     }
 
     @Override
@@ -75,6 +78,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
         super.saveLocal();
         StrageManager.put("recoveryManager", recoveryManager);
         StrageManager.put("rangeManager", rangeManager);
+        StrageManager.put("doFollowUp", doFollowUp);
     }
 
     @Override
@@ -85,6 +89,8 @@ public class AutoTrader31th extends AbstractAutoTrader {
         rangeManager = StrageManager.get("rangeManager");
         log.info("rangeManager.upperLimitSave:{}", rangeManager.getUpperLimitSave());
         log.info("rangeManager.lowerLimitSave:{}", rangeManager.getLowerLimitSave());
+        doFollowUp = StrageManager.get("doFollowUp");
+        log.info("doFollowUp:{}", doFollowUp);
     }
 
     @SuppressWarnings("resource")
@@ -113,6 +119,15 @@ public class AutoTrader31th extends AbstractAutoTrader {
             }
 
         }
+    }
+
+    @Override
+    protected void addHandleMessage() {
+        super.addHandleMessage();
+        jmsMessageListener.addHandle("doFollowUp", s -> {
+            doFollowUp = Boolean.valueOf(s);
+            log.info("doFollowUp is changed to {}", doFollowUp);
+        });
     }
 
     @Override
@@ -260,30 +275,32 @@ public class AutoTrader31th extends AbstractAutoTrader {
         case BID_EQ_ASK:
             // ポジションが同数の場合
 
-            if (rateAnalyzer.isAskUp()) {
-                if (doAsk
-                        && snapshot.isAskLtLimit()
-                        && snapshot.isBidLtAsk()
-                        && rate.isAskLt(recoveryManager.getLastFollowUpAskSnapshot().getRate())
-                        && rateAnalyzer.isReachedAskThresholdWithin(rate, followUpOrderDuration)) {
-                    recoveryManager.setCounterTradingSnapshot(snapshot);
-                    recoveryManager.setLastFollowUpAskSnapshot(snapshot);
-                    orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
-                    doAsk = false;
-                    return;
+            if (doFollowUp) {
+                if (rateAnalyzer.isAskUp()) {
+                    if (doAsk
+                            && snapshot.isAskLtLimit()
+                            && snapshot.isBidLtAsk()
+                            && rate.isAskLt(recoveryManager.getLastFollowUpAskSnapshot().getRate())
+                            && rateAnalyzer.isReachedAskThresholdWithin(rate, followUpOrderDuration)) {
+                        recoveryManager.setCounterTradingSnapshot(snapshot);
+                        recoveryManager.setLastFollowUpAskSnapshot(snapshot);
+                        orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
+                        doAsk = false;
+                        return;
+                    }
                 }
-            }
-            if (rateAnalyzer.isBidDown()) {
-                if (doBid
-                        && snapshot.isBidLtLimit()
-                        && snapshot.isBidGtAsk()
-                        && rate.isBidGt(recoveryManager.getLastFollowUpBidSnapshot().getRate())
-                        && rateAnalyzer.isReachedBidThresholdWithin(rate, followUpOrderDuration)) {
-                    recoveryManager.setCounterTradingSnapshot(snapshot);
-                    recoveryManager.setLastFollowUpBidSnapshot(snapshot);
-                    orderBid(toNextLot.applyAsInt(snapshot), snapshot);
-                    doBid = false;
-                    return;
+                if (rateAnalyzer.isBidDown()) {
+                    if (doBid
+                            && snapshot.isBidLtLimit()
+                            && snapshot.isBidGtAsk()
+                            && rate.isBidGt(recoveryManager.getLastFollowUpBidSnapshot().getRate())
+                            && rateAnalyzer.isReachedBidThresholdWithin(rate, followUpOrderDuration)) {
+                        recoveryManager.setCounterTradingSnapshot(snapshot);
+                        recoveryManager.setLastFollowUpBidSnapshot(snapshot);
+                        orderBid(toNextLot.applyAsInt(snapshot), snapshot);
+                        doBid = false;
+                        return;
+                    }
                 }
             }
 
@@ -362,20 +379,6 @@ public class AutoTrader31th extends AbstractAutoTrader {
 
     private int toCounterLot(Snapshot snapshot) {
         int counterLot = 1;
-//        if (snapshot.getLessLot() == 0) {
-//            Rate rate = snapshot.getRate();
-//            int depth = 1;
-//            if (snapshot.isBidGtAsk()) {
-//                depth = rangeManager.getUpperLimitSave().getAsk() - rate.getAsk();
-//            }
-//            if (snapshot.isBidLtAsk()) {
-//                depth = rate.getBid() - rangeManager.getLowerLimitSave().getBid();
-//            }
-//            counterLot = toRangeBreakLot(snapshot) * depth / rangeManager.getSaveRange();
-//            if (counterLot < 1) {
-//                counterLot = 1;
-//            }
-//        }
         if (snapshot.getMoreLot() > snapshot.getLessLot() * 4) {
             counterLot = 4;
         }
@@ -438,6 +441,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
         super.fixAll(snapshot);
         recoveryManager.printSummary(snapshot);
         recoveryManager.close();
+        doFollowUp = true;
     }
 
     @Override

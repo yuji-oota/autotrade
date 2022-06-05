@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import autotrade.local.actor.IndicatorManager;
+import autotrade.local.actor.JmsMessageListener;
 import autotrade.local.actor.PairManager;
 import autotrade.local.actor.RateAnalyzer;
 import autotrade.local.actor.StrageManager;
@@ -46,6 +47,9 @@ public abstract class AbstractAutoTrader {
     @Autowired
     @Qualifier("pairAnalyzerMap")
     protected Map<String, RateAnalyzer> pairAnalyzerMap;
+
+    @Autowired
+    protected JmsMessageListener jmsMessageListener;
 
     protected Pair pair;
     protected RateAnalyzer rateAnalyzer;
@@ -79,6 +83,8 @@ public abstract class AbstractAutoTrader {
             saveLocal();
             StrageManager.saveLocal();
         }));
+
+        addHandleMessage();
     }
 
     protected void saveLocal() {
@@ -102,6 +108,23 @@ public abstract class AbstractAutoTrader {
             StrageManager.loadLocal();
             loadLocal();
         }
+    }
+
+    protected void addHandleMessage() {
+        jmsMessageListener.addHandle("isThroughOrder", s -> {
+            isThroughOrder = Boolean.valueOf(s);
+            log.info("isThroughOrder is changed to {}", isThroughOrder);
+        });
+        jmsMessageListener.addHandle("isThroughFix", s -> {
+            isThroughFix = Boolean.valueOf(s);
+            log.info("isThroughFix is changed to {}", isThroughFix);
+        });
+        jmsMessageListener.addHandle("orderAsk", s -> {
+            orderAsk(Integer.valueOf(s), buildSnapshot());
+        });
+        jmsMessageListener.addHandle("orderBid", s -> {
+            orderBid(Integer.valueOf(s), buildSnapshot());
+        });
     }
 
     public void operation() {

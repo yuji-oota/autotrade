@@ -1,6 +1,7 @@
 package autotrade.jms.client;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Map.Entry;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -21,7 +22,7 @@ public class ApplicationRunnerImpl implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        if (args.getOptionNames().contains("key")) {
+        if (!args.getOptionNames().contains("key")) {
             log.info("application terminated. because key option is not exist.");
             System.exit(0);
         }
@@ -30,7 +31,7 @@ public class ApplicationRunnerImpl implements ApplicationRunner {
         if (args.getOptionNames().contains("value")) {
             value = args.getOptionValues("value").get(0);
         }
-        SimpleEntry<String, String> messageEntry = new SimpleEntry<>(args.getOptionValues("key").get(0), value);
+        Entry<String, String> messageEntry = new SimpleEntry<>(args.getOptionValues("key").get(0), value);
         log.info("send massage:{}", messageEntry);
         jmsTemplate.convertAndSend("autotrade-local", messageEntry);
         System.exit(0);
