@@ -2,7 +2,7 @@ plugins {
     // Apply the java-library plugin to add support for Java Library
     id 'java-library'
     id 'eclipse'
-    id 'org.springframework.boot' version '2.6.2'
+    id 'org.springframework.boot' version '2.7.0'
 }
 
 subprojects {
@@ -19,14 +19,17 @@ subprojects {
     dependencies {
 
         // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter
-        implementation group: 'org.springframework.boot', name: 'spring-boot-starter', version: '2.6.2'
+        implementation group: 'org.springframework.boot', name: 'spring-boot-starter', version: '2.7.0'
+
+        // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-activemq
+        implementation group: 'org.springframework.boot', name: 'spring-boot-starter-activemq', version: '2.7.0'
 
         // https://mvnrepository.com/artifact/org.projectlombok/lombok
         compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
         annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
 
         // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test
-        testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.6.2'
+        testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.7.0'
 
         testCompileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
         testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.22'
@@ -38,4 +41,4 @@ subprojects {
     }
 }
 
-defaultTasks 'clean', ':autotrade-local:collect'
+defaultTasks 'clean', ':autotrade-local:collect', ':autotrade-jms-client:collect'

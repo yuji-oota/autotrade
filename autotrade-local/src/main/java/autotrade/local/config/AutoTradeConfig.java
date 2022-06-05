@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
+import org.apache.activemq.broker.BrokerService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -69,6 +70,15 @@ public class AutoTradeConfig {
         return pairManager.getPairs().stream()
                 .collect(Collectors.toMap(pair -> pair.getName(),
                         pair -> applicationContext.getBean(RateAnalyzer.class)));
+    }
+    
+    @Bean(initMethod = "start", destroyMethod = "stop")
+    public BrokerService broker() throws Exception {
+        final BrokerService broker = new BrokerService();
+        broker.addConnector("tcp://localhost:61616");
+        broker.addConnector("vm://localhost");
+        broker.setPersistent(false);
+        return broker;
     }
 
 }

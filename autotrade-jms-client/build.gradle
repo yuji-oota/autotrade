@@ -1,0 +1,5 @@
+task collect(type: Copy) {
+    dependsOn bootJar
+    from 'build/libs'
+    into './'
+}
