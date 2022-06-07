@@ -381,6 +381,9 @@ public class AutoTrader31th extends AbstractAutoTrader {
         int counterLot = 1;
         if (snapshot.getMoreLot() > snapshot.getLessLot() * 4) {
             counterLot = 4;
+            if (snapshot.getLessLot() > 4) {
+                counterLot = (snapshot.getLessLot() % 4) + 1;
+            }
         }
         return counterLot;
     }
