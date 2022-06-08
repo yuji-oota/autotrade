@@ -67,6 +67,8 @@ public class AutoTrader31th extends AbstractAutoTrader {
 
     private boolean doFollowUp;
 
+    private int counterLot;
+
     public AutoTrader31th() {
         super();
         log.info("autoTrader31th started.");
@@ -127,6 +129,14 @@ public class AutoTrader31th extends AbstractAutoTrader {
         jmsMessageListener.addHandle("doFollowUp", s -> {
             doFollowUp = Boolean.valueOf(s);
             log.info("doFollowUp is changed to {}", doFollowUp);
+        });
+        jmsMessageListener.addHandle("forceFollowUpAsk", s -> {
+            Rate rate = recoveryManager.getLastFollowUpAskSnapshot().getRate();
+            recoveryManager.getLastFollowUpAskSnapshot().setRate(rate.toBuilder().ask(Integer.MAX_VALUE).build());
+        });
+        jmsMessageListener.addHandle("forceFollowUpBid", s -> {
+            Rate rate = recoveryManager.getLastFollowUpBidSnapshot().getRate();
+            recoveryManager.getLastFollowUpBidSnapshot().setRate(rate.toBuilder().bid(Integer.MIN_VALUE).build());
         });
     }
 
@@ -307,6 +317,9 @@ public class AutoTrader31th extends AbstractAutoTrader {
             // 反対売買用
             rangeManager.save(snapshot);
 
+            if (snapshot.getLessLot() == 0) {
+                counterLot = 0;
+            }
             if (snapshot.getMoreLot() < 2) {
                 return;
             }
@@ -378,14 +391,18 @@ public class AutoTrader31th extends AbstractAutoTrader {
     }
 
     private int toCounterLot(Snapshot snapshot) {
-        int counterLot = 1;
+        int lot = 1;
         if (snapshot.getMoreLot() > snapshot.getLessLot() * 4) {
-            counterLot = 4;
-            if (snapshot.getLessLot() > 4) {
-                counterLot = (snapshot.getLessLot() % 4) + 1;
+            lot = 4;
+            if (snapshot.getLessLot() >= 4) {
+                counterLot++;
+                if (counterLot > 4) {
+                    counterLot = 1;
+                }
+                lot = counterLot;
             }
         }
-        return counterLot;
+        return lot;
     }
 
     private int toRangeBreakLot(Snapshot snapshot) {
