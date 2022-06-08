@@ -58,6 +58,7 @@ public abstract class AbstractAutoTrader {
     protected boolean isThroughOrder;
     protected boolean isThroughFix;
     protected boolean isForceException;
+    protected boolean isManual;
 
     @Value("${autotrade.active.weekday.start}")
     @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
@@ -84,7 +85,7 @@ public abstract class AbstractAutoTrader {
             StrageManager.saveLocal();
         }));
 
-        addHandleMessage();
+        addMessageHandler();
     }
 
     protected void saveLocal() {
@@ -110,20 +111,24 @@ public abstract class AbstractAutoTrader {
         }
     }
 
-    protected void addHandleMessage() {
-        jmsMessageListener.addHandle("isThroughOrder", s -> {
+    protected void addMessageHandler() {
+        jmsMessageListener.addHandler("isThroughOrder", s -> {
             isThroughOrder = Boolean.valueOf(s);
             log.info("isThroughOrder is changed to {}", isThroughOrder);
         });
-        jmsMessageListener.addHandle("isThroughFix", s -> {
+        jmsMessageListener.addHandler("isThroughFix", s -> {
             isThroughFix = Boolean.valueOf(s);
             log.info("isThroughFix is changed to {}", isThroughFix);
         });
-        jmsMessageListener.addHandle("orderAsk", s -> {
+        jmsMessageListener.addHandler("orderAsk", s -> {
             orderAsk(Integer.valueOf(s), buildSnapshot());
         });
-        jmsMessageListener.addHandle("orderBid", s -> {
+        jmsMessageListener.addHandler("orderBid", s -> {
             orderBid(Integer.valueOf(s), buildSnapshot());
+        });
+        jmsMessageListener.addHandler("isManual", s -> {
+            isManual = Boolean.valueOf(s);
+            log.info("isManual is changed to {}", isManual);
         });
     }
 
@@ -135,6 +140,13 @@ public abstract class AbstractAutoTrader {
 
             // 繰り返し実行
             while (true) {
+
+                while (isManual) {
+                    Duration duration = Duration.ofSeconds(60);
+                    log.info("application will sleep {} minutes, because of manual mode.",
+                            duration.toMinutes());
+                    AutoTradeUtils.sleep(duration);
+                }
 
                 // 通貨ペア設定
                 changePair(selectPair());

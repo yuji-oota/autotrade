@@ -124,17 +124,17 @@ public class AutoTrader31th extends AbstractAutoTrader {
     }
 
     @Override
-    protected void addHandleMessage() {
-        super.addHandleMessage();
-        jmsMessageListener.addHandle("doFollowUp", s -> {
+    protected void addMessageHandler() {
+        super.addMessageHandler();
+        jmsMessageListener.addHandler("doFollowUp", s -> {
             doFollowUp = Boolean.valueOf(s);
             log.info("doFollowUp is changed to {}", doFollowUp);
         });
-        jmsMessageListener.addHandle("forceFollowUpAsk", s -> {
+        jmsMessageListener.addHandler("forceFollowUpAsk", s -> {
             Rate rate = recoveryManager.getLastFollowUpAskSnapshot().getRate();
             recoveryManager.getLastFollowUpAskSnapshot().setRate(rate.toBuilder().ask(Integer.MAX_VALUE).build());
         });
-        jmsMessageListener.addHandle("forceFollowUpBid", s -> {
+        jmsMessageListener.addHandler("forceFollowUpBid", s -> {
             Rate rate = recoveryManager.getLastFollowUpBidSnapshot().getRate();
             recoveryManager.getLastFollowUpBidSnapshot().setRate(rate.toBuilder().bid(Integer.MIN_VALUE).build());
         });

@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JmsMessageListener {
 
     private ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-    private Map<String, Consumer<String>> consumerMap = new HashMap<>();
+    private Map<String, Consumer<String>> handlerMap = new HashMap<>();
 
     @JmsListener(destination = "autotrade-local")
     void handleMessage(String message) throws JsonMappingException, JsonProcessingException {
@@ -29,15 +29,15 @@ public class JmsMessageListener {
         Entry<String, String> messageEntry = objectMapper.readValue(message, new TypeReference<>() {
         });
 
-        if (!consumerMap.containsKey(messageEntry.getKey())) {
+        if (!handlerMap.containsKey(messageEntry.getKey())) {
             log.info("message is not handled. because message key is not exist.");
             return;
         }
-        consumerMap.get(messageEntry.getKey()).accept(messageEntry.getValue());
+        handlerMap.get(messageEntry.getKey()).accept(messageEntry.getValue());
     }
 
-    public void addHandle(String key, Consumer<String> consumer) {
-        consumerMap.put(key, consumer);
+    public void addHandler(String key, Consumer<String> consumer) {
+        handlerMap.put(key, consumer);
     }
 
 }
