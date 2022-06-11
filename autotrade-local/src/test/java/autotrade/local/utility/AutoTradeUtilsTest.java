@@ -13,6 +13,9 @@ public class AutoTradeUtilsTest {
         System.out.println(AutoTradeUtils.nextNiceRound(10));
         System.out.println(AutoTradeUtils.nextNiceRound(15));
         System.out.println(AutoTradeUtils.nextNiceRound(30));
+        System.out.println(AutoTradeUtils.toInt("0.000"));
+        System.out.println(AutoTradeUtils.toInt("-0.000"));
+        System.out.println(AutoTradeUtils.toInt("-0.001"));
     }
 
     @Test

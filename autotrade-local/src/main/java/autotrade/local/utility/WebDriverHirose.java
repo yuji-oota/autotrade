@@ -162,7 +162,8 @@ public class WebDriverHirose implements WebDriverWrapper {
         List<WebElement> elements = driver.findElements(By.xpath("//li[@class='brand-regist-list-item']"));
         pairManager.getDescriptions().stream().forEach(pair -> {
             elements.stream()
-                    .filter(e -> !e.findElements(By.xpath(MessageFormat.format("div[contains(text(),\"{0}\")]", pair))).isEmpty())
+                    .filter(e -> !e.findElements(By.xpath(MessageFormat.format("div[contains(text(),\"{0}\")]", pair)))
+                            .isEmpty())
                     .findFirst()
                     .get()
                     .click();
@@ -249,10 +250,8 @@ public class WebDriverHirose implements WebDriverWrapper {
 
     @Override
     public String getRateDiffFromList(Pair pair) {
-        // NOTE:rate_diff_xxxxのサフィックスが不定っぽいのでstarts-withにした
-        String xpath = MessageFormat
-                .format("//th[@id=''tab_rate_diff_{0}'']//span[starts-with(@class, ''rate_diff'')]", pair.getCode());
-        return driver.findElements(By.xpath(xpath)).get(0).getText();
+        String xpath = MessageFormat.format("//span[@class=''rate_diff_{0}'']", pair.getCode());
+        return driver.findElement(By.xpath(xpath)).getText();
     }
 
     @Override

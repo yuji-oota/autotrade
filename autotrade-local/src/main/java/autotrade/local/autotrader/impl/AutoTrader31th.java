@@ -261,13 +261,18 @@ public class AutoTrader31th extends AbstractAutoTrader {
                     rangeManager.adjustTermination(min, max);
                 }
 
+                // 前日比取得
+                int rateDiff = AutoTradeUtils.toInt(webDriverWrapper.getRateDiffFromList(snapshot.getPair()));
+
                 if (rateAnalyzer.isAskUp()
+                        && rateDiff > 0
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
                     recoveryManager.open(snapshot);
                     orderAsk(toInitialLot.applyAsInt(snapshot), snapshot);
                     doAsk = false;
                 }
                 if (rateAnalyzer.isBidDown()
+                        && rateDiff < 0
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDuration)) {
                     recoveryManager.open(snapshot);
                     orderBid(toInitialLot.applyAsInt(snapshot), snapshot);
