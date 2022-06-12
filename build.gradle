@@ -41,4 +41,16 @@ subprojects {
     }
 }
 
+project(':autotrade-local') {
+    dependencies {
+        implementation project(':autotrade-common')
+    }
+}
+
+project('autotrade-jms-client') {
+    dependencies {
+        implementation project(':autotrade-common')
+    }
+}
+
 defaultTasks 'clean', ':autotrade-local:collect', ':autotrade-jms-client:collect'

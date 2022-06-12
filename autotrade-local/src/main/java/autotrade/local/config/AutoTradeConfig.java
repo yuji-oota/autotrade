@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
+import org.springframework.jms.support.converter.MessageConverter;
+import org.springframework.jms.support.converter.MessageType;
 
 import autotrade.local.actor.PairManager;
 import autotrade.local.actor.RateAnalyzer;
@@ -25,24 +28,25 @@ public class AutoTradeConfig {
         return (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / denominator;
     }
 
-//    @Bean
-//    public ToIntFunction<Snapshot> toInitialLot(ToIntFunction<Snapshot> toProfit,
-//            @Value("${autotrade.config.toInitialLot.denominator}") int denominator) {
-//        return (ToIntFunction<Snapshot> & Serializable) s -> toProfit.applyAsInt(s) / denominator;
-//    }
+    //    @Bean
+    //    public ToIntFunction<Snapshot> toInitialLot(ToIntFunction<Snapshot> toProfit,
+    //            @Value("${autotrade.config.toInitialLot.denominator}") int denominator) {
+    //        return (ToIntFunction<Snapshot> & Serializable) s -> toProfit.applyAsInt(s) / denominator;
+    //    }
     @Bean
-    public ToIntFunction<Snapshot> toInitialLot(@Value("${autotrade.config.toInitialLot.denominator}") int denominator) {
+    public ToIntFunction<Snapshot> toInitialLot(
+            @Value("${autotrade.config.toInitialLot.denominator}") int denominator) {
         return (ToIntFunction<Snapshot> & Serializable) s -> {
             int lot = s.getMargin() / denominator;
             return lot < 1 ? 1 : lot;
         };
     }
 
-//    @Bean
-//    public ToIntFunction<Snapshot> toNextLot(ToIntFunction<Snapshot> toProfit,
-//            @Value("${autotrade.config.toNextLot.denominator}") int denominator) {
-//        return (ToIntFunction<Snapshot> & Serializable) s -> (s.getLimitLot() - s.getMoreLot()) / denominator + 1;
-//    }
+    //    @Bean
+    //    public ToIntFunction<Snapshot> toNextLot(ToIntFunction<Snapshot> toProfit,
+    //            @Value("${autotrade.config.toNextLot.denominator}") int denominator) {
+    //        return (ToIntFunction<Snapshot> & Serializable) s -> (s.getLimitLot() - s.getMoreLot()) / denominator + 1;
+    //    }
     @Bean
     public ToIntFunction<Snapshot> toNextLot() {
         return (ToIntFunction<Snapshot> & Serializable) s -> {
@@ -55,10 +59,10 @@ public class AutoTradeConfig {
         };
     }
 
-//    @Bean
-//    public ToIntFunction<Snapshot> toMinimumProfit() {
-//        return (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / 10000;
-//    }
+    //    @Bean
+    //    public ToIntFunction<Snapshot> toMinimumProfit() {
+    //        return (ToIntFunction<Snapshot> & Serializable) s -> s.getMargin() / 10000;
+    //    }
     @Bean
     public ToIntFunction<Snapshot> toMinimumProfit() {
         return (ToIntFunction<Snapshot> & Serializable) s -> 1;
@@ -71,7 +75,7 @@ public class AutoTradeConfig {
                 .collect(Collectors.toMap(pair -> pair.getName(),
                         pair -> applicationContext.getBean(RateAnalyzer.class)));
     }
-    
+
     @Bean(initMethod = "start", destroyMethod = "stop")
     public BrokerService broker() throws Exception {
         final BrokerService broker = new BrokerService();
@@ -79,6 +83,14 @@ public class AutoTradeConfig {
         broker.addConnector("vm://localhost");
         broker.setPersistent(false);
         return broker;
+    }
+
+    @Bean // Serialize message content to json using TextMessage
+    public MessageConverter jacksonJmsMessageConverter() {
+        MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
+        converter.setTargetType(MessageType.TEXT);
+        converter.setTypeIdPropertyName("_type");
+        return converter;
     }
 
 }
