@@ -138,6 +138,18 @@ public class AutoTrader31th extends AbstractAutoTrader {
             Rate rate = recoveryManager.getLastFollowUpBidSnapshot().getRate();
             recoveryManager.getLastFollowUpBidSnapshot().setRate(rate.toBuilder().bid(Integer.MIN_VALUE).build());
         });
+        jmsMessageListener.addHandler("forceOpenRecoveryManager", s -> {
+            recoveryManager.open(buildSnapshot());
+        });
+        jmsMessageListener.addHandler("updateOpenSnapshotMargin", s -> {
+            int adjustMargin = Integer.valueOf(s);
+            log.info("before update");
+            log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
+            recoveryManager.getOpenSnapshot().setMargin(adjustMargin);
+            recoveryManager.getOpenSnapshot().setEffectiveMargin(adjustMargin);
+            log.info("after update");
+            log.info("openSnapshot:{}", recoveryManager.getOpenSnapshot());
+        });
     }
 
     @Override
