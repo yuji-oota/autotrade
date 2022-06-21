@@ -140,6 +140,8 @@ public class AutoTrader31th extends AbstractAutoTrader {
         });
         jmsMessageListener.addHandler("forceOpenRecoveryManager", s -> {
             recoveryManager.open(buildSnapshot());
+            recoveryManager.setLastFollowUpAskSnapshot(buildSnapshot());
+            recoveryManager.setLastFollowUpBidSnapshot(buildSnapshot());
         });
         jmsMessageListener.addHandler("updateOpenSnapshotMargin", s -> {
             int adjustMargin = Integer.valueOf(s);
