@@ -37,7 +37,7 @@ public class AutoTradeConfig {
     public ToIntFunction<Snapshot> toInitialLot(
             @Value("${autotrade.config.toInitialLot.denominator}") int denominator) {
         return (ToIntFunction<Snapshot> & Serializable) s -> {
-            int lot = 4 + (s.getMargin() / denominator * 4);
+            int lot = 4 + (s.getMargin() / denominator * 1);
             return lot;
         };
     }
