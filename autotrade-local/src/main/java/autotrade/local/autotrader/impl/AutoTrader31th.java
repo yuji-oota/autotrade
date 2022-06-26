@@ -66,6 +66,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
     private Duration fixDuration;
 
     private boolean doFollowUp;
+    private boolean hasRangeBreakLot;
 
     private int counterLot;
 
@@ -81,6 +82,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
         StrageManager.put("recoveryManager", recoveryManager);
         StrageManager.put("rangeManager", rangeManager);
         StrageManager.put("doFollowUp", doFollowUp);
+        StrageManager.put("hasRangeBreakLot", hasRangeBreakLot);
     }
 
     @Override
@@ -93,6 +95,8 @@ public class AutoTrader31th extends AbstractAutoTrader {
         log.info("rangeManager.lowerLimitSave:{}", rangeManager.getLowerLimitSave());
         doFollowUp = StrageManager.get("doFollowUp");
         log.info("doFollowUp:{}", doFollowUp);
+        hasRangeBreakLot = StrageManager.get("hasRangeBreakLot");
+        log.info("hasRangeBreakLot:{}", hasRangeBreakLot);
     }
 
     @SuppressWarnings("resource")
@@ -231,6 +235,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
                 && rateAnalyzer.isReachedBidThresholdWithin(rate, fixDuration)) {
             fixAsk(snapshot);
             recoveryManager.printSummary(snapshot);
+            hasRangeBreakLot = false;
             return true;
         }
         if (rateAnalyzer.isAskUp()
@@ -239,6 +244,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
                 && rateAnalyzer.isReachedAskThresholdWithin(rate, fixDuration)) {
             fixBid(snapshot);
             recoveryManager.printSummary(snapshot);
+            hasRangeBreakLot = false;
             return true;
         }
 
@@ -358,10 +364,12 @@ public class AutoTrader31th extends AbstractAutoTrader {
                     }
                     orderAsk(toRangeBreakLot(snapshot) - snapshot.getAskLot(), snapshot);
                     doAsk = false;
+                    hasRangeBreakLot = true;
                     return;
                 }
 
                 if (doAsk
+                        && !hasRangeBreakLot
                         && snapshot.getMoreLot() > snapshot.getLessLot() * 2 + 1
                         && rate.isAskLt(recoveryManager.getLastFollowUpAskSnapshot().getRate())
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, counterOrderDuration)) {
@@ -388,10 +396,12 @@ public class AutoTrader31th extends AbstractAutoTrader {
                     }
                     orderBid(toRangeBreakLot(snapshot) - snapshot.getBidLot(), snapshot);
                     doBid = false;
+                    hasRangeBreakLot = true;
                     return;
                 }
 
                 if (doBid
+                        && !hasRangeBreakLot
                         && snapshot.getMoreLot() > snapshot.getLessLot() * 2 + 1
                         && rate.isBidGt(recoveryManager.getLastFollowUpBidSnapshot().getRate())
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, counterOrderDuration)) {
@@ -410,25 +420,26 @@ public class AutoTrader31th extends AbstractAutoTrader {
     }
 
     private int toCounterLot(Snapshot snapshot) {
-        if (snapshot.getMoreLot() < 16) {
-            return 1;
-        }
-        int lot = 1;
-        if (snapshot.getMoreLot() > snapshot.getLessLot() * 4) {
-            lot = 4;
-            if (snapshot.getLessLot() >= 4) {
-                counterLot++;
-                if (counterLot > 4) {
-                    counterLot = 1;
-                }
-                lot = counterLot;
-            }
-        }
-        return lot;
+//        if (snapshot.getMoreLot() < 16) {
+//            return 1;
+//        }
+//        int lot = 1;
+//        if (snapshot.getMoreLot() > snapshot.getLessLot() * 4) {
+//            lot = 4;
+//            if (snapshot.getLessLot() >= 4) {
+//                counterLot++;
+//                if (counterLot > 4) {
+//                    counterLot = 1;
+//                }
+//                lot = counterLot;
+//            }
+//        }
+//        return lot;
+        return 1;
     }
 
     private int toRangeBreakLot(Snapshot snapshot) {
-        int rangeBreakLot = snapshot.getMoreLot() / 10;
+        int rangeBreakLot = snapshot.getMoreLot() / 4;
         if (rangeBreakLot < 1) {
             rangeBreakLot = 1;
         }
