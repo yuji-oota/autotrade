@@ -68,8 +68,6 @@ public class AutoTrader31th extends AbstractAutoTrader {
     private boolean doFollowUp;
     private boolean hasRangeBreakLot;
 
-    private int counterLot;
-
     public AutoTrader31th() {
         super();
         log.info("autoTrader31th started.");
@@ -342,9 +340,6 @@ public class AutoTrader31th extends AbstractAutoTrader {
             // 反対売買用
             rangeManager.save(snapshot);
 
-            if (snapshot.getLessLot() == 0) {
-                counterLot = 0;
-            }
             if (snapshot.getMoreLot() < 2) {
                 return;
             }
@@ -420,21 +415,6 @@ public class AutoTrader31th extends AbstractAutoTrader {
     }
 
     private int toCounterLot(Snapshot snapshot) {
-//        if (snapshot.getMoreLot() < 16) {
-//            return 1;
-//        }
-//        int lot = 1;
-//        if (snapshot.getMoreLot() > snapshot.getLessLot() * 4) {
-//            lot = 4;
-//            if (snapshot.getLessLot() >= 4) {
-//                counterLot++;
-//                if (counterLot > 4) {
-//                    counterLot = 1;
-//                }
-//                lot = counterLot;
-//            }
-//        }
-//        return lot;
         return 1;
     }
 
