@@ -442,13 +442,13 @@ public class AutoTrader31th extends AbstractAutoTrader {
         // 反対売買用
         if (snapshot.isBidLtAsk()) {
             if (rateAnalyzer.isAskUp()
-                    && rateAnalyzer.isReachedAskThresholdWithin(rate, orderDuration)) {
+                    && rateAnalyzer.isReachedAskThresholdWithin(rate, counterOrderDuration)) {
                 doBid = true;
             }
         }
         if (snapshot.isBidGtAsk()) {
             if (rateAnalyzer.isBidDown()
-                    && rateAnalyzer.isReachedBidThresholdWithin(rate, orderDuration)) {
+                    && rateAnalyzer.isReachedBidThresholdWithin(rate, counterOrderDuration)) {
                 doAsk = true;
             }
         }
