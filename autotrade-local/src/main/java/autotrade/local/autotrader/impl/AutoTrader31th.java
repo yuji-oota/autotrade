@@ -132,6 +132,10 @@ public class AutoTrader31th extends AbstractAutoTrader {
             doFollowUp = Boolean.valueOf(s);
             log.info("doFollowUp is changed to {}", doFollowUp);
         });
+        jmsMessageListener.addHandler("hasRangeBreakLot", s -> {
+            hasRangeBreakLot = Boolean.valueOf(s);
+            log.info("hasRangeBreakLot is changed to {}", hasRangeBreakLot);
+        });
         jmsMessageListener.addHandler("forceFollowUpAsk", s -> {
             Rate rate = recoveryManager.getLastFollowUpAskSnapshot().getRate();
             recoveryManager.getLastFollowUpAskSnapshot().setRate(rate.toBuilder().ask(Integer.MAX_VALUE).build());
