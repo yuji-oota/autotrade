@@ -250,6 +250,24 @@ public class AutoTrader31th extends AbstractAutoTrader {
             return true;
         }
 
+        // 反対売買レンジブレイク用
+        if (hasRangeBreakLot) {
+            if (snapshot.isBidGtAsk()
+                    && snapshot.getBidPipProfit() > snapshot.getAskPipProfit()) {
+                fixAsk(snapshot);
+                recoveryManager.printSummary(snapshot);
+                hasRangeBreakLot = false;
+                return true;
+            }
+            if (snapshot.isBidLtAsk()
+                    && snapshot.getBidPipProfit() < snapshot.getAskPipProfit()) {
+                fixBid(snapshot);
+                recoveryManager.printSummary(snapshot);
+                hasRangeBreakLot = false;
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -317,7 +335,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
                     if (doAsk
                             && snapshot.isAskLtLimit()
                             && snapshot.isBidLtAsk()
-//                            && rate.isAskLt(recoveryManager.getLastFollowUpAskSnapshot().getRate())
+                            //                            && rate.isAskLt(recoveryManager.getLastFollowUpAskSnapshot().getRate())
                             && rate.getAsk() <= recoveryManager.getLastFollowUpAskSnapshot().getRate().getAsk() - 100
                             && rateAnalyzer.isReachedAskThresholdWithin(rate, followUpOrderDuration)) {
                         recoveryManager.setCounterTradingSnapshot(snapshot);
@@ -331,7 +349,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
                     if (doBid
                             && snapshot.isBidLtLimit()
                             && snapshot.isBidGtAsk()
-//                            && rate.isBidGt(recoveryManager.getLastFollowUpBidSnapshot().getRate())
+                            //                            && rate.isBidGt(recoveryManager.getLastFollowUpBidSnapshot().getRate())
                             && rate.getBid() >= recoveryManager.getLastFollowUpBidSnapshot().getRate().getBid() + 100
                             && rateAnalyzer.isReachedBidThresholdWithin(rate, followUpOrderDuration)) {
                         recoveryManager.setCounterTradingSnapshot(snapshot);
@@ -372,7 +390,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
                 if (doAsk
                         && !hasRangeBreakLot
                         && snapshot.getMoreLot() > snapshot.getLessLot() * 2 + 1
-//                        && rate.isAskLt(recoveryManager.getLastFollowUpAskSnapshot().getRate())
+                        //                        && rate.isAskLt(recoveryManager.getLastFollowUpAskSnapshot().getRate())
                         && rate.getAsk() <= recoveryManager.getLastFollowUpAskSnapshot().getRate().getAsk() - 25
                         && rateAnalyzer.isReachedAskThresholdWithin(rate, counterOrderDuration)) {
                     recoveryManager.setCounterTradingSnapshot(snapshot);
@@ -405,7 +423,7 @@ public class AutoTrader31th extends AbstractAutoTrader {
                 if (doBid
                         && !hasRangeBreakLot
                         && snapshot.getMoreLot() > snapshot.getLessLot() * 2 + 1
-//                        && rate.isBidGt(recoveryManager.getLastFollowUpBidSnapshot().getRate())
+                        //                        && rate.isBidGt(recoveryManager.getLastFollowUpBidSnapshot().getRate())
                         && rate.getBid() >= recoveryManager.getLastFollowUpBidSnapshot().getRate().getBid() + 25
                         && rateAnalyzer.isReachedBidThresholdWithin(rate, counterOrderDuration)) {
                     recoveryManager.setCounterTradingSnapshot(snapshot);
