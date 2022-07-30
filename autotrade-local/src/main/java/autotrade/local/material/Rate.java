@@ -28,19 +28,51 @@ public class Rate implements Serializable {
     }
 
     public boolean isAskGt(Rate rate) {
-        return this.ask > rate.getAsk();
+        return isAskGt(rate.getAsk());
     }
 
     public boolean isBidLt(Rate rate) {
-        return this.bid < rate.getBid();
+        return isBidLt(rate.getBid());
     }
 
     public boolean isAskLt(Rate rate) {
-        return this.ask < rate.getAsk();
+        return isAskLt(rate.getAsk());
     }
 
     public boolean isBidGt(Rate rate) {
-        return this.bid > rate.getBid();
+        return isBidGt(rate.getBid());
+    }
+
+    public boolean isAskGt(int ask) {
+        return this.ask > ask;
+    }
+
+    public boolean isBidLt(int bid) {
+        return this.bid < bid;
+    }
+
+    public boolean isAskLt(int ask) {
+        return this.ask < ask;
+    }
+
+    public boolean isBidGt(int bid) {
+        return this.bid > bid;
+    }
+
+    public boolean isAskGe(int ask) {
+        return this.ask >= ask;
+    }
+
+    public boolean isBidLe(int bid) {
+        return this.bid <= bid;
+    }
+
+    public boolean isAskLe(int ask) {
+        return this.ask <= ask;
+    }
+
+    public boolean isBidGe(int bid) {
+        return this.bid >= bid;
     }
 
     public boolean isSpreadWiden() {
