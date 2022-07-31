@@ -149,7 +149,7 @@ public class WebDriverHirose implements WebDriverWrapper {
     private void orderSettings() {
         driver.findElement(By.id("fifo-on-label-quick")).click();
         driver.findElement(By.id("all-confm-quick")).click();
-        driver.findElement(By.id("account-status")).click();
+//        driver.findElement(By.id("account-status")).click();
     }
 
     private void pairSettings() {
