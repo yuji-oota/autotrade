@@ -47,14 +47,14 @@ public class AutoTrader31th extends AbstractAutoTrader {
     @Autowired
     private ToIntFunction<Snapshot> toInitialLot;
 
-    @Autowired
-    private ToIntFunction<Snapshot> toNextLot;
-
     @Value("#{T(java.time.Duration).ofSeconds('${autoTrader31th.order.duration.seconds}')}")
     private Duration orderDuration;
 
     @Value("#{T(java.time.Duration).ofSeconds('${autoTrader31th.counterOrder.duration.seconds}')}")
     private Duration counterOrderDuration;
+
+    @Value("#{T(java.time.Duration).ofSeconds('${autoTrader31th.followUpEarlyOrder.duration.seconds}')}")
+    private Duration followUpEarlyOrderDuration;
 
     @Value("#{T(java.time.Duration).ofSeconds('${autoTrader31th.followUpOrder.duration.seconds}')}")
     private Duration followUpOrderDuration;
@@ -332,9 +332,11 @@ public class AutoTrader31th extends AbstractAutoTrader {
 
             if (doFollowUp) {
 
-                int orderDiff = 25;
-                if (snapshot.getLimitLot() / 10 <= snapshot.getMoreLot()) {
-                    orderDiff = 100;
+                int orderDiff = 100;
+                Duration duration = followUpOrderDuration;
+                if (recoveryManager.isEarlyStage(snapshot)) {
+                    orderDiff = 25;
+                    duration = followUpEarlyOrderDuration;
                 }
 
                 if (rateAnalyzer.isAskUp()) {
@@ -342,10 +344,9 @@ public class AutoTrader31th extends AbstractAutoTrader {
                             && snapshot.isAskLtLimit()
                             && snapshot.isBidLtAsk()
                             && rate.isAskLe(recoveryManager.getLastFollowUpAskSnapshot().getRate().getAsk() - orderDiff)
-                            && rateAnalyzer.isReachedAskThresholdWithin(rate, followUpOrderDuration)) {
+                            && rateAnalyzer.isReachedAskThresholdWithin(rate, duration)) {
                         recoveryManager.setCounterTradingSnapshot(snapshot);
                         recoveryManager.setLastFollowUpAskSnapshot(snapshot);
-                        //                        orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
                         orderAsk(1, snapshot);
                         doAsk = false;
                         return;
@@ -356,10 +357,9 @@ public class AutoTrader31th extends AbstractAutoTrader {
                             && snapshot.isBidLtLimit()
                             && snapshot.isBidGtAsk()
                             && rate.isBidGe(recoveryManager.getLastFollowUpBidSnapshot().getRate().getBid() + orderDiff)
-                            && rateAnalyzer.isReachedBidThresholdWithin(rate, followUpOrderDuration)) {
+                            && rateAnalyzer.isReachedBidThresholdWithin(rate, duration)) {
                         recoveryManager.setCounterTradingSnapshot(snapshot);
                         recoveryManager.setLastFollowUpBidSnapshot(snapshot);
-                        //                        orderBid(toNextLot.applyAsInt(snapshot), snapshot);
                         orderBid(1, snapshot);
                         doBid = false;
                         return;

@@ -133,11 +133,11 @@ public class RecoveryManager implements Serializable {
     public void stopLossProcess(Snapshot snapshot) {
         printSummary(snapshot);
         counterTradingStartLot = snapshot.getMoreLot();
-//        if (snapshot.hasProfit()) {
-//            int percentage = 100 - getRecoveryProgress(snapshot);
-//            counterTradingStartLot = snapshot.getMoreLot() * percentage / 100;
-//        }
-//        counterTradingStartLot = Math.max(toInitialLot.applyAsInt(openSnapshot), counterTradingStartLot);
+        //        if (snapshot.hasProfit()) {
+        //            int percentage = 100 - getRecoveryProgress(snapshot);
+        //            counterTradingStartLot = snapshot.getMoreLot() * percentage / 100;
+        //        }
+        //        counterTradingStartLot = Math.max(toInitialLot.applyAsInt(openSnapshot), counterTradingStartLot);
         stopLossCount++;
     }
 
@@ -155,6 +155,10 @@ public class RecoveryManager implements Serializable {
         BigDecimal currentSubInitial = new BigDecimal(snapshot.getMoreLot() - toInitialLot.applyAsInt(openSnapshot));
         BigDecimal progressUnit = limitSubInitial.divide(ratioRange, 1, RoundingMode.HALF_UP);
         return maxRatio - currentSubInitial.divide(progressUnit, 0, RoundingMode.HALF_UP).intValue();
+    }
+
+    public boolean isEarlyStage(Snapshot snapshot) {
+        return snapshot.getLimitLot() / 10 > snapshot.getMoreLot();
     }
 
 }
