@@ -331,15 +331,22 @@ public class AutoTrader31th extends AbstractAutoTrader {
             // ポジションが同数の場合
 
             if (doFollowUp) {
+
+                int orderDiff = 25;
+                if (snapshot.getLimitLot() / 10 <= snapshot.getMoreLot()) {
+                    orderDiff = 100;
+                }
+
                 if (rateAnalyzer.isAskUp()) {
                     if (doAsk
                             && snapshot.isAskLtLimit()
                             && snapshot.isBidLtAsk()
-                            && rate.isAskLe(recoveryManager.getLastFollowUpAskSnapshot().getRate().getAsk() - 100)
+                            && rate.isAskLe(recoveryManager.getLastFollowUpAskSnapshot().getRate().getAsk() - orderDiff)
                             && rateAnalyzer.isReachedAskThresholdWithin(rate, followUpOrderDuration)) {
                         recoveryManager.setCounterTradingSnapshot(snapshot);
                         recoveryManager.setLastFollowUpAskSnapshot(snapshot);
-                        orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
+                        //                        orderAsk(toNextLot.applyAsInt(snapshot), snapshot);
+                        orderAsk(1, snapshot);
                         doAsk = false;
                         return;
                     }
@@ -348,11 +355,12 @@ public class AutoTrader31th extends AbstractAutoTrader {
                     if (doBid
                             && snapshot.isBidLtLimit()
                             && snapshot.isBidGtAsk()
-                            && rate.isBidGe(recoveryManager.getLastFollowUpBidSnapshot().getRate().getBid() + 100)
+                            && rate.isBidGe(recoveryManager.getLastFollowUpBidSnapshot().getRate().getBid() + orderDiff)
                             && rateAnalyzer.isReachedBidThresholdWithin(rate, followUpOrderDuration)) {
                         recoveryManager.setCounterTradingSnapshot(snapshot);
                         recoveryManager.setLastFollowUpBidSnapshot(snapshot);
-                        orderBid(toNextLot.applyAsInt(snapshot), snapshot);
+                        //                        orderBid(toNextLot.applyAsInt(snapshot), snapshot);
+                        orderBid(1, snapshot);
                         doBid = false;
                         return;
                     }
